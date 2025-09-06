@@ -1,0 +1,51 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { Pool } from 'pg';
+
+const client = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await getServerSession();
+    
+    if (!session || session.user?.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Unauthorized' }, 
+        { status: 401 }
+      );
+    }
+
+    const { userId, reason } = await req.json();
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Missing userId' }, 
+        { status: 400 }
+      );
+    }
+
+    // Simple approach - just update status
+    await client.query(`
+      UPDATE users 
+      SET status = 'rejected'
+      WHERE id = $1
+    `, [userId]);
+
+    // Log the rejection (optional)
+    console.log(`Admin ${session.user.email} rejected user ${userId} with reason: ${reason || 'No reason provided'}`);
+
+    return NextResponse.json(
+      { message: 'User request rejected successfully' },
+      { status: 200 }
+    );
+
+  } catch (error) {
+    console.error('Database error:', error);
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
+  }
+}
