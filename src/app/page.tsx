@@ -30,9 +30,9 @@ type HistoryEntry = {
 };
 
 // History Manager Component
-function HistoryManager({ 
-  history, 
-  setHistory 
+function HistoryManager({
+  history,
+  setHistory
 }: {
   history: HistoryEntry[];
   setHistory: (history: HistoryEntry[]) => void;
@@ -44,7 +44,7 @@ function HistoryManager({
   const availableDates = Array.from(new Set(history.map(entry => entry.date))).sort((a, b) => b.localeCompare(a));
 
   // Filter history by selected date
-  const filteredHistory = selectedDate 
+  const filteredHistory = selectedDate
     ? history.filter(entry => entry.date === selectedDate)
     : history;
 
@@ -91,7 +91,7 @@ function HistoryManager({
 
     try {
       const workbook = new ExcelJS.Workbook();
-      
+
       // Daily Summary Sheet
       const summarySheet = workbook.addWorksheet("Daily Summary");
       summarySheet.addRow([
@@ -99,7 +99,7 @@ function HistoryManager({
         "Sessions",
         "Total Entries",
         "Valid Numbers",
-        "Invalid Numbers", 
+        "Invalid Numbers",
         "Duplicates",
         "Total Data (GB)"
       ]);
@@ -129,8 +129,8 @@ function HistoryManager({
 
       history.forEach(entry => {
         entry.entries.forEach(phoneEntry => {
-          const status = phoneEntry.isDuplicate ? "Duplicate" : 
-                        phoneEntry.isValid ? "Valid" : "Invalid";
+          const status = phoneEntry.isDuplicate ? "Duplicate" :
+            phoneEntry.isValid ? "Valid" : "Invalid";
           detailSheet.addRow([
             entry.date,
             new Date(entry.timestamp).toLocaleTimeString(),
@@ -160,7 +160,7 @@ function HistoryManager({
       const blob = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-      
+
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -190,7 +190,7 @@ function HistoryManager({
                 Track and analyze your daily data processing activities
               </p>
             </div>
-            
+
             <div className="flex flex-wrap items-center gap-3">
               <select
                 value={selectedDate}
@@ -202,25 +202,23 @@ function HistoryManager({
                   <option key={date} value={date}>{date}</option>
                 ))}
               </select>
-              
+
               <div className="flex bg-gray-100 rounded-lg p-1">
                 <button
                   onClick={() => setViewMode('summary')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                    viewMode === 'summary' 
-                      ? 'bg-white text-blue-600 shadow-sm' 
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${viewMode === 'summary'
+                      ? 'bg-white text-blue-600 shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                    }`}
                 >
                   Summary
                 </button>
                 <button
                   onClick={() => setViewMode('detailed')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                    viewMode === 'detailed' 
-                      ? 'bg-white text-blue-600 shadow-sm' 
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${viewMode === 'detailed'
+                      ? 'bg-white text-blue-600 shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                    }`}
                 >
                   Detailed
                 </button>
@@ -322,32 +320,32 @@ function HistoryManager({
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={dailySummaries.slice(-30)}>
-                      <XAxis 
-                        dataKey="date" 
+                      <XAxis
+                        dataKey="date"
                         tick={{ fontSize: 12 }}
                         tickFormatter={(value) => new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                       />
                       <YAxis tick={{ fontSize: 12 }} />
-                      <Tooltip 
+                      <Tooltip
                         labelFormatter={(value) => `Date: ${value}`}
                         formatter={(value, name) => [
-                          name === 'totalGB' ? `${value} GB` : value,
-                          name === 'totalGB' ? 'Total Data' : 'Total Entries'
+                          name === 'Total Data (GB)' ? `${value} GB` : value,
+                          name
                         ]}
                       />
                       <Legend />
-                      <Line 
-                        type="monotone" 
-                        dataKey="totalEntries" 
-                        stroke="#3b82f6" 
+                      <Line
+                        type="monotone"
+                        dataKey="totalEntries"
+                        stroke="#3b82f6"
                         strokeWidth={3}
                         name="Total Entries"
                         dot={{ r: 4 }}
                       />
-                      <Line 
-                        type="monotone" 
-                        dataKey="totalGB" 
-                        stroke="#10b981" 
+                      <Line
+                        type="monotone"
+                        dataKey="totalGB"
+                        stroke="#10b981"
                         strokeWidth={3}
                         name="Total Data (GB)"
                         dot={{ r: 4 }}
@@ -377,7 +375,7 @@ function HistoryManager({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {(selectedDate 
+                    {(selectedDate
                       ? dailySummaries.filter(s => s.date === selectedDate)
                       : dailySummaries
                     ).map((summary) => (
@@ -411,8 +409,8 @@ function HistoryManager({
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-blue-100 rounded-lg">
-                        {entry.type === 'bundle-allocator' ? 
-                          <Phone className="w-4 h-4 text-blue-600" /> : 
+                        {entry.type === 'bundle-allocator' ?
+                          <Phone className="w-4 h-4 text-blue-600" /> :
                           <BarChart className="w-4 h-4 text-blue-600" />
                         }
                       </div>
@@ -452,12 +450,12 @@ function HistoryManager({
 }
 
 // Bundle Allocator App Component
-function BundleAllocatorApp({ 
-  inputText, 
-  setInputText, 
-  entries, 
+function BundleAllocatorApp({
+  inputText,
+  setInputText,
+  entries,
   setEntries,
-  onAddToHistory 
+  onAddToHistory
 }: {
   inputText: string;
   setInputText: (text: string) => void;
@@ -598,10 +596,10 @@ function BundleAllocatorApp({
     try {
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("PhoneData");
-      
+
       worksheet.addRow([
         "Beneficiary Msisdn",
-        "Beneficiary Name", 
+        "Beneficiary Name",
         "Voice(Minutes)",
         "Data (MB) (1024MB = 1GB)",
         "Sms(Unit)",
@@ -610,11 +608,11 @@ function BundleAllocatorApp({
       entries.forEach(({ number, allocationGB, isValid, isDuplicate }) => {
         const mb = allocationGB * 1024;
         const row = worksheet.addRow([number, "", 0, mb, 0]);
-        
+
         if (!isValid) {
           row.getCell(1).font = { color: { argb: "FFFF0000" }, bold: true };
         }
-        
+
         if (isDuplicate) {
           row.getCell(1).fill = {
             type: 'pattern',
@@ -637,7 +635,7 @@ function BundleAllocatorApp({
 
       const lastRowNum = worksheet.lastRow?.number || entries.length + 1;
       const totalRowNum = lastRowNum + 5;
-      
+
       worksheet.getCell(`F${totalRowNum}`).value = { formula: `SUM(D2:D${lastRowNum})` };
       worksheet.getCell(`G${totalRowNum}`).value = { formula: `F${totalRowNum}/1024` };
       worksheet.getCell(`F${totalRowNum}`).font = { bold: true };
@@ -647,27 +645,27 @@ function BundleAllocatorApp({
       const blob = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-      
+
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.download = 'UploadTemplate.xlsx';
       link.click();
       URL.revokeObjectURL(url);
-      
+
       const validEntries = entries.filter(entry => entry.isValid && !entry.isDuplicate);
       const duplicateCount = entries.filter(entry => entry.isDuplicate).length;
       const invalidCount = entries.filter(entry => !entry.isValid).length;
       const totalMB = entries.reduce((sum, entry) => sum + (entry.allocationGB * 1024), 0);
       const totalGB = totalMB / 1024;
-      
+
       window.alert && window.alert(`✅ Excel file exported successfully!\n\nTotal exported: ${entries.length} entries\nValid: ${validEntries.length}\nDuplicates: ${duplicateCount}\nInvalid: ${invalidCount}\n\nTotal Data: ${totalGB.toFixed(2)} GB (${totalMB.toFixed(0)} MB)`);
-      
+
       onAddToHistory(entries, 'bundle-allocator');
-      
+
       setInputText("");
       setEntries([]);
-      
+
     } catch (error) {
       console.error('Export error:', error);
       window.alert && window.alert('❌ Error exporting to Excel. Please try again.');
@@ -675,7 +673,7 @@ function BundleAllocatorApp({
       setIsExporting(false);
     }
   };
-  
+
   const validEntries = entries.filter(entry => entry.isValid && !entry.isDuplicate);
   const invalidEntries = entries.filter(entry => !entry.isValid);
   const duplicateEntries = entries.filter(entry => entry.isDuplicate);
@@ -695,7 +693,7 @@ function BundleAllocatorApp({
               Paste phone numbers with allocations or drag & drop a file
             </p>
           </div>
-          
+
           <div className="p-6 space-y-6">
             <div className="relative">
               <textarea
@@ -721,15 +719,13 @@ function BundleAllocatorApp({
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-300 ${
-                isDragActive 
-                  ? "border-blue-500 bg-blue-50 scale-[1.02] shadow-lg" 
+              className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-300 ${isDragActive
+                  ? "border-blue-500 bg-blue-50 scale-[1.02] shadow-lg"
                   : "border-gray-300 hover:border-blue-400 hover:bg-blue-50"
-              }`}
+                }`}
             >
-              <div className={`w-14 h-14 mx-auto mb-4 flex items-center justify-center rounded-full ${
-                isDragActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'
-              }`}>
+              <div className={`w-14 h-14 mx-auto mb-4 flex items-center justify-center rounded-full ${isDragActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'
+                }`}>
                 <Upload className="w-6 h-6" />
               </div>
               {isDragActive ? (
@@ -741,7 +737,7 @@ function BundleAllocatorApp({
                 </>
               )}
             </div>
-            
+
             {/* Hidden file input */}
             <input
               type="file"
@@ -832,15 +828,14 @@ function BundleAllocatorApp({
                   {validEntries.length} valid, {invalidEntries.length} invalid, {duplicateEntries.length} duplicates
                 </p>
               </div>
-              
+
               <button
                 onClick={exportToExcel}
                 disabled={isExporting}
-                className={`flex items-center gap-2 px-6 py-3 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl ${
-                  isExporting 
-                    ? 'bg-gray-500 cursor-not-allowed' 
+                className={`flex items-center gap-2 px-6 py-3 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl ${isExporting
+                    ? 'bg-gray-500 cursor-not-allowed'
                     : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
-                }`}
+                  }`}
               >
                 {isExporting ? (
                   <>
@@ -855,15 +850,14 @@ function BundleAllocatorApp({
                 )}
               </button>
             </div>
-            
+
             <div className="max-h-96 overflow-y-auto">
               <div className="grid grid-cols-1 divide-y divide-gray-100">
                 {entries.map(({ number, allocationGB, isValid, isDuplicate }, idx) => (
                   <div
                     key={idx}
-                    className={`flex items-center justify-between p-4 transition-all duration-200 hover:bg-gray-50 ${
-                      isDuplicate ? 'bg-yellow-50' : !isValid ? 'bg-red-50' : ''
-                    }`}
+                    className={`flex items-center justify-between p-4 transition-all duration-200 hover:bg-gray-50 ${isDuplicate ? 'bg-yellow-50' : !isValid ? 'bg-red-50' : ''
+                      }`}
                   >
                     <div className="flex items-center gap-4">
                       {isDuplicate ? (
@@ -880,9 +874,8 @@ function BundleAllocatorApp({
                         </div>
                       )}
                       <div>
-                        <p className={`font-mono font-medium text-base ${
-                          isDuplicate ? 'text-yellow-700' : isValid ? 'text-gray-900' : 'text-red-700'
-                        }`}>
+                        <p className={`font-mono font-medium text-base ${isDuplicate ? 'text-yellow-700' : isValid ? 'text-gray-900' : 'text-red-700'
+                          }`}>
                           {number}
                         </p>
                         {isDuplicate && (
@@ -893,11 +886,10 @@ function BundleAllocatorApp({
                         )}
                       </div>
                     </div>
-                    
+
                     <div className="text-right">
-                      <p className={`font-bold text-lg ${
-                        isDuplicate ? 'text-yellow-700' : isValid ? 'text-gray-900' : 'text-red-700'
-                      }`}>
+                      <p className={`font-bold text-lg ${isDuplicate ? 'text-yellow-700' : isValid ? 'text-gray-900' : 'text-red-700'
+                        }`}>
                         {allocationGB} GB
                       </p>
                       <p className="text-xs text-gray-500 font-medium mt-1">
@@ -929,21 +921,21 @@ function BundleAllocatorApp({
 }
 
 // Bundle Categorizer App Component  
-function BundleCategorizerApp({ 
-  rawData, 
-  setRawData, 
-  summary, 
-  setSummary, 
-  chartData, 
+function BundleCategorizerApp({
+  rawData,
+  setRawData,
+  summary,
+  setSummary,
+  chartData,
   setChartData,
-  onAddToHistory 
+  onAddToHistory
 }: {
   rawData: string;
   setRawData: (data: string) => void;
-  summary: Array<{allocation: string, count: number}>;
-  setSummary: (summary: Array<{allocation: string, count: number}>) => void;
-  chartData: Array<{allocation: string, count: number}>;
-  setChartData: (data: Array<{allocation: string, count: number}>) => void;
+  summary: Array<{ allocation: string, count: number }>;
+  setSummary: (summary: Array<{ allocation: string, count: number }>) => void;
+  chartData: Array<{ allocation: string, count: number }>;
+  setChartData: (data: Array<{ allocation: string, count: number }>) => void;
   onAddToHistory: (entries: PhoneEntry[], type: 'bundle-allocator' | 'bundle-categorizer') => void;
 }) {
   const parseData = () => {
@@ -988,22 +980,22 @@ function BundleCategorizerApp({
       if (a.allocation === "Unknown" && b.allocation === "Unknown") return 0;
       if (a.allocation === "Unknown") return 1;
       if (b.allocation === "Unknown") return -1;
-      
+
       const aValue = parseInt(a.allocation.replace(/[^0-9]/g, "")) || 0;
       const bValue = parseInt(b.allocation.replace(/[^0-9]/g, "")) || 0;
 
       const aNum = isNaN(aValue) ? 0 : aValue;
       const bNum = isNaN(bValue) ? 0 : bValue;
-      
+
       return aNum - bNum;
     });
 
     setSummary(sortedSummaryArray);
     setChartData(sortedSummaryArray);
-    
+
     // Add to history
     onAddToHistory(processedEntries, 'bundle-categorizer');
-    
+
     setRawData("");
   };
 
@@ -1054,7 +1046,7 @@ function BundleCategorizerApp({
                   {totalEntries} total entries
                 </div>
               </div>
-              
+
               <div className="overflow-hidden rounded-xl border border-gray-200">
                 <table className="w-full">
                   <thead className="bg-gray-50">
@@ -1089,7 +1081,7 @@ function BundleCategorizerApp({
                             <div className="w-full bg-gray-200 rounded-full h-2.5 mr-3">
                               <div
                                 className="h-2.5 rounded-full transition-all duration-500"
-                                style={{ 
+                                style={{
                                   width: `${(row.count / totalEntries * 100)}%`,
                                   backgroundColor: COLORS[idx % COLORS.length]
                                 }}
@@ -1113,18 +1105,18 @@ function BundleCategorizerApp({
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-gray-200">
                 <ResponsiveContainer width="100%" height={300}>
                   <RechartsBarChart data={chartData}>
-                    <XAxis 
-                      dataKey="allocation" 
+                    <XAxis
+                      dataKey="allocation"
                       tick={{ fontSize: 12 }}
                       axisLine={{ stroke: '#e5e7eb' }}
                       tickLine={{ stroke: '#e5e7eb' }}
                     />
-                    <YAxis 
+                    <YAxis
                       tick={{ fontSize: 12 }}
                       axisLine={{ stroke: '#e5e7eb' }}
                       tickLine={{ stroke: '#e5e7eb' }}
                     />
-                    <Tooltip 
+                    <Tooltip
                       contentStyle={{
                         backgroundColor: '#ADD8E6',
                         border: 'none',
@@ -1136,8 +1128,8 @@ function BundleCategorizerApp({
                       labelFormatter={(label) => `Allocation: ${label}`}
                     />
                     <Legend />
-                    <Bar 
-                      dataKey="count" 
+                    <Bar
+                      dataKey="count"
                       name="Number of Entries"
                       radius={[4, 4, 0, 0]}
                     >
@@ -1171,9 +1163,9 @@ function BundleCategorizerApp({
 
 // Main App with Authentication and Admin Features
 export default function App() {
-  const { data: session } = useSession();
+  const { data: session } = useSession() as any;
 
-    // Show loading while checking authentication
+  // Show loading while checking authentication
   if (status === "loading") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
@@ -1203,15 +1195,15 @@ export default function App() {
   }
 
   const [activeTab, setActiveTab] = useState("bundle-allocator");
-  
+
   // Bundle Allocator state
   const [allocatorInputText, setAllocatorInputText] = useState("");
   const [allocatorEntries, setAllocatorEntries] = useState<PhoneEntry[]>([]);
-  
+
   // Bundle Categorizer state
   const [categorizerRawData, setCategorizerRawData] = useState("");
-  const [categorizerSummary, setCategorizerSummary] = useState<Array<{allocation: string, count: number}>>([]);
-  const [categorizerChartData, setCategorizerChartData] = useState<Array<{allocation: string, count: number}>>([]);
+  const [categorizerSummary, setCategorizerSummary] = useState<Array<{ allocation: string, count: number }>>([]);
+  const [categorizerChartData, setCategorizerChartData] = useState<Array<{ allocation: string, count: number }>>([]);
 
   // History state
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -1278,7 +1270,7 @@ export default function App() {
       icon: Phone,
     },
     {
-      id: "bundle-categorizer", 
+      id: "bundle-categorizer",
       name: "Bundle Categorizer",
       icon: BarChart,
     },
@@ -1338,7 +1330,7 @@ export default function App() {
                 <p className="text-sm text-gray-600">Data validation and categorization tool with history tracking</p>
               </div>
             </div>
-            
+
             {/* User Info & Stats */}
             <div className="flex items-center gap-4 text-sm">
               {history.length > 0 && activeTab !== "history" && (
@@ -1351,7 +1343,7 @@ export default function App() {
                   </div>
                 </>
               )}
-              
+
               {/* Admin Panel Link - Only visible to admins */}
               {session?.user?.role === 'admin' && (
                 <a
@@ -1362,7 +1354,7 @@ export default function App() {
                   Admin Panel
                 </a>
               )}
-              
+
               {/* User Menu */}
               <div className="flex items-center gap-2 bg-gray-100 text-gray-700 px-3 py-1 rounded-full">
                 <User className="w-4 h-4" />
@@ -1386,11 +1378,10 @@ export default function App() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-5 py-3 rounded-t-lg font-medium transition-all duration-200 ${
-                    activeTab === tab.id
+                  className={`flex items-center gap-2 px-5 py-3 rounded-t-lg font-medium transition-all duration-200 ${activeTab === tab.id
                       ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
                       : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                  }`}
+                    }`}
                 >
                   <Icon className="w-5 h-5" />
                   {tab.name}

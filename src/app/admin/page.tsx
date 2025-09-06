@@ -22,7 +22,7 @@ interface UserStats {
 }
 
 export default function AdminDashboard() {
-  const { data: session, status } = useSession();
+  const { data: session, status } = useSession() as any;
   const router = useRouter();
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [userStats, setUserStats] = useState<UserStats>({

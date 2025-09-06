@@ -23,7 +23,7 @@ export async function requireAuth() {
 }
 
 export async function requireAdmin() {
-  const session = await requireAuth()
+  const session = await requireAuth() as any
   if (session.user?.role !== 'admin') {
     throw new Error('Admin access required')
   }
