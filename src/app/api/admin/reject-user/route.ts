@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { Pool } from 'pg';
 
 const client = new Pool({
@@ -8,7 +9,7 @@ const client = new Pool({
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     
     if (!session || session.user?.role !== 'admin') {
       return NextResponse.json(
