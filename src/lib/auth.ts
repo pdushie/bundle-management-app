@@ -33,6 +33,8 @@ export async function requireAdmin() {
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
+    maxAge: 30, // 30 seconds
+    updateAge: 0, // Disable session extension on activity
   },
   secret: process.env.NEXTAUTH_SECRET, // ADD THIS LINE
   pages: {
