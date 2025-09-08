@@ -73,7 +73,7 @@ function HistoryManager({
     const shouldClear = window.confirm && window.confirm("Are you sure you want to clear all history? This action cannot be undone.");
     if (shouldClear) {
       try {
-        await fetch('/api/history/clear', { method: 'POST' });
+        await fetch('/api/history/clear', { method: 'DELETE' });
         setHistory([]);
         setSelectedDate("");
       } catch (error) {
