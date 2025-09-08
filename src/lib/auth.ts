@@ -33,7 +33,7 @@ export async function requireAdmin() {
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
-    maxAge: 30, // 30 seconds
+    maxAge: 30 * 60, // 30 minustes
     updateAge: 0, // Disable session extension on activity
   },
   secret: process.env.NEXTAUTH_SECRET, // ADD THIS LINE
@@ -73,7 +73,7 @@ export const authOptions: NextAuthOptions = {
           }
           
           if (user.status === 'rejected') {
-            throw new Error('Your account was rejected. Please contact support');
+            throw new Error('Your request for account was rejected. Please contact support');
           }
           
           if (user.status !== 'approved') {
