@@ -47,7 +47,7 @@ const createTimestamp = (): string => {
   return `${datePart}_${timePart}`;
 };
 
-// History Manager Component
+// History Manager Component (only accessible to admins)
 function HistoryManager({
   history,
   setHistory
@@ -467,7 +467,7 @@ function HistoryManager({
   );
 }
 
-// Bundle Allocator App Component
+// Bundle Allocator App Component (unchanged)
 function BundleAllocatorApp({
   inputText,
   setInputText,
@@ -498,11 +498,11 @@ function BundleAllocatorApp({
         .map((line) => line.trim())
         .filter((line) => line !== "");
 
-      // NEW DUPLICATE DETECTION: Requires both phone AND allocation to match
-      const seenCombinations = new Set<string>();
-      const duplicateCombinations = new Set<string>();
+      const parsed: PhoneEntry[] = [];
+      const phoneNumbers = new Set<string>();
+      const duplicates = new Set<string>();
 
-      // First pass: identify duplicate combinations of phone+allocation
+      // First pass: collect all phone numbers and identify duplicates
       lines.forEach((line) => {
         const cleanedLine = line.replace(/\./g, " ").trim();
         const parts = cleanedLine.split(/[\s-]+/);
@@ -512,23 +512,20 @@ function BundleAllocatorApp({
           let allocRaw = parts[1];
 
           allocRaw = allocRaw.replace(/gb$/i, "").trim();
+
           const allocGB = parseFloat(allocRaw);
 
           if (!isNaN(allocGB)) {
-            // Create a unique key combining phone number and allocation
-            const combinationKey = `${phoneRaw}-${allocRaw}`;
-            
-            if (seenCombinations.has(combinationKey)) {
-              duplicateCombinations.add(combinationKey);
+            if (phoneNumbers.has(phoneRaw)) {
+              duplicates.add(phoneRaw);
             } else {
-              seenCombinations.add(combinationKey);
+              phoneNumbers.add(phoneRaw);
             }
           }
         }
       });
 
-      // Second pass: create entries with updated duplicate flag
-      const parsed: PhoneEntry[] = [];
+      // Second pass: create entries with duplicate flag
       lines.forEach((line) => {
         const cleanedLine = line.replace(/\./g, " ").trim();
         const parts = cleanedLine.split(/[\s-]+/);
@@ -538,28 +535,24 @@ function BundleAllocatorApp({
           let allocRaw = parts[1];
 
           allocRaw = allocRaw.replace(/gb$/i, "").trim();
+
           const allocGB = parseFloat(allocRaw);
 
           if (!isNaN(allocGB)) {
-            const combinationKey = `${phoneRaw}-${allocRaw}`;
-            
             parsed.push({
               number: phoneRaw,
               allocationGB: allocGB,
               isValid: validateNumber(phoneRaw),
-              isDuplicate: duplicateCombinations.has(combinationKey),
+              isDuplicate: duplicates.has(phoneRaw),
             });
           }
         }
       });
 
-      // Show duplicate alert for phone+allocation combinations
-      if (duplicateCombinations.size > 0) {
-        const duplicateList = Array.from(duplicateCombinations).map(key => {
-          const [phone, alloc] = key.split('-');
-          return `${phone} (${alloc}GB)`;
-        }).join(', ');
-        window.alert && window.alert(`⚠️ Duplicate phone number and allocation combinations detected:\n${duplicateList}\n\nDuplicates will be highlighted in the export.`);
+      // Show duplicate alert
+      if (duplicates.size > 0) {
+        const duplicateList = Array.from(duplicates).join(', ');
+        window.alert && window.alert(`⚠️ Duplicate phone numbers detected:\n${duplicateList}\n\nDuplicates will be highlighted in the export.`);
       }
 
       setEntries(parsed);
@@ -647,20 +640,17 @@ function BundleAllocatorApp({
         // Create human-readable timestamp with AM/PM
         const timestamp = createTimestamp();
         
-        // CRITICAL CHANGE: Separate valid entries from problematic ones
+        // Split files and create ZIP
         const validEntries = entries.filter(entry => entry.isValid && !entry.isDuplicate);
         const problematicEntries = entries.filter(entry => !entry.isValid || entry.isDuplicate);
         
-        // Split ONLY valid entries into chunks
         const fileChunks: PhoneEntry[][] = [];
         let currentChunk: PhoneEntry[] = [];
         let currentChunkGB = 0;
         
-        // Sort valid entries by allocation (largest first) for better distribution
         const sortedValidEntries = [...validEntries].sort((a, b) => b.allocationGB - a.allocationGB);
         
         for (const entry of sortedValidEntries) {
-          // If adding this entry would exceed the limit, start a new chunk
           if (currentChunkGB + entry.allocationGB > MAX_GB_PER_FILE && currentChunk.length > 0) {
             fileChunks.push(currentChunk);
             currentChunk = [];
@@ -671,23 +661,18 @@ function BundleAllocatorApp({
           currentChunkGB += entry.allocationGB;
         }
         
-        // Add the last chunk of valid entries if it has entries
         if (currentChunk.length > 0) {
           fileChunks.push(currentChunk);
         }
         
-        // IMPORTANT: Add ALL problematic entries to the LAST chunk
         if (problematicEntries.length > 0) {
           if (fileChunks.length === 0) {
-            // If no valid entries, create a chunk just for problematic ones
             fileChunks.push(problematicEntries);
           } else {
-            // Add all problematic entries to the last existing chunk
             fileChunks[fileChunks.length - 1].push(...problematicEntries);
           }
         }
         
-        // Create multiple Excel files and collect blobs
         const excelFiles: { name: string; blob: Blob }[] = [];
         
         for (let i = 0; i < fileChunks.length; i++) {
@@ -695,7 +680,6 @@ function BundleAllocatorApp({
           const workbook = new ExcelJS.Workbook();
           const worksheet = workbook.addWorksheet("PhoneData");
           
-          // Add standard headers
           worksheet.addRow([
             "Beneficiary Msisdn",
             "Beneficiary Name", 
@@ -704,15 +688,12 @@ function BundleAllocatorApp({
             "Sms(Unit)",
           ]);
 
-          // For the LAST file, sort to put problematic entries at bottom
           let sortedChunk = chunk;
           if (i === fileChunks.length - 1) {
-            // This is the last file - sort to put invalids and duplicates at bottom
             const validInChunk = chunk.filter(entry => entry.isValid && !entry.isDuplicate);
             const invalidInChunk = chunk.filter(entry => !entry.isValid);
             const duplicateInChunk = chunk.filter(entry => entry.isDuplicate);
             
-            // Group duplicates by their phone+allocation combination for pairing
             const duplicateGroups = new Map<string, PhoneEntry[]>();
             duplicateInChunk.forEach(entry => {
               const key = `${entry.number}-${entry.allocationGB}`;
@@ -722,7 +703,6 @@ function BundleAllocatorApp({
               duplicateGroups.get(key)!.push(entry);
             });
             
-            // Flatten grouped duplicates to keep pairs together
             const groupedDuplicates: PhoneEntry[] = [];
             duplicateGroups.forEach(group => {
               groupedDuplicates.push(...group);
@@ -759,7 +739,6 @@ function BundleAllocatorApp({
             column.width = maxLength + 2;
           });
 
-          // Add summary for this chunk
           const lastRowNum = worksheet.lastRow?.number || sortedChunk.length + 1;
           const totalRowNum = lastRowNum + 5;
           
@@ -779,11 +758,9 @@ function BundleAllocatorApp({
           });
         }
         
-        // Create ZIP file with human-friendly timestamp including AM/PM
         const zipName = `UploadTemplate_Splitted_${timestamp}.zip`;
         await downloadZip(excelFiles, zipName);
         
-        // Show split summary
         const validCount = validEntries.length;
         const duplicateCount = entries.filter(entry => entry.isDuplicate).length;
         const invalidCount = entries.filter(entry => !entry.isValid).length;
@@ -794,7 +771,7 @@ function BundleAllocatorApp({
         window.alert && window.alert(`✅ ZIP file exported successfully!\n\n📊 SUMMARY:\nTotal: ${entries.length} entries (${totalTB.toFixed(2)} TB)\nValid: ${validCount}\nDuplicates: ${duplicateCount}\nInvalid: ${invalidCount}\n\n📦 ZIP INFO:\nFile: ${zipName}\nExcel files inside: ${fileChunks.length}\nReason: Total exceeds 1.5TB limit\nMax per file: 1.5TB\n\n🎯 IMPORTANT: ALL duplicates and invalid entries are at the bottom of the LAST Excel file inside the ZIP.\n\n💡 TIP: Extract the ZIP to access all Excel files!`);
         
       } else {
-        // Single file export with all problematic entries at bottom
+        // Single file export
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet("PhoneData");
 
@@ -806,12 +783,10 @@ function BundleAllocatorApp({
           "Sms(Unit)",
         ]);
 
-        // SORT THE ENTRIES: Valid first, then invalids, then grouped duplicates at bottom
         const validEntries = entries.filter(entry => entry.isValid && !entry.isDuplicate);
         const invalidEntries = entries.filter(entry => !entry.isValid);
         const duplicateEntries = entries.filter(entry => entry.isDuplicate);
         
-        // Group duplicates by their phone+allocation combination for pairing
         const duplicateGroups = new Map<string, PhoneEntry[]>();
         duplicateEntries.forEach(entry => {
           const key = `${entry.number}-${entry.allocationGB}`;
@@ -821,7 +796,6 @@ function BundleAllocatorApp({
           duplicateGroups.get(key)!.push(entry);
         });
         
-        // Flatten grouped duplicates to keep pairs together
         const groupedDuplicates: PhoneEntry[] = [];
         duplicateGroups.forEach(group => {
           groupedDuplicates.push(...group);
@@ -886,6 +860,7 @@ function BundleAllocatorApp({
         window.alert && window.alert(`✅ Excel file exported successfully!\n\nTotal exported: ${entries.length} entries\nValid: ${validCount}\nDuplicates: ${duplicateCount}\nInvalid: ${invalidCount}\n\nTotal Data: ${totalGB.toFixed(2)} GB (${totalMB.toFixed(0)} MB)\n\n📋 ORDER: Valid entries first, then invalid entries, then duplicates paired together at bottom.`);
       }
 
+      // Always call onAddToHistory for all users (admins and non-admins)
       onAddToHistory(entries, 'bundle-allocator');
 
       setInputText("");
@@ -1104,7 +1079,7 @@ function BundleAllocatorApp({
                           {number}
                         </p>
                         {isDuplicate && (
-                          <p className="text-xs text-yellow-600 font-medium mt-1">Duplicate phone + allocation</p>
+                          <p className="text-xs text-yellow-600 font-medium mt-1">Duplicate entry</p>
                         )}
                         {!isValid && !isDuplicate && (
                           <p className="text-xs text-red-600 font-medium mt-1">Invalid format</p>
@@ -1145,7 +1120,7 @@ function BundleAllocatorApp({
   );
 }
 
-// Bundle Categorizer App Component  
+// Bundle Categorizer App Component (unchanged from original)
 function BundleCategorizerApp({
   rawData,
   setRawData,
@@ -1218,7 +1193,7 @@ function BundleCategorizerApp({
     setSummary(sortedSummaryArray);
     setChartData(sortedSummaryArray);
 
-    // Add to history
+    // Always call onAddToHistory for all users (admins and non-admins)
     onAddToHistory(processedEntries, 'bundle-categorizer');
 
     setRawData("");
@@ -1419,6 +1394,9 @@ export default function App() {
     );
   }
 
+  // ===== ADMIN ACCESS CHECK FOR HISTORY VISIBILITY =====
+  const isAdmin = session?.user?.role === 'admin';
+
   const [activeTab, setActiveTab] = useState("bundle-allocator");
 
   // Bundle Allocator state
@@ -1430,14 +1408,14 @@ export default function App() {
   const [categorizerSummary, setCategorizerSummary] = useState<Array<{ allocation: string, count: number }>>([]);
   const [categorizerChartData, setCategorizerChartData] = useState<Array<{ allocation: string, count: number }>>([]);
 
-  // History state
+  // History state (maintained for all users, but only shown to admins)
   const [history, setHistory] = useState<HistoryEntry[]>([]);
 
   const handleSignOut = () => {
     signOut({ callbackUrl: "/auth/signin" });
   };
 
-  // Add to history function with database persistence
+  // Add to history function - WORKS FOR ALL USERS (both admins and non-admins)
   const addToHistory = async (entries: PhoneEntry[], type: 'bundle-allocator' | 'bundle-categorizer') => {
     const now = new Date();
     const newEntry: HistoryEntry = {
@@ -1452,10 +1430,10 @@ export default function App() {
       type: type
     };
 
-    // Add to local state first
+    // Add to local state first (for admins to see)
     setHistory(prev => [newEntry, ...prev]);
 
-    // Save to database
+    // Save to database (for ALL users - admins and non-admins)
     try {
       await fetch('/api/history/save', {
         method: 'POST',
@@ -1469,9 +1447,11 @@ export default function App() {
     }
   };
 
-  // Load history from database on component mount
+  // Load history from database - ONLY FOR ADMINS (since non-admins can't see history anyway)
   useEffect(() => {
     const loadHistory = async () => {
+      if (!isAdmin) return; // Only load history for admins
+      
       try {
         const response = await fetch('/api/history/load');
         if (response.ok) {
@@ -1483,11 +1463,12 @@ export default function App() {
       }
     };
 
-    if (session?.user) {
+    if (session?.user && isAdmin) {
       loadHistory();
     }
-  }, [session]);
+  }, [session, isAdmin]);
 
+  // ===== CONDITIONAL TABS BASED ON ADMIN STATUS =====
   const tabs = [
     {
       id: "bundle-allocator",
@@ -1499,11 +1480,12 @@ export default function App() {
       name: "Bundle Categorizer",
       icon: BarChart,
     },
-    {
-      id: "history",
+    // Only include History & Analytics tab for admin users
+    ...(isAdmin ? [{
+      id: "history" as const,
       name: "History & Analytics",
       icon: History,
-    }
+    }] : [])
   ];
 
   const renderActiveComponent = () => {
@@ -1529,7 +1511,8 @@ export default function App() {
           onAddToHistory={addToHistory}
         />
       );
-    } else if (activeTab === "history") {
+    } else if (activeTab === "history" && isAdmin) {
+      // Only render HistoryManager if user is admin
       return (
         <HistoryManager
           history={history}
@@ -1558,7 +1541,8 @@ export default function App() {
 
             {/* User Info & Stats */}
             <div className="flex items-center gap-4 text-sm">
-              {history.length > 0 && activeTab !== "history" && (
+              {/* Only show history stats for admins */}
+              {isAdmin && history.length > 0 && activeTab !== "history" && (
                 <>
                   <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-medium">
                     {history.length} sessions
@@ -1570,7 +1554,7 @@ export default function App() {
               )}
 
               {/* Admin Panel Link - Only visible to admins */}
-              {session?.user?.role === 'admin' && (
+              {isAdmin && (
                 <a
                   href="/admin"
                   className="flex items-center gap-2 bg-purple-100 text-purple-700 px-3 py-1 rounded-full hover:bg-purple-200 transition-colors"
@@ -1584,6 +1568,10 @@ export default function App() {
               <div className="flex items-center gap-2 bg-gray-100 text-gray-700 px-3 py-1 rounded-full">
                 <User className="w-4 h-4" />
                 <span className="font-medium">{session?.user?.name || session?.user?.email}</span>
+                {/* Show role indicator */}
+                {isAdmin && (
+                  <span className="text-xs bg-purple-200 text-purple-700 px-2 py-1 rounded-full">Admin</span>
+                )}
                 <button
                   onClick={handleSignOut}
                   className="ml-2 p-1 hover:bg-gray-200 rounded transition-colors"
@@ -1595,7 +1583,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Tab Navigation */}
+          {/* Tab Navigation - Only shows tabs based on user role */}
           <div className="flex flex-wrap gap-1">
             {tabs.map((tab) => {
               const Icon = tab.icon;
@@ -1610,7 +1598,7 @@ export default function App() {
                 >
                   <Icon className="w-5 h-5" />
                   {tab.name}
-                  {tab.id === "history" && history.length > 0 && (
+                  {tab.id === "history" && isAdmin && history.length > 0 && (
                     <span className="bg-white/20 text-xs px-2 py-1 rounded-full">
                       {history.length}
                     </span>
