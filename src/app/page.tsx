@@ -5,13 +5,14 @@ import { useSession, signOut } from "next-auth/react";
 import { Upload, FileText, Check, X, Download, Phone, Database, AlertCircle, BarChart, History, Calendar, Eye, Trash2, LogOut, User, Shield } from "lucide-react";
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell, LineChart, Line } from "recharts";
 import ExcelJS from "exceljs";
-import JSZip from "jszip";
+import JSZip from "jszip"; // Make sure to install: npm install jszip @types/jszip
 
 type PhoneEntry = {
   number: string;
   allocationGB: number;
   isValid: boolean;
   isDuplicate: boolean;
+  wasFixed?: boolean;
 };
 
 type AllocationSummary = {
@@ -47,7 +48,7 @@ const createTimestamp = (): string => {
   return `${datePart}_${timePart}`;
 };
 
-// History Manager Component (only accessible to admins)
+// History Manager Component
 function HistoryManager({
   history,
   setHistory
@@ -467,7 +468,7 @@ function HistoryManager({
   );
 }
 
-// Bundle Allocator App Component (unchanged)
+// Bundle Allocator App Component with Enhanced Validation and Splitting
 function BundleAllocatorApp({
   inputText,
   setInputText,
@@ -486,7 +487,24 @@ function BundleAllocatorApp({
   const [isExporting, setIsExporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const validateNumber = (num: string): boolean => /^0\d{9}$/.test(num);
+  // Enhanced validation function that tries to fix numbers by adding leading zero
+  const validateNumber = (num: string): { isValid: boolean; correctedNumber: string; wasFixed: boolean } => {
+    // First, check if the number is already valid
+    if (/^0\d{9}$/.test(num)) {
+      return { isValid: true, correctedNumber: num, wasFixed: false };
+    }
+
+    // Try adding a leading zero if it doesn't start with 0
+    if (!num.startsWith('0')) {
+      const withZero = '0' + num;
+      if (/^0\d{9}$/.test(withZero)) {
+        return { isValid: true, correctedNumber: withZero, wasFixed: true };
+      }
+    }
+
+    // If still invalid, return the original number as invalid
+    return { isValid: false, correctedNumber: num, wasFixed: false };
+  };
 
   const processInput = (text: string) => {
     setInputText(text);
@@ -501,8 +519,9 @@ function BundleAllocatorApp({
       const parsed: PhoneEntry[] = [];
       const phoneNumbers = new Set<string>();
       const duplicates = new Set<string>();
+      let fixedNumbers = 0;
 
-      // First pass: collect all phone numbers and identify duplicates
+      // First pass: collect all phone numbers and identify duplicates (using corrected numbers)
       lines.forEach((line) => {
         const cleanedLine = line.replace(/\./g, " ").trim();
         const parts = cleanedLine.split(/[\s-]+/);
@@ -516,16 +535,23 @@ function BundleAllocatorApp({
           const allocGB = parseFloat(allocRaw);
 
           if (!isNaN(allocGB)) {
-            if (phoneNumbers.has(phoneRaw)) {
-              duplicates.add(phoneRaw);
+            const validation = validateNumber(phoneRaw);
+            const finalPhoneNumber = validation.correctedNumber;
+            
+            if (validation.wasFixed) {
+              fixedNumbers++;
+            }
+
+            if (phoneNumbers.has(finalPhoneNumber)) {
+              duplicates.add(finalPhoneNumber);
             } else {
-              phoneNumbers.add(phoneRaw);
+              phoneNumbers.add(finalPhoneNumber);
             }
           }
         }
       });
 
-      // Second pass: create entries with duplicate flag
+      // Second pass: create entries with duplicate flag and validation results
       lines.forEach((line) => {
         const cleanedLine = line.replace(/\./g, " ").trim();
         const parts = cleanedLine.split(/[\s-]+/);
@@ -539,20 +565,33 @@ function BundleAllocatorApp({
           const allocGB = parseFloat(allocRaw);
 
           if (!isNaN(allocGB)) {
+            const validation = validateNumber(phoneRaw);
+            
             parsed.push({
-              number: phoneRaw,
+              number: validation.correctedNumber,
               allocationGB: allocGB,
-              isValid: validateNumber(phoneRaw),
-              isDuplicate: duplicates.has(phoneRaw),
+              isValid: validation.isValid,
+              isDuplicate: duplicates.has(validation.correctedNumber),
+              wasFixed: validation.wasFixed,
             });
           }
         }
       });
 
-      // Show duplicate alert
+      // Show alerts for duplicates and fixed numbers
+      const alertMessages: string[] = [];
+      
       if (duplicates.size > 0) {
         const duplicateList = Array.from(duplicates).join(', ');
-        window.alert && window.alert(`⚠️ Duplicate phone numbers detected:\n${duplicateList}\n\nDuplicates will be highlighted in the export.`);
+        alertMessages.push(`⚠️ Duplicate phone numbers detected:\n${duplicateList}\n\nDuplicates will be highlighted in the export.`);
+      }
+      
+      if (fixedNumbers > 0) {
+        alertMessages.push(`✅ Auto-fixed ${fixedNumbers} phone number(s) by adding leading zero.\n\nFixed numbers are marked with a cyan icon.`);
+      }
+
+      if (alertMessages.length > 0) {
+        window.alert && window.alert(alertMessages.join('\n\n'));
       }
 
       setEntries(parsed);
@@ -764,14 +803,21 @@ function BundleAllocatorApp({
         const validCount = validEntries.length;
         const duplicateCount = entries.filter(entry => entry.isDuplicate).length;
         const invalidCount = entries.filter(entry => !entry.isValid).length;
+        const fixedCount = entries.filter(entry => entry.wasFixed).length;
         const totalMB = entries.reduce((sum, entry) => sum + (entry.allocationGB * 1024), 0);
-        const totalGBCalculated = totalMB / 1024;
-        const totalTB = totalGBCalculated / 1024;
         
-        window.alert && window.alert(`✅ ZIP file exported successfully!\n\n📊 SUMMARY:\nTotal: ${entries.length} entries (${totalTB.toFixed(2)} TB)\nValid: ${validCount}\nDuplicates: ${duplicateCount}\nInvalid: ${invalidCount}\n\n📦 ZIP INFO:\nFile: ${zipName}\nExcel files inside: ${fileChunks.length}\nReason: Total exceeds 1.5TB limit\nMax per file: 1.5TB\n\n🎯 IMPORTANT: ALL duplicates and invalid entries are at the bottom of the LAST Excel file inside the ZIP.\n\n💡 TIP: Extract the ZIP to access all Excel files!`);
+        let successMessage = `✅ Files exported and zipped successfully!\n\nData was split into ${fileChunks.length} files due to size (${totalGB.toFixed(2)} GB > ${MAX_TB_PER_FILE} TB limit)\n\nTotal processed: ${entries.length} entries\nValid: ${validCount}\nInvalid: ${invalidCount}\nDuplicates: ${duplicateCount}`;
         
+        if (fixedCount > 0) {
+          successMessage += `\nAuto-fixed: ${fixedCount}`;
+        }
+        
+        successMessage += `\n\nTotal Data: ${totalGB.toFixed(2)} GB (${totalMB.toFixed(0)} MB)`;
+
+        window.alert && window.alert(successMessage);
+
       } else {
-        // Single file export
+        // Single file export (original logic)
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet("PhoneData");
 
@@ -783,27 +829,7 @@ function BundleAllocatorApp({
           "Sms(Unit)",
         ]);
 
-        const validEntries = entries.filter(entry => entry.isValid && !entry.isDuplicate);
-        const invalidEntries = entries.filter(entry => !entry.isValid);
-        const duplicateEntries = entries.filter(entry => entry.isDuplicate);
-        
-        const duplicateGroups = new Map<string, PhoneEntry[]>();
-        duplicateEntries.forEach(entry => {
-          const key = `${entry.number}-${entry.allocationGB}`;
-          if (!duplicateGroups.has(key)) {
-            duplicateGroups.set(key, []);
-          }
-          duplicateGroups.get(key)!.push(entry);
-        });
-        
-        const groupedDuplicates: PhoneEntry[] = [];
-        duplicateGroups.forEach(group => {
-          groupedDuplicates.push(...group);
-        });
-        
-        const sortedEntries = [...validEntries, ...invalidEntries, ...groupedDuplicates];
-
-        sortedEntries.forEach(({ number, allocationGB, isValid, isDuplicate }) => {
+        entries.forEach(({ number, allocationGB, isValid, isDuplicate }) => {
           const mb = allocationGB * 1024;
           const row = worksheet.addRow([number, "", 0, mb, 0]);
 
@@ -831,7 +857,7 @@ function BundleAllocatorApp({
           column.width = maxLength + 2;
         });
 
-        const lastRowNum = worksheet.lastRow?.number || sortedEntries.length + 1;
+        const lastRowNum = worksheet.lastRow?.number || entries.length + 1;
         const totalRowNum = lastRowNum + 5;
 
         worksheet.getCell(`F${totalRowNum}`).value = { formula: `SUM(D2:D${lastRowNum})` };
@@ -851,16 +877,23 @@ function BundleAllocatorApp({
         link.click();
         URL.revokeObjectURL(url);
 
-        const validCount = validEntries.length;
-        const duplicateCount = duplicateEntries.length;
-        const invalidCount = invalidEntries.length;
+        const validEntries = entries.filter(entry => entry.isValid && !entry.isDuplicate);
+        const duplicateCount = entries.filter(entry => entry.isDuplicate).length;
+        const invalidCount = entries.filter(entry => !entry.isValid).length;
+        const fixedCount = entries.filter(entry => entry.wasFixed).length;
         const totalMB = entries.reduce((sum, entry) => sum + (entry.allocationGB * 1024), 0);
-        const totalGB = totalMB / 1024;
 
-        window.alert && window.alert(`✅ Excel file exported successfully!\n\nTotal exported: ${entries.length} entries\nValid: ${validCount}\nDuplicates: ${duplicateCount}\nInvalid: ${invalidCount}\n\nTotal Data: ${totalGB.toFixed(2)} GB (${totalMB.toFixed(0)} MB)\n\n📋 ORDER: Valid entries first, then invalid entries, then duplicates paired together at bottom.`);
+        let successMessage = `✅ Excel file exported successfully!\n\nTotal exported: ${entries.length} entries\nValid: ${validEntries.length}\nDuplicates: ${duplicateCount}\nInvalid: ${invalidCount}`;
+        
+        if (fixedCount > 0) {
+          successMessage += `\nAuto-fixed: ${fixedCount}`;
+        }
+        
+        successMessage += `\n\nTotal Data: ${totalGB.toFixed(2)} GB (${totalMB.toFixed(0)} MB)`;
+
+        window.alert && window.alert(successMessage);
       }
 
-      // Always call onAddToHistory for all users (admins and non-admins)
       onAddToHistory(entries, 'bundle-allocator');
 
       setInputText("");
@@ -877,6 +910,7 @@ function BundleAllocatorApp({
   const validEntries = entries.filter(entry => entry.isValid && !entry.isDuplicate);
   const invalidEntries = entries.filter(entry => !entry.isValid);
   const duplicateEntries = entries.filter(entry => entry.isDuplicate);
+  const fixedEntries = entries.filter(entry => entry.wasFixed);
   const totalGB = entries.reduce((sum, entry) => sum + entry.allocationGB, 0);
 
   return (
@@ -950,9 +984,9 @@ function BundleAllocatorApp({
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards - Enhanced with Fixed Numbers Count */}
         {entries.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
             <div className="bg-white rounded-xl p-4 shadow-md border border-gray-200 hover:shadow-lg transition-all">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
@@ -1001,6 +1035,19 @@ function BundleAllocatorApp({
               </div>
             </div>
 
+            {/* New Auto-Fixed Stats Card */}
+            <div className="bg-white rounded-xl p-4 shadow-md border border-gray-200 hover:shadow-lg transition-all">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-cyan-100 rounded-lg flex-shrink-0">
+                  <Check className="w-5 h-5 text-cyan-600" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-gray-600 font-medium">Auto-Fixed</p>
+                  <p className="text-xl font-bold text-cyan-600">{fixedEntries.length}</p>
+                </div>
+              </div>
+            </div>
+
             <div className="bg-white rounded-xl p-4 shadow-md border border-gray-200 hover:shadow-lg transition-all">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">
@@ -1015,7 +1062,7 @@ function BundleAllocatorApp({
           </div>
         )}
 
-        {/* Results Section */}
+        {/* Results Section - Enhanced with Fixed Number Indicators */}
         {entries.length > 0 && (
           <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden transition-all hover:shadow-2xl">
             <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -1026,6 +1073,7 @@ function BundleAllocatorApp({
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">
                   {validEntries.length} valid, {invalidEntries.length} invalid, {duplicateEntries.length} duplicates
+                  {fixedEntries.length > 0 && `, ${fixedEntries.length} auto-fixed`}
                 </p>
               </div>
 
@@ -1053,10 +1101,10 @@ function BundleAllocatorApp({
 
             <div className="max-h-96 overflow-y-auto">
               <div className="grid grid-cols-1 divide-y divide-gray-100">
-                {entries.map(({ number, allocationGB, isValid, isDuplicate }, idx) => (
+                {entries.map(({ number, allocationGB, isValid, isDuplicate, wasFixed }, idx) => (
                   <div
                     key={idx}
-                    className={`flex items-center justify-between p-4 transition-all duration-200 hover:bg-gray-50 ${isDuplicate ? 'bg-yellow-50' : !isValid ? 'bg-red-50' : ''
+                    className={`flex items-center justify-between p-4 transition-all duration-200 hover:bg-gray-50 ${isDuplicate ? 'bg-yellow-50' : !isValid ? 'bg-red-50' : wasFixed ? 'bg-cyan-50' : ''
                       }`}
                   >
                     <div className="flex items-center gap-4">
@@ -1064,17 +1112,21 @@ function BundleAllocatorApp({
                         <div className="p-2 bg-yellow-100 rounded-full">
                           <AlertCircle className="w-5 h-5 text-yellow-600" />
                         </div>
-                      ) : isValid ? (
-                        <div className="p-2 bg-green-100 rounded-full">
-                          <Check className="w-5 h-5 text-green-600" />
-                        </div>
-                      ) : (
+                      ) : !isValid ? (
                         <div className="p-2 bg-red-100 rounded-full">
                           <AlertCircle className="w-5 h-5 text-red-600" />
                         </div>
+                      ) : wasFixed ? (
+                        <div className="p-2 bg-cyan-100 rounded-full">
+                          <Check className="w-5 h-5 text-cyan-600" />
+                        </div>
+                      ) : (
+                        <div className="p-2 bg-green-100 rounded-full">
+                          <Check className="w-5 h-5 text-green-600" />
+                        </div>
                       )}
                       <div>
-                        <p className={`font-mono font-medium text-base ${isDuplicate ? 'text-yellow-700' : isValid ? 'text-gray-900' : 'text-red-700'
+                        <p className={`font-mono font-medium text-base ${isDuplicate ? 'text-yellow-700' : !isValid ? 'text-red-700' : wasFixed ? 'text-cyan-700' : 'text-gray-900'
                           }`}>
                           {number}
                         </p>
@@ -1084,11 +1136,14 @@ function BundleAllocatorApp({
                         {!isValid && !isDuplicate && (
                           <p className="text-xs text-red-600 font-medium mt-1">Invalid format</p>
                         )}
+                        {wasFixed && isValid && !isDuplicate && (
+                          <p className="text-xs text-cyan-600 font-medium mt-1">Auto-fixed (added leading zero)</p>
+                        )}
                       </div>
                     </div>
 
                     <div className="text-right">
-                      <p className={`font-bold text-lg ${isDuplicate ? 'text-yellow-700' : isValid ? 'text-gray-900' : 'text-red-700'
+                      <p className={`font-bold text-lg ${isDuplicate ? 'text-yellow-700' : !isValid ? 'text-red-700' : wasFixed ? 'text-cyan-700' : 'text-gray-900'
                         }`}>
                         {allocationGB} GB
                       </p>
@@ -1120,7 +1175,7 @@ function BundleAllocatorApp({
   );
 }
 
-// Bundle Categorizer App Component (unchanged from original)
+// Bundle Categorizer App Component with Enhanced Validation
 function BundleCategorizerApp({
   rawData,
   setRawData,
@@ -1138,10 +1193,30 @@ function BundleCategorizerApp({
   setChartData: (data: Array<{ allocation: string, count: number }>) => void;
   onAddToHistory: (entries: PhoneEntry[], type: 'bundle-allocator' | 'bundle-categorizer') => void;
 }) {
+  // Enhanced validation function that tries to fix numbers by adding leading zero
+  const validateNumber = (num: string): { isValid: boolean; correctedNumber: string; wasFixed: boolean } => {
+    // First, check if the number is already valid
+    if (/^0\d{9}$/.test(num)) {
+      return { isValid: true, correctedNumber: num, wasFixed: false };
+    }
+
+    // Try adding a leading zero if it doesn't start with 0
+    if (!num.startsWith('0')) {
+      const withZero = '0' + num;
+      if (/^0\d{9}$/.test(withZero)) {
+        return { isValid: true, correctedNumber: withZero, wasFixed: true };
+      }
+    }
+
+    // If still invalid, return the original number as invalid
+    return { isValid: false, correctedNumber: num, wasFixed: false };
+  };
+
   const parseData = () => {
     const lines = rawData.split("\n").map(line => line.trim()).filter(line => line.length > 0);
     const allocationSummary: AllocationSummary = {};
     const processedEntries: PhoneEntry[] = [];
+    let fixedNumbers = 0;
 
     lines.forEach(line => {
       const parts = line.split(/[\s-]+/);
@@ -1162,12 +1237,19 @@ function BundleCategorizerApp({
 
       allocationSummary[allocKey] = (allocationSummary[allocKey] || 0) + 1;
 
+      // Enhanced validation with auto-fix
+      const validation = validateNumber(phoneNumber);
+      if (validation.wasFixed) {
+        fixedNumbers++;
+      }
+
       // Create phone entry for history
       processedEntries.push({
-        number: phoneNumber,
+        number: validation.correctedNumber,
         allocationGB: allocationGB,
-        isValid: /^0\d{9}$/.test(phoneNumber),
-        isDuplicate: false
+        isValid: validation.isValid,
+        isDuplicate: false,
+        wasFixed: validation.wasFixed
       });
     });
 
@@ -1193,7 +1275,12 @@ function BundleCategorizerApp({
     setSummary(sortedSummaryArray);
     setChartData(sortedSummaryArray);
 
-    // Always call onAddToHistory for all users (admins and non-admins)
+    // Show alert for fixed numbers
+    if (fixedNumbers > 0) {
+      window.alert && window.alert(`✅ Auto-fixed ${fixedNumbers} phone number(s) by adding leading zero.`);
+    }
+
+    // Add to history
     onAddToHistory(processedEntries, 'bundle-categorizer');
 
     setRawData("");
