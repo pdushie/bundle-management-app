@@ -1055,7 +1055,7 @@ function BundleAllocatorApp({
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs text-gray-600 font-medium">Total Data</p>
-                  <p className="text-xl font-bold text-purple-600">{totalGB.toFixed(1)}GB</p>
+                  <p className="text-xs font-bold text-purple-600">{totalGB.toFixed(1)}GB</p>
                 </div>
               </div>
             </div>
