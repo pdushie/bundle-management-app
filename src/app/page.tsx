@@ -1008,7 +1008,7 @@ function BundleCategorizerApp({
         {/* Input Section */}
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-8 border border-gray-200 transition-all hover:shadow-2xl">
           <div className="mb-6">
-            <label className="block text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+            <label className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
               <FileText className="w-5 h-5 text-blue-600" />
               Data Input
             </label>
