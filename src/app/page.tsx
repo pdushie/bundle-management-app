@@ -5,6 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import { Upload, FileText, Check, X, Download, Phone, Database, AlertCircle, BarChart, History, Calendar, Eye, Trash2, LogOut, User, Shield } from "lucide-react";
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell, LineChart, Line } from "recharts";
 import ExcelJS from "exceljs";
+import JSZip from "jszip";
 
 type PhoneEntry = {
   number: string;
@@ -27,6 +28,23 @@ type HistoryEntry = {
   invalidCount: number;
   duplicateCount: number;
   type: 'bundle-allocator' | 'bundle-categorizer';
+};
+
+// Helper function to create human-friendly timestamp with AM/PM
+const createTimestamp = (): string => {
+  const now = new Date();
+  const datePart = now.toISOString().split('T')[0]; // YYYY-MM-DD
+  
+  let hours = now.getHours();
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  const seconds = now.getSeconds().toString().padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  
+  hours = hours % 12;
+  hours = hours ? hours : 12; // hour '0' should be '12'
+  
+  const timePart = `${hours}-${minutes}-${seconds}${ampm}`;
+  return `${datePart}_${timePart}`;
 };
 
 // History Manager Component
@@ -592,6 +610,24 @@ function BundleAllocatorApp({
     }
   };
 
+  // Helper function to create and download ZIP file
+  const downloadZip = async (files: { name: string; blob: Blob }[], zipName: string) => {
+    const zip = new JSZip();
+    
+    files.forEach(file => {
+      zip.file(file.name, file.blob);
+    });
+    
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    
+    const url = URL.createObjectURL(zipBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = zipName;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const exportToExcel = async () => {
     if (entries.length === 0) {
       window.alert && window.alert("No data to export");
@@ -608,11 +644,8 @@ function BundleAllocatorApp({
       const needsSplitting = totalGB > MAX_GB_PER_FILE;
       
       if (needsSplitting) {
-        // Create human-readable timestamp for folder name
-        const now = new Date();
-        const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
-        const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS
-        const folderName = `UploadTemplate_${dateStr}_${timeStr}`;
+        // Create human-readable timestamp with AM/PM
+        const timestamp = createTimestamp();
         
         // CRITICAL CHANGE: Separate valid entries from problematic ones
         const validEntries = entries.filter(entry => entry.isValid && !entry.isDuplicate);
@@ -654,7 +687,9 @@ function BundleAllocatorApp({
           }
         }
         
-        // Create multiple Excel files
+        // Create multiple Excel files and collect blobs
+        const excelFiles: { name: string; blob: Blob }[] = [];
+        
         for (let i = 0; i < fileChunks.length; i++) {
           const chunk = fileChunks[i];
           const workbook = new ExcelJS.Workbook();
@@ -738,19 +773,17 @@ function BundleAllocatorApp({
             type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           });
           
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          // Include folder name in filename for organization
-          link.download = `${folderName}_Part${i + 1}_of_${fileChunks.length}.xlsx`;
-          link.click();
-          URL.revokeObjectURL(url);
-          
-          // Small delay between downloads to prevent browser issues
-          await new Promise(resolve => setTimeout(resolve, 500));
+          excelFiles.push({
+            name: `UploadTemplate_Part${i + 1}_of_${fileChunks.length}.xlsx`,
+            blob: blob
+          });
         }
         
-        // Show split summary with folder information
+        // Create ZIP file with human-friendly timestamp including AM/PM
+        const zipName = `UploadTemplate_Splitted_${timestamp}.zip`;
+        await downloadZip(excelFiles, zipName);
+        
+        // Show split summary
         const validCount = validEntries.length;
         const duplicateCount = entries.filter(entry => entry.isDuplicate).length;
         const invalidCount = entries.filter(entry => !entry.isValid).length;
@@ -758,7 +791,7 @@ function BundleAllocatorApp({
         const totalGBCalculated = totalMB / 1024;
         const totalTB = totalGBCalculated / 1024;
         
-        window.alert && window.alert(`✅ Files exported successfully!\n\n📊 SUMMARY:\nTotal: ${entries.length} entries (${totalTB.toFixed(2)} TB)\nValid: ${validCount}\nDuplicates: ${duplicateCount}\nInvalid: ${invalidCount}\n\n📁 SPLIT INFO:\nFolder: ${folderName}\nFiles created: ${fileChunks.length}\nReason: Total exceeds 1.5TB limit\nMax per file: 1.5TB\n\n📥 DOWNLOADS:\n${fileChunks.map((_, i) => `• ${folderName}_Part${i + 1}_of_${fileChunks.length}.xlsx`).join('\n')}\n\n💡 TIP: All files are prefixed with the same timestamp for easy organization!\n\n🎯 IMPORTANT: ALL duplicates and invalid entries are at the bottom of the LAST file (Part ${fileChunks.length}).`);
+        window.alert && window.alert(`✅ ZIP file exported successfully!\n\n📊 SUMMARY:\nTotal: ${entries.length} entries (${totalTB.toFixed(2)} TB)\nValid: ${validCount}\nDuplicates: ${duplicateCount}\nInvalid: ${invalidCount}\n\n📦 ZIP INFO:\nFile: ${zipName}\nExcel files inside: ${fileChunks.length}\nReason: Total exceeds 1.5TB limit\nMax per file: 1.5TB\n\n🎯 IMPORTANT: ALL duplicates and invalid entries are at the bottom of the LAST Excel file inside the ZIP.\n\n💡 TIP: Extract the ZIP to access all Excel files!`);
         
       } else {
         // Single file export with all problematic entries at bottom
