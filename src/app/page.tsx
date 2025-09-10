@@ -607,16 +607,6 @@ function BundleAllocatorApp({
       const totalGB = entries.reduce((sum, entry) => sum + entry.allocationGB, 0);
       const needsSplitting = totalGB > MAX_GB_PER_FILE;
       
-      // SORTING LOGIC: Move duplicates and invalids to bottom
-      const sortEntries = (entries: PhoneEntry[]) => {
-        const validEntries = entries.filter(entry => entry.isValid && !entry.isDuplicate);
-        const invalidEntries = entries.filter(entry => !entry.isValid);
-        const duplicateEntries = entries.filter(entry => entry.isDuplicate);
-        
-        // Return sorted: Valid first, then invalids, then duplicates at the bottom
-        return [...validEntries, ...invalidEntries, ...duplicateEntries];
-      };
-      
       if (needsSplitting) {
         // Create human-readable timestamp for folder name
         const now = new Date();
@@ -624,15 +614,19 @@ function BundleAllocatorApp({
         const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS
         const folderName = `UploadTemplate_${dateStr}_${timeStr}`;
         
-        // Split into multiple files
+        // CRITICAL CHANGE: Separate valid entries from problematic ones
+        const validEntries = entries.filter(entry => entry.isValid && !entry.isDuplicate);
+        const problematicEntries = entries.filter(entry => !entry.isValid || entry.isDuplicate);
+        
+        // Split ONLY valid entries into chunks
         const fileChunks: PhoneEntry[][] = [];
         let currentChunk: PhoneEntry[] = [];
         let currentChunkGB = 0;
         
-        // Sort entries by allocation (largest first) for better distribution
-        const sortedEntries = [...entries].sort((a, b) => b.allocationGB - a.allocationGB);
+        // Sort valid entries by allocation (largest first) for better distribution
+        const sortedValidEntries = [...validEntries].sort((a, b) => b.allocationGB - a.allocationGB);
         
-        for (const entry of sortedEntries) {
+        for (const entry of sortedValidEntries) {
           // If adding this entry would exceed the limit, start a new chunk
           if (currentChunkGB + entry.allocationGB > MAX_GB_PER_FILE && currentChunk.length > 0) {
             fileChunks.push(currentChunk);
@@ -644,9 +638,20 @@ function BundleAllocatorApp({
           currentChunkGB += entry.allocationGB;
         }
         
-        // Add the last chunk if it has entries
+        // Add the last chunk of valid entries if it has entries
         if (currentChunk.length > 0) {
           fileChunks.push(currentChunk);
+        }
+        
+        // IMPORTANT: Add ALL problematic entries to the LAST chunk
+        if (problematicEntries.length > 0) {
+          if (fileChunks.length === 0) {
+            // If no valid entries, create a chunk just for problematic ones
+            fileChunks.push(problematicEntries);
+          } else {
+            // Add all problematic entries to the last existing chunk
+            fileChunks[fileChunks.length - 1].push(...problematicEntries);
+          }
         }
         
         // Create multiple Excel files
@@ -655,7 +660,7 @@ function BundleAllocatorApp({
           const workbook = new ExcelJS.Workbook();
           const worksheet = workbook.addWorksheet("PhoneData");
           
-          // Add standard headers (no info header)
+          // Add standard headers
           worksheet.addRow([
             "Beneficiary Msisdn",
             "Beneficiary Name", 
@@ -664,8 +669,32 @@ function BundleAllocatorApp({
             "Sms(Unit)",
           ]);
 
-          // SORT THE CHUNK: Valid first, then invalids, then duplicates
-          const sortedChunk = sortEntries(chunk);
+          // For the LAST file, sort to put problematic entries at bottom
+          let sortedChunk = chunk;
+          if (i === fileChunks.length - 1) {
+            // This is the last file - sort to put invalids and duplicates at bottom
+            const validInChunk = chunk.filter(entry => entry.isValid && !entry.isDuplicate);
+            const invalidInChunk = chunk.filter(entry => !entry.isValid);
+            const duplicateInChunk = chunk.filter(entry => entry.isDuplicate);
+            
+            // Group duplicates by their phone+allocation combination for pairing
+            const duplicateGroups = new Map<string, PhoneEntry[]>();
+            duplicateInChunk.forEach(entry => {
+              const key = `${entry.number}-${entry.allocationGB}`;
+              if (!duplicateGroups.has(key)) {
+                duplicateGroups.set(key, []);
+              }
+              duplicateGroups.get(key)!.push(entry);
+            });
+            
+            // Flatten grouped duplicates to keep pairs together
+            const groupedDuplicates: PhoneEntry[] = [];
+            duplicateGroups.forEach(group => {
+              groupedDuplicates.push(...group);
+            });
+            
+            sortedChunk = [...validInChunk, ...invalidInChunk, ...groupedDuplicates];
+          }
 
           sortedChunk.forEach(({ number, allocationGB, isValid, isDuplicate }) => {
             const mb = allocationGB * 1024;
@@ -722,17 +751,17 @@ function BundleAllocatorApp({
         }
         
         // Show split summary with folder information
-        const validEntries = entries.filter(entry => entry.isValid && !entry.isDuplicate);
+        const validCount = validEntries.length;
         const duplicateCount = entries.filter(entry => entry.isDuplicate).length;
         const invalidCount = entries.filter(entry => !entry.isValid).length;
         const totalMB = entries.reduce((sum, entry) => sum + (entry.allocationGB * 1024), 0);
         const totalGBCalculated = totalMB / 1024;
         const totalTB = totalGBCalculated / 1024;
         
-        window.alert && window.alert(`✅ Files exported successfully!\n\n📊 SUMMARY:\nTotal: ${entries.length} entries (${totalTB.toFixed(2)} TB)\nValid: ${validEntries.length}\nDuplicates: ${duplicateCount}\nInvalid: ${invalidCount}\n\n📁 SPLIT INFO:\nFolder: ${folderName}\nFiles created: ${fileChunks.length}\nReason: Total exceeds 1.5TB limit\nMax per file: 1.5TB\n\n📥 DOWNLOADS:\n${fileChunks.map((_, i) => `• ${folderName}_Part${i + 1}_of_${fileChunks.length}.xlsx`).join('\n')}\n\n💡 TIP: All files are prefixed with the same timestamp for easy organization!\n\n📋 ORDER: Valid entries first, then invalid entries, duplicates at the bottom.`);
+        window.alert && window.alert(`✅ Files exported successfully!\n\n📊 SUMMARY:\nTotal: ${entries.length} entries (${totalTB.toFixed(2)} TB)\nValid: ${validCount}\nDuplicates: ${duplicateCount}\nInvalid: ${invalidCount}\n\n📁 SPLIT INFO:\nFolder: ${folderName}\nFiles created: ${fileChunks.length}\nReason: Total exceeds 1.5TB limit\nMax per file: 1.5TB\n\n📥 DOWNLOADS:\n${fileChunks.map((_, i) => `• ${folderName}_Part${i + 1}_of_${fileChunks.length}.xlsx`).join('\n')}\n\n💡 TIP: All files are prefixed with the same timestamp for easy organization!\n\n🎯 IMPORTANT: ALL duplicates and invalid entries are at the bottom of the LAST file (Part ${fileChunks.length}).`);
         
       } else {
-        // Single file export with sorting
+        // Single file export with all problematic entries at bottom
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet("PhoneData");
 
@@ -744,8 +773,28 @@ function BundleAllocatorApp({
           "Sms(Unit)",
         ]);
 
-        // SORT THE ENTRIES: Valid first, then invalids, then duplicates
-        const sortedEntries = sortEntries(entries);
+        // SORT THE ENTRIES: Valid first, then invalids, then grouped duplicates at bottom
+        const validEntries = entries.filter(entry => entry.isValid && !entry.isDuplicate);
+        const invalidEntries = entries.filter(entry => !entry.isValid);
+        const duplicateEntries = entries.filter(entry => entry.isDuplicate);
+        
+        // Group duplicates by their phone+allocation combination for pairing
+        const duplicateGroups = new Map<string, PhoneEntry[]>();
+        duplicateEntries.forEach(entry => {
+          const key = `${entry.number}-${entry.allocationGB}`;
+          if (!duplicateGroups.has(key)) {
+            duplicateGroups.set(key, []);
+          }
+          duplicateGroups.get(key)!.push(entry);
+        });
+        
+        // Flatten grouped duplicates to keep pairs together
+        const groupedDuplicates: PhoneEntry[] = [];
+        duplicateGroups.forEach(group => {
+          groupedDuplicates.push(...group);
+        });
+        
+        const sortedEntries = [...validEntries, ...invalidEntries, ...groupedDuplicates];
 
         sortedEntries.forEach(({ number, allocationGB, isValid, isDuplicate }) => {
           const mb = allocationGB * 1024;
@@ -795,13 +844,13 @@ function BundleAllocatorApp({
         link.click();
         URL.revokeObjectURL(url);
 
-        const validEntries = entries.filter(entry => entry.isValid && !entry.isDuplicate);
-        const duplicateCount = entries.filter(entry => entry.isDuplicate).length;
-        const invalidCount = entries.filter(entry => !entry.isValid).length;
+        const validCount = validEntries.length;
+        const duplicateCount = duplicateEntries.length;
+        const invalidCount = invalidEntries.length;
         const totalMB = entries.reduce((sum, entry) => sum + (entry.allocationGB * 1024), 0);
         const totalGB = totalMB / 1024;
 
-        window.alert && window.alert(`✅ Excel file exported successfully!\n\nTotal exported: ${entries.length} entries\nValid: ${validEntries.length}\nDuplicates: ${duplicateCount}\nInvalid: ${invalidCount}\n\nTotal Data: ${totalGB.toFixed(2)} GB (${totalMB.toFixed(0)} MB)\n\n📋 ORDER: Valid entries first, then invalid entries, duplicates at the bottom.`);
+        window.alert && window.alert(`✅ Excel file exported successfully!\n\nTotal exported: ${entries.length} entries\nValid: ${validCount}\nDuplicates: ${duplicateCount}\nInvalid: ${invalidCount}\n\nTotal Data: ${totalGB.toFixed(2)} GB (${totalMB.toFixed(0)} MB)\n\n📋 ORDER: Valid entries first, then invalid entries, then duplicates paired together at bottom.`);
       }
 
       onAddToHistory(entries, 'bundle-allocator');
