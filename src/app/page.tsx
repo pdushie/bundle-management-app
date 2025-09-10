@@ -480,11 +480,11 @@ function BundleAllocatorApp({
         .map((line) => line.trim())
         .filter((line) => line !== "");
 
-      const parsed: PhoneEntry[] = [];
-      const phoneNumbers = new Set<string>();
-      const duplicates = new Set<string>();
+      // NEW DUPLICATE DETECTION: Requires both phone AND allocation to match
+      const seenCombinations = new Set<string>();
+      const duplicateCombinations = new Set<string>();
 
-      // First pass: collect all phone numbers and identify duplicates
+      // First pass: identify duplicate combinations of phone+allocation
       lines.forEach((line) => {
         const cleanedLine = line.replace(/\./g, " ").trim();
         const parts = cleanedLine.split(/[\s-]+/);
@@ -494,20 +494,23 @@ function BundleAllocatorApp({
           let allocRaw = parts[1];
 
           allocRaw = allocRaw.replace(/gb$/i, "").trim();
-
           const allocGB = parseFloat(allocRaw);
 
           if (!isNaN(allocGB)) {
-            if (phoneNumbers.has(phoneRaw)) {
-              duplicates.add(phoneRaw);
+            // Create a unique key combining phone number and allocation
+            const combinationKey = `${phoneRaw}-${allocRaw}`;
+            
+            if (seenCombinations.has(combinationKey)) {
+              duplicateCombinations.add(combinationKey);
             } else {
-              phoneNumbers.add(phoneRaw);
+              seenCombinations.add(combinationKey);
             }
           }
         }
       });
 
-      // Second pass: create entries with duplicate flag
+      // Second pass: create entries with updated duplicate flag
+      const parsed: PhoneEntry[] = [];
       lines.forEach((line) => {
         const cleanedLine = line.replace(/\./g, " ").trim();
         const parts = cleanedLine.split(/[\s-]+/);
@@ -517,24 +520,28 @@ function BundleAllocatorApp({
           let allocRaw = parts[1];
 
           allocRaw = allocRaw.replace(/gb$/i, "").trim();
-
           const allocGB = parseFloat(allocRaw);
 
           if (!isNaN(allocGB)) {
+            const combinationKey = `${phoneRaw}-${allocRaw}`;
+            
             parsed.push({
               number: phoneRaw,
               allocationGB: allocGB,
               isValid: validateNumber(phoneRaw),
-              isDuplicate: duplicates.has(phoneRaw),
+              isDuplicate: duplicateCombinations.has(combinationKey),
             });
           }
         }
       });
 
-      // Show duplicate alert
-      if (duplicates.size > 0) {
-        const duplicateList = Array.from(duplicates).join(', ');
-        window.alert && window.alert(`⚠️ Duplicate phone numbers detected:\n${duplicateList}\n\nDuplicates will be highlighted in the export.`);
+      // Show duplicate alert for phone+allocation combinations
+      if (duplicateCombinations.size > 0) {
+        const duplicateList = Array.from(duplicateCombinations).map(key => {
+          const [phone, alloc] = key.split('-');
+          return `${phone} (${alloc}GB)`;
+        }).join(', ');
+        window.alert && window.alert(`⚠️ Duplicate phone number and allocation combinations detected:\n${duplicateList}\n\nDuplicates will be highlighted in the export.`);
       }
 
       setEntries(parsed);
@@ -594,72 +601,208 @@ function BundleAllocatorApp({
     setIsExporting(true);
 
     try {
-      const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet("PhoneData");
-
-      worksheet.addRow([
-        "Beneficiary Msisdn",
-        "Beneficiary Name",
-        "Voice(Minutes)",
-        "Data (MB) (1024MB = 1GB)",
-        "Sms(Unit)",
-      ]);
-
-      entries.forEach(({ number, allocationGB, isValid, isDuplicate }) => {
-        const mb = allocationGB * 1024;
-        const row = worksheet.addRow([number, "", 0, mb, 0]);
-
-        if (!isValid) {
-          row.getCell(1).font = { color: { argb: "FFFF0000" }, bold: true };
+      const MAX_TB_PER_FILE = 1.5;
+      const MAX_GB_PER_FILE = MAX_TB_PER_FILE * 1024; // 1536 GB
+      
+      const totalGB = entries.reduce((sum, entry) => sum + entry.allocationGB, 0);
+      const needsSplitting = totalGB > MAX_GB_PER_FILE;
+      
+      // SORTING LOGIC: Move duplicates and invalids to bottom
+      const sortEntries = (entries: PhoneEntry[]) => {
+        const validEntries = entries.filter(entry => entry.isValid && !entry.isDuplicate);
+        const invalidEntries = entries.filter(entry => !entry.isValid);
+        const duplicateEntries = entries.filter(entry => entry.isDuplicate);
+        
+        // Return sorted: Valid first, then invalids, then duplicates at the bottom
+        return [...validEntries, ...invalidEntries, ...duplicateEntries];
+      };
+      
+      if (needsSplitting) {
+        // Create human-readable timestamp for folder name
+        const now = new Date();
+        const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
+        const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS
+        const folderName = `UploadTemplate_${dateStr}_${timeStr}`;
+        
+        // Split into multiple files
+        const fileChunks: PhoneEntry[][] = [];
+        let currentChunk: PhoneEntry[] = [];
+        let currentChunkGB = 0;
+        
+        // Sort entries by allocation (largest first) for better distribution
+        const sortedEntries = [...entries].sort((a, b) => b.allocationGB - a.allocationGB);
+        
+        for (const entry of sortedEntries) {
+          // If adding this entry would exceed the limit, start a new chunk
+          if (currentChunkGB + entry.allocationGB > MAX_GB_PER_FILE && currentChunk.length > 0) {
+            fileChunks.push(currentChunk);
+            currentChunk = [];
+            currentChunkGB = 0;
+          }
+          
+          currentChunk.push(entry);
+          currentChunkGB += entry.allocationGB;
         }
-
-        if (isDuplicate) {
-          row.getCell(1).fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FFFFFF00' }
-          };
+        
+        // Add the last chunk if it has entries
+        if (currentChunk.length > 0) {
+          fileChunks.push(currentChunk);
         }
-      });
+        
+        // Create multiple Excel files
+        for (let i = 0; i < fileChunks.length; i++) {
+          const chunk = fileChunks[i];
+          const workbook = new ExcelJS.Workbook();
+          const worksheet = workbook.addWorksheet("PhoneData");
+          
+          // Add standard headers (no info header)
+          worksheet.addRow([
+            "Beneficiary Msisdn",
+            "Beneficiary Name", 
+            "Voice(Minutes)",
+            "Data (MB) (1024MB = 1GB)",
+            "Sms(Unit)",
+          ]);
 
-      worksheet.columns.forEach((column) => {
-        let maxLength = 10;
-        if (typeof column.eachCell === "function") {
-          column.eachCell({ includeEmpty: true }, (cell) => {
-            const cellValue = cell.value ? cell.value.toString() : "";
-            maxLength = Math.max(maxLength, cellValue.length);
+          // SORT THE CHUNK: Valid first, then invalids, then duplicates
+          const sortedChunk = sortEntries(chunk);
+
+          sortedChunk.forEach(({ number, allocationGB, isValid, isDuplicate }) => {
+            const mb = allocationGB * 1024;
+            const row = worksheet.addRow([number, "", 0, mb, 0]);
+            
+            if (!isValid) {
+              row.getCell(1).font = { color: { argb: "FFFF0000" }, bold: true };
+            }
+            
+            if (isDuplicate) {
+              row.getCell(1).fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFFFFF00' }
+              };
+            }
           });
+
+          worksheet.columns.forEach((column) => {
+            let maxLength = 10;
+            if (typeof column.eachCell === "function") {
+              column.eachCell({ includeEmpty: true }, (cell) => {
+                const cellValue = cell.value ? cell.value.toString() : "";
+                maxLength = Math.max(maxLength, cellValue.length);
+              });
+            }
+            column.width = maxLength + 2;
+          });
+
+          // Add summary for this chunk
+          const lastRowNum = worksheet.lastRow?.number || sortedChunk.length + 1;
+          const totalRowNum = lastRowNum + 5;
+          
+          worksheet.getCell(`F${totalRowNum}`).value = { formula: `SUM(D2:D${lastRowNum})` };
+          worksheet.getCell(`G${totalRowNum}`).value = { formula: `F${totalRowNum}/1024` };
+          worksheet.getCell(`F${totalRowNum}`).font = { bold: true };
+          worksheet.getCell(`G${totalRowNum}`).font = { bold: true };
+
+          const buffer = await workbook.xlsx.writeBuffer();
+          const blob = new Blob([buffer], {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          });
+          
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          // Include folder name in filename for organization
+          link.download = `${folderName}_Part${i + 1}_of_${fileChunks.length}.xlsx`;
+          link.click();
+          URL.revokeObjectURL(url);
+          
+          // Small delay between downloads to prevent browser issues
+          await new Promise(resolve => setTimeout(resolve, 500));
         }
-        column.width = maxLength + 2;
-      });
+        
+        // Show split summary with folder information
+        const validEntries = entries.filter(entry => entry.isValid && !entry.isDuplicate);
+        const duplicateCount = entries.filter(entry => entry.isDuplicate).length;
+        const invalidCount = entries.filter(entry => !entry.isValid).length;
+        const totalMB = entries.reduce((sum, entry) => sum + (entry.allocationGB * 1024), 0);
+        const totalGBCalculated = totalMB / 1024;
+        const totalTB = totalGBCalculated / 1024;
+        
+        window.alert && window.alert(`✅ Files exported successfully!\n\n📊 SUMMARY:\nTotal: ${entries.length} entries (${totalTB.toFixed(2)} TB)\nValid: ${validEntries.length}\nDuplicates: ${duplicateCount}\nInvalid: ${invalidCount}\n\n📁 SPLIT INFO:\nFolder: ${folderName}\nFiles created: ${fileChunks.length}\nReason: Total exceeds 1.5TB limit\nMax per file: 1.5TB\n\n📥 DOWNLOADS:\n${fileChunks.map((_, i) => `• ${folderName}_Part${i + 1}_of_${fileChunks.length}.xlsx`).join('\n')}\n\n💡 TIP: All files are prefixed with the same timestamp for easy organization!\n\n📋 ORDER: Valid entries first, then invalid entries, duplicates at the bottom.`);
+        
+      } else {
+        // Single file export with sorting
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("PhoneData");
 
-      const lastRowNum = worksheet.lastRow?.number || entries.length + 1;
-      const totalRowNum = lastRowNum + 5;
+        worksheet.addRow([
+          "Beneficiary Msisdn",
+          "Beneficiary Name",
+          "Voice(Minutes)",
+          "Data (MB) (1024MB = 1GB)",
+          "Sms(Unit)",
+        ]);
 
-      worksheet.getCell(`F${totalRowNum}`).value = { formula: `SUM(D2:D${lastRowNum})` };
-      worksheet.getCell(`G${totalRowNum}`).value = { formula: `F${totalRowNum}/1024` };
-      worksheet.getCell(`F${totalRowNum}`).font = { bold: true };
-      worksheet.getCell(`G${totalRowNum}`).font = { bold: true };
+        // SORT THE ENTRIES: Valid first, then invalids, then duplicates
+        const sortedEntries = sortEntries(entries);
 
-      const buffer = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([buffer], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
+        sortedEntries.forEach(({ number, allocationGB, isValid, isDuplicate }) => {
+          const mb = allocationGB * 1024;
+          const row = worksheet.addRow([number, "", 0, mb, 0]);
 
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'UploadTemplate.xlsx';
-      link.click();
-      URL.revokeObjectURL(url);
+          if (!isValid) {
+            row.getCell(1).font = { color: { argb: "FFFF0000" }, bold: true };
+          }
 
-      const validEntries = entries.filter(entry => entry.isValid && !entry.isDuplicate);
-      const duplicateCount = entries.filter(entry => entry.isDuplicate).length;
-      const invalidCount = entries.filter(entry => !entry.isValid).length;
-      const totalMB = entries.reduce((sum, entry) => sum + (entry.allocationGB * 1024), 0);
-      const totalGB = totalMB / 1024;
+          if (isDuplicate) {
+            row.getCell(1).fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FFFFFF00' }
+            };
+          }
+        });
 
-      window.alert && window.alert(`✅ Excel file exported successfully!\n\nTotal exported: ${entries.length} entries\nValid: ${validEntries.length}\nDuplicates: ${duplicateCount}\nInvalid: ${invalidCount}\n\nTotal Data: ${totalGB.toFixed(2)} GB (${totalMB.toFixed(0)} MB)`);
+        worksheet.columns.forEach((column) => {
+          let maxLength = 10;
+          if (typeof column.eachCell === "function") {
+            column.eachCell({ includeEmpty: true }, (cell) => {
+              const cellValue = cell.value ? cell.value.toString() : "";
+              maxLength = Math.max(maxLength, cellValue.length);
+            });
+          }
+          column.width = maxLength + 2;
+        });
+
+        const lastRowNum = worksheet.lastRow?.number || sortedEntries.length + 1;
+        const totalRowNum = lastRowNum + 5;
+
+        worksheet.getCell(`F${totalRowNum}`).value = { formula: `SUM(D2:D${lastRowNum})` };
+        worksheet.getCell(`G${totalRowNum}`).value = { formula: `F${totalRowNum}/1024` };
+        worksheet.getCell(`F${totalRowNum}`).font = { bold: true };
+        worksheet.getCell(`G${totalRowNum}`).font = { bold: true };
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'UploadTemplate.xlsx';
+        link.click();
+        URL.revokeObjectURL(url);
+
+        const validEntries = entries.filter(entry => entry.isValid && !entry.isDuplicate);
+        const duplicateCount = entries.filter(entry => entry.isDuplicate).length;
+        const invalidCount = entries.filter(entry => !entry.isValid).length;
+        const totalMB = entries.reduce((sum, entry) => sum + (entry.allocationGB * 1024), 0);
+        const totalGB = totalMB / 1024;
+
+        window.alert && window.alert(`✅ Excel file exported successfully!\n\nTotal exported: ${entries.length} entries\nValid: ${validEntries.length}\nDuplicates: ${duplicateCount}\nInvalid: ${invalidCount}\n\nTotal Data: ${totalGB.toFixed(2)} GB (${totalMB.toFixed(0)} MB)\n\n📋 ORDER: Valid entries first, then invalid entries, duplicates at the bottom.`);
+      }
 
       onAddToHistory(entries, 'bundle-allocator');
 
@@ -795,7 +938,7 @@ function BundleAllocatorApp({
                   <AlertCircle className="w-5 h-5 text-yellow-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-gray-600 font-medium">Number of Duplicates</p>
+                  <p className="text-xs text-gray-600 font-medium">Duplicates</p>
                   <p className="text-xl font-bold text-yellow-600">{duplicateEntries.length}</p>
                 </div>
               </div>
@@ -879,7 +1022,7 @@ function BundleAllocatorApp({
                           {number}
                         </p>
                         {isDuplicate && (
-                          <p className="text-xs text-yellow-600 font-medium mt-1">Duplicate entry</p>
+                          <p className="text-xs text-yellow-600 font-medium mt-1">Duplicate phone + allocation</p>
                         )}
                         {!isValid && !isDuplicate && (
                           <p className="text-xs text-red-600 font-medium mt-1">Invalid format</p>
@@ -1163,7 +1306,7 @@ function BundleCategorizerApp({
 
 // Main App with Authentication and Admin Features
 export default function App() {
-  const { data: session } = useSession() as any;
+  const { data: session, status } = useSession() as any;
 
   // Show loading while checking authentication
   if (status === "loading") {
