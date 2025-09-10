@@ -5,7 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import { Upload, FileText, Check, X, Download, Phone, Database, AlertCircle, BarChart, History, Calendar, Eye, Trash2, LogOut, User, Shield } from "lucide-react";
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell, LineChart, Line } from "recharts";
 import ExcelJS from "exceljs";
-import JSZip from "jszip"; // Make sure to install: npm install jszip @types/jszip
+import JSZip from "jszip";
 
 type PhoneEntry = {
   number: string;
@@ -196,25 +196,25 @@ function HistoryManager({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Controls */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 mb-8">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
+        {/* Controls - Mobile Optimized */}
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 p-3 sm:p-6 mb-4 sm:mb-8">
+          <div className="flex flex-col gap-4">
             <div>
-              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3 mb-2">
-                <History className="w-6 h-6 text-blue-600" />
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3 mb-2">
+                <History className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                 History & Analytics
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-gray-600">
                 Track and analyze your daily data processing activities
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <select
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full sm:w-auto px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               >
                 <option value="">All Dates</option>
                 {availableDates.map(date => (
@@ -222,10 +222,10 @@ function HistoryManager({
                 ))}
               </select>
 
-              <div className="flex bg-gray-100 rounded-lg p-1">
+              <div className="flex bg-gray-100 rounded-lg p-1 w-full sm:w-auto">
                 <button
                   onClick={() => setViewMode('summary')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${viewMode === 'summary'
+                  className={`flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all ${viewMode === 'summary'
                       ? 'bg-white text-blue-600 shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
                     }`}
@@ -234,7 +234,7 @@ function HistoryManager({
                 </button>
                 <button
                   onClick={() => setViewMode('detailed')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${viewMode === 'detailed'
+                  className={`flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all ${viewMode === 'detailed'
                       ? 'bg-white text-blue-600 shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
                     }`}
@@ -243,108 +243,110 @@ function HistoryManager({
                 </button>
               </div>
 
-              <button
-                onClick={exportHistoryToExcel}
-                disabled={history.length === 0}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Download className="w-4 h-4" />
-                Export
-              </button>
+              <div className="flex gap-2 sm:gap-3">
+                <button
+                  onClick={exportHistoryToExcel}
+                  disabled={history.length === 0}
+                  className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
+                >
+                  <Download className="w-3 h-3 sm:w-4 sm:h-4" />
+                  Export
+                </button>
 
-              <button
-                onClick={clearHistory}
-                disabled={history.length === 0}
-                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Trash2 className="w-4 h-4" />
-                Clear
-              </button>
+                <button
+                  onClick={clearHistory}
+                  disabled={history.length === 0}
+                  className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
+                >
+                  <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                  Clear
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
         {history.length === 0 ? (
-          <div className="text-center py-12 px-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-gray-200 shadow-inner">
-            <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
-              <History className="w-10 h-10" />
+          <div className="text-center py-8 sm:py-12 px-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl sm:rounded-2xl border border-gray-200 shadow-inner">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
+              <History className="w-8 h-8 sm:w-10 sm:h-10" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-3">No History Yet</h3>
-            <p className="text-gray-600 max-w-md mx-auto">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">No History Yet</h3>
+            <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto">
               Process some data using the Bundle Allocator or Categorizer to start building your history
             </p>
           </div>
         ) : viewMode === 'summary' ? (
           /* Summary View */
-          <div className="space-y-8">
-            {/* Summary Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white rounded-xl p-4 shadow-md border border-gray-200">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Calendar className="w-5 h-5 text-blue-600" />
+          <div className="space-y-4 sm:space-y-8">
+            {/* Summary Stats - Mobile Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+              <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-md border border-gray-200">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-600 font-medium">Total Days</p>
-                    <p className="text-xl font-bold text-gray-900">{availableDates.length}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium text-gray-600 truncate">Total Days</p>
+                    <p className="text-lg sm:text-xl font-bold text-gray-900">{availableDates.length}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl p-4 shadow-md border border-gray-200">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <Database className="w-5 h-5 text-green-600" />
+              <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-md border border-gray-200">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 bg-green-100 rounded-lg flex-shrink-0">
+                    <Database className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-600 font-medium">Total Entries</p>
-                    <p className="text-xl font-bold text-gray-900">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium text-gray-600 truncate">Total Entries</p>
+                    <p className="text-lg sm:text-xl font-bold text-gray-900">
                       {dailySummaries.reduce((sum, day) => sum + day.totalEntries, 0)}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl p-4 shadow-md border border-gray-200">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Database className="w-5 h-5 text-purple-600" />
+              <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-md border border-gray-200">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 bg-purple-100 rounded-lg flex-shrink-0">
+                    <Database className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-600 font-medium">Total Data</p>
-                    <p className="text-xl font-bold text-gray-900">
+                  <div className="min-w-0 flex-1 overflow-hidden">
+                    <p className="text-xs font-medium text-gray-600 truncate">Total Data</p>
+                    <p className="text-xs sm:text-lg font-bold text-gray-900 break-words">
                       {dailySummaries.reduce((sum, day) => sum + day.totalGB, 0).toFixed(1)}GB
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl p-4 shadow-md border border-gray-200">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-orange-100 rounded-lg">
-                    <BarChart className="w-5 h-5 text-orange-600" />
+              <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-md border border-gray-200">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 bg-orange-100 rounded-lg flex-shrink-0">
+                    <BarChart className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-600 font-medium">Sessions</p>
-                    <p className="text-xl font-bold text-gray-900">{history.length}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium text-gray-600 truncate">Sessions</p>
+                    <p className="text-lg sm:text-xl font-bold text-gray-900">{history.length}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Daily Summary Chart */}
+            {/* Daily Summary Chart - Mobile Height Adjusted */}
             {dailySummaries.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-200">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Daily Data Processing Trends</h3>
-                <div className="h-64">
+              <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-3 sm:p-6 border border-gray-200">
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Daily Data Processing Trends</h3>
+                <div className="h-48 sm:h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={dailySummaries.slice(-30)}>
                       <XAxis
                         dataKey="date"
-                        tick={{ fontSize: 12 }}
+                        tick={{ fontSize: 10 }}
                         tickFormatter={(value) => new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                       />
-                      <YAxis tick={{ fontSize: 12 }} />
+                      <YAxis tick={{ fontSize: 10 }} />
                       <Tooltip
                         labelFormatter={(value) => `Date: ${value}`}
                         formatter={(value, name) => [
@@ -357,17 +359,17 @@ function HistoryManager({
                         type="monotone"
                         dataKey="totalEntries"
                         stroke="#3b82f6"
-                        strokeWidth={3}
+                        strokeWidth={2}
                         name="Total Entries"
-                        dot={{ r: 4 }}
+                        dot={{ r: 3 }}
                       />
                       <Line
                         type="monotone"
                         dataKey="totalGB"
                         stroke="#10b981"
-                        strokeWidth={3}
+                        strokeWidth={2}
                         name="Total Data (GB)"
-                        dot={{ r: 4 }}
+                        dot={{ r: 3 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -375,22 +377,22 @@ function HistoryManager({
               </div>
             )}
 
-            {/* Daily Summary Table */}
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-              <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
-                <h3 className="text-lg font-bold text-gray-900">Daily Summary</h3>
+            {/* Daily Summary Table - Mobile Scrollable */}
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+              <div className="p-3 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+                <h3 className="text-base sm:text-lg font-bold text-gray-900">Daily Summary</h3>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full min-w-[600px]">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Date</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Sessions</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Entries</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Valid</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Invalid</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Duplicates</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Total Data</th>
+                      <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase">Date</th>
+                      <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase">Sessions</th>
+                      <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase">Entries</th>
+                      <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase">Valid</th>
+                      <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase">Invalid</th>
+                      <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase">Duplicates</th>
+                      <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase">Total Data</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -399,13 +401,13 @@ function HistoryManager({
                       : dailySummaries
                     ).map((summary) => (
                       <tr key={summary.date} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900">{summary.date}</td>
-                        <td className="px-4 py-3 text-sm text-gray-600">{summary.sessionsCount}</td>
-                        <td className="px-4 py-3 text-sm text-gray-600">{summary.totalEntries}</td>
-                        <td className="px-4 py-3 text-sm text-green-600 font-medium">{summary.totalValid}</td>
-                        <td className="px-4 py-3 text-sm text-red-600 font-medium">{summary.totalInvalid}</td>
-                        <td className="px-4 py-3 text-sm text-yellow-600 font-medium">{summary.totalDuplicates}</td>
-                        <td className="px-4 py-3 text-sm font-bold text-purple-600">{summary.totalGB.toFixed(2)} GB</td>
+                        <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-gray-900">{summary.date}</td>
+                        <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600">{summary.sessionsCount}</td>
+                        <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600">{summary.totalEntries}</td>
+                        <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-green-600 font-medium">{summary.totalValid}</td>
+                        <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-red-600 font-medium">{summary.totalInvalid}</td>
+                        <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-yellow-600 font-medium">{summary.totalDuplicates}</td>
+                        <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-bold text-purple-600">{summary.totalGB.toFixed(2)} GB</td>
                       </tr>
                     ))}
                   </tbody>
@@ -415,26 +417,26 @@ function HistoryManager({
           </div>
         ) : (
           /* Detailed View */
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-            <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
-              <h3 className="text-lg font-bold text-gray-900">Detailed History</h3>
-              <p className="text-sm text-gray-600 mt-1">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            <div className="p-3 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">Detailed History</h3>
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">
                 {filteredHistory.length} sessions {selectedDate && `on ${selectedDate}`}
               </p>
             </div>
-            <div className="max-h-96 overflow-y-auto">
+            <div className="max-h-80 sm:max-h-96 overflow-y-auto">
               {filteredHistory.map((entry) => (
-                <div key={entry.id} className="border-b border-gray-100 p-4 hover:bg-gray-50">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-100 rounded-lg">
+                <div key={entry.id} className="border-b border-gray-100 p-3 sm:p-4 hover:bg-gray-50">
+                  <div className="flex items-center justify-between mb-2 sm:mb-3">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                      <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0">
                         {entry.type === 'bundle-allocator' ?
-                          <Phone className="w-4 h-4 text-blue-600" /> :
-                          <BarChart className="w-4 h-4 text-blue-600" />
+                          <Phone className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" /> :
+                          <BarChart className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />
                         }
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-900">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">
                           {entry.type === 'bundle-allocator' ? 'Bundle Allocator' : 'Bundle Categorizer'}
                         </p>
                         <p className="text-xs text-gray-600">
@@ -442,12 +444,12 @@ function HistoryManager({
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-gray-900">{entry.totalGB.toFixed(2)} GB</p>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-xs sm:text-sm font-bold text-gray-900">{entry.totalGB.toFixed(2)} GB</p>
                       <p className="text-xs text-gray-600">{entry.entries.length} entries</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm">
                     <div className="bg-green-50 p-2 rounded">
                       <span className="text-green-600 font-medium">Valid: {entry.validCount}</span>
                     </div>
@@ -915,31 +917,31 @@ function BundleAllocatorApp({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Input Section */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-8 transition-all hover:shadow-2xl">
-          <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-              <FileText className="w-6 h-6 text-blue-600" />
+      <div className="max-w-4xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
+        {/* Input Section - Mobile Optimized */}
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-4 sm:mb-8 transition-all hover:shadow-2xl">
+          <div className="p-3 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3">
+              <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
               <span>Input Data</span>
             </h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-xs sm:text-sm text-gray-600 mt-1">
               Paste phone numbers with allocations or drag & drop a file
             </p>
           </div>
 
-          <div className="p-6 space-y-6">
+          <div className="p-3 sm:p-6 space-y-3 sm:space-y-6">
             <div className="relative">
               <textarea
                 placeholder="Paste phone numbers and data allocations here&#10;0554739033 20GB&#10;0201234567 15GB&#10;0556789012 10GB"
-                className="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none font-mono text-sm shadow-sm hover:shadow-md"
+                className="w-full p-3 sm:p-4 border border-gray-300 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none font-mono text-xs sm:text-sm shadow-sm hover:shadow-md"
                 rows={6}
                 value={inputText}
                 onChange={(e) => processInput(e.target.value)}
               />
               {isProcessing && (
-                <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center rounded-xl">
-                  <div className="flex items-center gap-2 text-blue-600 font-medium">
+                <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center rounded-lg sm:rounded-xl">
+                  <div className="flex items-center gap-2 text-blue-600 font-medium text-sm">
                     <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                     Processing...
                   </div>
@@ -947,27 +949,27 @@ function BundleAllocatorApp({
               )}
             </div>
 
-            {/* File Drop Zone */}
+            {/* File Drop Zone - Mobile Optimized */}
             <div
               onClick={handleDropZoneClick}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-300 ${isDragActive
+              className={`border-2 border-dashed rounded-lg sm:rounded-xl p-4 sm:p-8 text-center cursor-pointer transition-all duration-300 ${isDragActive
                   ? "border-blue-500 bg-blue-50 scale-[1.02] shadow-lg"
                   : "border-gray-300 hover:border-blue-400 hover:bg-blue-50"
                 }`}
             >
-              <div className={`w-14 h-14 mx-auto mb-4 flex items-center justify-center rounded-full ${isDragActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'
+              <div className={`w-10 h-10 sm:w-14 sm:h-14 mx-auto mb-2 sm:mb-4 flex items-center justify-center rounded-full ${isDragActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'
                 }`}>
-                <Upload className="w-6 h-6" />
+                <Upload className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               {isDragActive ? (
-                <p className="text-blue-600 font-bold text-lg">Drop your file here!</p>
+                <p className="text-blue-600 font-bold text-sm sm:text-lg">Drop your file here!</p>
               ) : (
                 <>
-                  <p className="text-gray-700 font-medium mb-2">Drag & drop CSV or TXT files</p>
-                  <p className="text-sm text-gray-500">or click to browse files</p>
+                  <p className="text-gray-700 font-medium mb-1 sm:mb-2 text-sm sm:text-base">Drag & drop CSV or TXT files</p>
+                  <p className="text-xs sm:text-sm text-gray-500">or click to browse files</p>
                 </>
               )}
             </div>
@@ -984,94 +986,93 @@ function BundleAllocatorApp({
           </div>
         </div>
 
-        {/* Stats Cards - Enhanced with Fixed Numbers Count */}
+        {/* Stats Cards - Mobile Optimized Grid */}
         {entries.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
-            <div className="bg-white rounded-xl p-4 shadow-md border border-gray-200 hover:shadow-lg transition-all">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                  <Database className="w-5 h-5 text-blue-600" />
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4 mb-4 sm:mb-8">
+            <div className="bg-white rounded-lg sm:rounded-xl p-2 sm:p-4 shadow-md border border-gray-200 hover:shadow-lg transition-all">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                  <Database className="w-3 h-3 sm:w-5 sm:h-5 text-blue-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-gray-600 font-medium">Total Entries</p>
-                  <p className="text-xl font-bold text-gray-900">{entries.length}</p>
+                  <p className="text-xs font-medium text-gray-600 truncate">Total Entries</p>
+                  <p className="text-sm sm:text-xl font-bold text-gray-900">{entries.length}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-4 shadow-md border border-gray-200 hover:shadow-lg transition-all">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
-                  <Check className="w-5 h-5 text-green-600" />
+            <div className="bg-white rounded-lg sm:rounded-xl p-2 sm:p-4 shadow-md border border-gray-200 hover:shadow-lg transition-all">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1 sm:p-2 bg-green-100 rounded-lg flex-shrink-0">
+                  <Check className="w-3 h-3 sm:w-5 sm:h-5 text-green-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-gray-600 font-medium">Valid Numbers</p>
-                  <p className="text-xl font-bold text-green-600">{validEntries.length}</p>
+                  <p className="text-xs font-medium text-gray-600 truncate">Valid Numbers</p>
+                  <p className="text-sm sm:text-xl font-bold text-green-600">{validEntries.length}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-4 shadow-md border border-gray-200 hover:shadow-lg transition-all">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-100 rounded-lg flex-shrink-0">
-                  <X className="w-5 h-5 text-red-600" />
+            <div className="bg-white rounded-lg sm:rounded-xl p-2 sm:p-4 shadow-md border border-gray-200 hover:shadow-lg transition-all">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1 sm:p-2 bg-red-100 rounded-lg flex-shrink-0">
+                  <X className="w-3 h-3 sm:w-5 sm:h-5 text-red-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-gray-600 font-medium">Invalid Numbers</p>
-                  <p className="text-xl font-bold text-red-600">{invalidEntries.length}</p>
+                  <p className="text-xs font-medium text-gray-600 truncate">Invalid Numbers</p>
+                  <p className="text-sm sm:text-xl font-bold text-red-600">{invalidEntries.length}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-4 shadow-md border border-gray-200 hover:shadow-lg transition-all">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-yellow-100 rounded-lg flex-shrink-0">
-                  <AlertCircle className="w-5 h-5 text-yellow-600" />
+            <div className="bg-white rounded-lg sm:rounded-xl p-2 sm:p-4 shadow-md border border-gray-200 hover:shadow-lg transition-all">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1 sm:p-2 bg-yellow-100 rounded-lg flex-shrink-0">
+                  <AlertCircle className="w-3 h-3 sm:w-5 sm:h-5 text-yellow-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-gray-600 font-medium">Duplicates</p>
-                  <p className="text-xl font-bold text-yellow-600">{duplicateEntries.length}</p>
+                  <p className="text-xs font-medium text-gray-600 truncate">Duplicates</p>
+                  <p className="text-sm sm:text-xl font-bold text-yellow-600">{duplicateEntries.length}</p>
                 </div>
               </div>
             </div>
 
-            {/* New Auto-Fixed Stats Card */}
-            <div className="bg-white rounded-xl p-4 shadow-md border border-gray-200 hover:shadow-lg transition-all">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-cyan-100 rounded-lg flex-shrink-0">
-                  <Check className="w-5 h-5 text-cyan-600" />
+            <div className="bg-white rounded-lg sm:rounded-xl p-2 sm:p-4 shadow-md border border-gray-200 hover:shadow-lg transition-all">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1 sm:p-2 bg-cyan-100 rounded-lg flex-shrink-0">
+                  <Check className="w-3 h-3 sm:w-5 sm:h-5 text-cyan-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-gray-600 font-medium">Auto-Fixed</p>
-                  <p className="text-xl font-bold text-cyan-600">{fixedEntries.length}</p>
+                  <p className="text-xs font-medium text-gray-600 truncate">Auto-Fixed</p>
+                  <p className="text-sm sm:text-xl font-bold text-cyan-600">{fixedEntries.length}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-4 shadow-md border border-gray-200 hover:shadow-lg transition-all">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">
-                  <Database className="w-5 h-5 text-purple-600" />
+            <div className="bg-white rounded-lg sm:rounded-xl p-2 sm:p-4 shadow-md border border-gray-200 hover:shadow-lg transition-all">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1 sm:p-2 bg-purple-100 rounded-lg flex-shrink-0">
+                  <Database className="w-3 h-3 sm:w-5 sm:h-5 text-purple-600" />
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-gray-600 font-medium">Total Data</p>
-                  <p className="text-xs font-bold text-purple-600">{totalGB.toFixed(1)}GB</p>
+                <div className="min-w-0 flex-1 overflow-hidden">
+                  <p className="text-xs font-medium text-gray-600 truncate">Total Data</p>
+                  <p className="text-xs sm:text-sm font-bold text-purple-600 break-words">{totalGB.toFixed(1)}GB</p>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Results Section - Enhanced with Fixed Number Indicators */}
+        {/* Results Section - Mobile Optimized */}
         {entries.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden transition-all hover:shadow-2xl">
-            <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden transition-all hover:shadow-2xl">
+            <div className="p-3 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 flex flex-col gap-3 sm:gap-4">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                  <Check className="w-6 h-6 text-green-600" />
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3">
+                  <Check className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
                   <span>Processed Results</span>
                 </h2>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">
                   {validEntries.length} valid, {invalidEntries.length} invalid, {duplicateEntries.length} duplicates
                   {fixedEntries.length > 0 && `, ${fixedEntries.length} auto-fixed`}
                 </p>
@@ -1080,7 +1081,7 @@ function BundleAllocatorApp({
               <button
                 onClick={exportToExcel}
                 disabled={isExporting}
-                className={`flex items-center gap-2 px-6 py-3 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl ${isExporting
+                className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 text-white rounded-lg sm:rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl ${isExporting
                     ? 'bg-gray-500 cursor-not-allowed'
                     : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
                   }`}
@@ -1088,45 +1089,45 @@ function BundleAllocatorApp({
                 {isExporting ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Exporting...
+                    <span className="font-medium text-sm sm:text-base">Exporting...</span>
                   </>
                 ) : (
                   <>
-                    <Download className="w-5 h-5" />
-                    <span className="font-medium">Export to Excel</span>
+                    <Download className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="font-medium text-sm sm:text-base">Export to Excel</span>
                   </>
                 )}
               </button>
             </div>
 
-            <div className="max-h-96 overflow-y-auto">
+            <div className="max-h-80 sm:max-h-96 overflow-y-auto">
               <div className="grid grid-cols-1 divide-y divide-gray-100">
                 {entries.map(({ number, allocationGB, isValid, isDuplicate, wasFixed }, idx) => (
                   <div
                     key={idx}
-                    className={`flex items-center justify-between p-4 transition-all duration-200 hover:bg-gray-50 ${isDuplicate ? 'bg-yellow-50' : !isValid ? 'bg-red-50' : wasFixed ? 'bg-cyan-50' : ''
+                    className={`flex items-center justify-between p-3 sm:p-4 transition-all duration-200 hover:bg-gray-50 ${isDuplicate ? 'bg-yellow-50' : !isValid ? 'bg-red-50' : wasFixed ? 'bg-cyan-50' : ''
                       }`}
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
                       {isDuplicate ? (
-                        <div className="p-2 bg-yellow-100 rounded-full">
-                          <AlertCircle className="w-5 h-5 text-yellow-600" />
+                        <div className="p-1.5 sm:p-2 bg-yellow-100 rounded-full flex-shrink-0">
+                          <AlertCircle className="w-3 h-3 sm:w-5 sm:h-5 text-yellow-600" />
                         </div>
                       ) : !isValid ? (
-                        <div className="p-2 bg-red-100 rounded-full">
-                          <AlertCircle className="w-5 h-5 text-red-600" />
+                        <div className="p-1.5 sm:p-2 bg-red-100 rounded-full flex-shrink-0">
+                          <AlertCircle className="w-3 h-3 sm:w-5 sm:h-5 text-red-600" />
                         </div>
                       ) : wasFixed ? (
-                        <div className="p-2 bg-cyan-100 rounded-full">
-                          <Check className="w-5 h-5 text-cyan-600" />
+                        <div className="p-1.5 sm:p-2 bg-cyan-100 rounded-full flex-shrink-0">
+                          <Check className="w-3 h-3 sm:w-5 sm:h-5 text-cyan-600" />
                         </div>
                       ) : (
-                        <div className="p-2 bg-green-100 rounded-full">
-                          <Check className="w-5 h-5 text-green-600" />
+                        <div className="p-1.5 sm:p-2 bg-green-100 rounded-full flex-shrink-0">
+                          <Check className="w-3 h-3 sm:w-5 sm:h-5 text-green-600" />
                         </div>
                       )}
-                      <div>
-                        <p className={`font-mono font-medium text-base ${isDuplicate ? 'text-yellow-700' : !isValid ? 'text-red-700' : wasFixed ? 'text-cyan-700' : 'text-gray-900'
+                      <div className="min-w-0 flex-1">
+                        <p className={`font-mono font-medium text-sm sm:text-base break-all ${isDuplicate ? 'text-yellow-700' : !isValid ? 'text-red-700' : wasFixed ? 'text-cyan-700' : 'text-gray-900'
                           }`}>
                           {number}
                         </p>
@@ -1142,8 +1143,8 @@ function BundleAllocatorApp({
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <p className={`font-bold text-lg ${isDuplicate ? 'text-yellow-700' : !isValid ? 'text-red-700' : wasFixed ? 'text-cyan-700' : 'text-gray-900'
+                    <div className="text-right flex-shrink-0 ml-2">
+                      <p className={`font-bold text-sm sm:text-lg ${isDuplicate ? 'text-yellow-700' : !isValid ? 'text-red-700' : wasFixed ? 'text-cyan-700' : 'text-gray-900'
                         }`}>
                         {allocationGB} GB
                       </p>
@@ -1158,14 +1159,14 @@ function BundleAllocatorApp({
           </div>
         )}
 
-        {/* Empty State */}
+        {/* Empty State - Mobile Optimized */}
         {entries.length === 0 && !isProcessing && (
-          <div className="text-center py-12 px-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-gray-200 shadow-inner">
-            <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
-              <Phone className="w-10 h-10" />
+          <div className="text-center py-8 sm:py-12 px-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl sm:rounded-2xl border border-gray-200 shadow-inner">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
+              <Phone className="w-8 h-8 sm:w-10 sm:h-10" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-3">Ready to Process Data</h3>
-            <p className="text-gray-600 max-w-md mx-auto">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Ready to Process Data</h3>
+            <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto">
               Enter phone numbers above or drag & drop a file to get started
             </p>
           </div>
@@ -1291,115 +1292,117 @@ function BundleCategorizerApp({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Input Section */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-8 border border-gray-200 transition-all hover:shadow-2xl">
-          <div className="mb-6">
-            <label className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
-              <FileText className="w-5 h-5 text-blue-600" />
+      <div className="max-w-6xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
+        {/* Input Section - Mobile Optimized */}
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-3 sm:p-6 mb-4 sm:mb-8 border border-gray-200 transition-all hover:shadow-2xl">
+          <div className="mb-4 sm:mb-6">
+            <label className="text-base font-bold text-gray-800 mb-2 sm:mb-3 flex items-center gap-2">
+              <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
               Data Input
             </label>
             <textarea
-              className="w-full h-48 p-4 border border-gray-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 font-mono text-sm bg-white hover:shadow-md"
+              className="w-full h-32 sm:h-48 p-3 sm:p-4 border border-gray-300 rounded-lg sm:rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 font-mono text-xs sm:text-sm bg-white hover:shadow-md"
               placeholder="Paste your data here...&#10;Example:&#10;024XXXXXXXX 20GB&#10;059XXXXXXXX 50GB&#10;0249XXXXXXX 10GB"
               value={rawData}
               onChange={(e) => setRawData(e.target.value)}
             />
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-600 font-medium">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="text-xs sm:text-sm text-gray-600 font-medium">
               {rawData.split('\n').filter(line => line.trim().length > 0).length} lines detected
             </div>
             <button
               onClick={parseData}
               disabled={!rawData.trim()}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              <BarChart className="w-5 h-5" />
+              <BarChart className="w-4 h-4 sm:w-5 sm:h-5" />
               Process Data
             </button>
           </div>
         </div>
 
-        {/* Results Section */}
+        {/* Results Section - Mobile Optimized */}
         {summary.length > 0 && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Summary Table */}
-            <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-200 transition-all hover:shadow-2xl">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-                <h2 className="text-xl font-bold text-gray-800">Summary</h2>
-                <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-bold">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
+            {/* Summary Table - Mobile Optimized */}
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-3 sm:p-6 border border-gray-200 transition-all hover:shadow-2xl">
+              <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-800">Summary</h2>
+                <div className="bg-blue-100 text-blue-800 px-3 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-bold text-center">
                   {totalEntries} total entries
                 </div>
               </div>
 
-              <div className="overflow-hidden rounded-xl border border-gray-200">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                        Data Allocation
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                        Count
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                        Percentage
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {summary.map((row, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50 transition-colors duration-150">
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                          <div className="flex items-center">
-                            <div className="w-3 h-3 rounded-full mr-3" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></div>
-                            {row.allocation}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-700">
-                          <span className="bg-gray-100 px-3 py-1 rounded-full font-bold">
-                            {row.count}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-700">
-                          <div className="flex items-center">
-                            <div className="w-full bg-gray-200 rounded-full h-2.5 mr-3">
-                              <div
-                                className="h-2.5 rounded-full transition-all duration-500"
-                                style={{
-                                  width: `${(row.count / totalEntries * 100)}%`,
-                                  backgroundColor: COLORS[idx % COLORS.length]
-                                }}
-                              ></div>
-                            </div>
-                            <span className="text-sm font-bold min-w-0">
-                              {((row.count / totalEntries) * 100).toFixed(1)}%
-                            </span>
-                          </div>
-                        </td>
+              <div className="overflow-hidden rounded-lg sm:rounded-xl border border-gray-200">
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[300px]">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                          Data Allocation
+                        </th>
+                        <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                          Count
+                        </th>
+                        <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                          Percentage
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {summary.map((row, idx) => (
+                        <tr key={idx} className="hover:bg-gray-50 transition-colors duration-150">
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-gray-900">
+                            <div className="flex items-center">
+                              <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-2 sm:mr-3 flex-shrink-0" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></div>
+                              <span className="truncate">{row.allocation}</span>
+                            </div>
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700">
+                            <span className="bg-gray-100 px-2 sm:px-3 py-1 rounded-full font-bold">
+                              {row.count}
+                            </span>
+                          </td>
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700">
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 bg-gray-200 rounded-full h-1.5 sm:h-2.5">
+                                <div
+                                  className="h-1.5 sm:h-2.5 rounded-full transition-all duration-500"
+                                  style={{
+                                    width: `${(row.count / totalEntries * 100)}%`,
+                                    backgroundColor: COLORS[idx % COLORS.length]
+                                  }}
+                                ></div>
+                              </div>
+                              <span className="text-xs sm:text-sm font-bold flex-shrink-0">
+                                {((row.count / totalEntries) * 100).toFixed(1)}%
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
-            {/* Chart Section */}
-            <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-200 transition-all hover:shadow-2xl">
-              <h2 className="text-xl font-bold text-gray-800 mb-6">Visualization</h2>
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-gray-200">
-                <ResponsiveContainer width="100%" height={300}>
+            {/* Chart Section - Mobile Height Adjusted */}
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-3 sm:p-6 border border-gray-200 transition-all hover:shadow-2xl">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-6">Visualization</h2>
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg sm:rounded-xl p-2 sm:p-4 border border-gray-200">
+                <ResponsiveContainer width="100%" height={250}>
                   <RechartsBarChart data={chartData}>
                     <XAxis
                       dataKey="allocation"
-                      tick={{ fontSize: 12 }}
+                      tick={{ fontSize: 10 }}
                       axisLine={{ stroke: '#e5e7eb' }}
                       tickLine={{ stroke: '#e5e7eb' }}
                     />
                     <YAxis
-                      tick={{ fontSize: 12 }}
+                      tick={{ fontSize: 10 }}
                       axisLine={{ stroke: '#e5e7eb' }}
                       tickLine={{ stroke: '#e5e7eb' }}
                     />
@@ -1409,7 +1412,7 @@ function BundleCategorizerApp({
                         border: 'none',
                         borderRadius: '8px',
                         color: 'black',
-                        fontSize: '16px'
+                        fontSize: '14px'
                       }}
                       formatter={(value) => [value, 'Count']}
                       labelFormatter={(label) => `Allocation: ${label}`}
@@ -1431,14 +1434,14 @@ function BundleCategorizerApp({
           </div>
         )}
 
-        {/* Empty State */}
+        {/* Empty State - Mobile Optimized */}
         {summary.length === 0 && rawData.trim() === "" && (
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-inner p-12 text-center border border-gray-200">
-            <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <BarChart className="w-10 h-10 text-blue-600" />
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl sm:rounded-2xl shadow-inner p-8 sm:p-12 text-center border border-gray-200">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+              <BarChart className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600" />
             </div>
-            <h3 className="text-xl font-bold text-gray-800 mb-3">Ready to Analyze Data</h3>
-            <p className="text-gray-600 max-w-md mx-auto">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 sm:mb-3">Ready to Analyze Data</h3>
+            <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto">
               Paste your data in the input field above and click "Process Data" to see allocation summaries and visualizations.
             </p>
           </div>
@@ -1455,10 +1458,10 @@ export default function App() {
   // Show loading while checking authentication
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center px-4">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 text-sm sm:text-base">Loading...</p>
         </div>
       </div>
     );
@@ -1467,13 +1470,13 @@ export default function App() {
   // If not authenticated, redirect will be handled by middleware
   if (!session) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center px-4">
         <div className="text-center">
-          <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
-            <Database className="w-10 h-10" />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
+            <Database className="w-8 h-8 sm:w-10 sm:h-10" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-3">Access Required</h3>
-          <p className="text-gray-600 max-w-md mx-auto">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Access Required</h3>
+          <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto">
             Please sign in to access the Data Processing Suite
           </p>
         </div>
@@ -1612,87 +1615,97 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      {/* Header with Tabs */}
+      {/* Header with Tabs - Mobile Optimized */}
       <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between py-4 gap-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg">
-                <Database className="w-6 h-6 text-white" />
+        <div className="max-w-7xl mx-auto px-2 sm:px-4">
+          <div className="flex flex-col gap-3 py-3 sm:py-4">
+            {/* Title and User Info */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg">
+                  <Database className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Data Processing Suite V1.0</h1>
+                  <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Data validation and categorization tool with history tracking</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Data Processing Suite V1.0</h1>
-                <p className="text-sm text-gray-600">Data validation and categorization tool with history tracking</p>
-              </div>
-            </div>
 
-            {/* User Info & Stats */}
-            <div className="flex items-center gap-4 text-sm">
-              {/* Only show history stats for admins */}
-              {isAdmin && history.length > 0 && activeTab !== "history" && (
-                <>
-                  <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-medium">
-                    {history.length} sessions
-                  </div>
-                  <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full font-medium">
-                    {history.reduce((sum, entry) => sum + entry.totalGB, 0).toFixed(1)} GB total
-                  </div>
-                </>
-              )}
-
-              {/* Admin Panel Link - Only visible to admins */}
-              {isAdmin && (
-                <a
-                  href="/admin"
-                  className="flex items-center gap-2 bg-purple-100 text-purple-700 px-3 py-1 rounded-full hover:bg-purple-200 transition-colors"
-                >
-                  <Shield className="w-4 h-4" />
-                  Admin Panel
-                </a>
-              )}
-
-              {/* User Menu */}
-              <div className="flex items-center gap-2 bg-gray-100 text-gray-700 px-3 py-1 rounded-full">
-                <User className="w-4 h-4" />
-                <span className="font-medium">{session?.user?.name || session?.user?.email}</span>
-                {/* Show role indicator */}
-                {isAdmin && (
-                  <span className="text-xs bg-purple-200 text-purple-700 px-2 py-1 rounded-full">Admin</span>
+              {/* User Info & Stats - Mobile Optimized */}
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm w-full sm:w-auto">
+                {/* Only show history stats for admins */}
+                {isAdmin && history.length > 0 && activeTab !== "history" && (
+                  <>
+                    <div className="bg-blue-100 text-blue-800 px-2 sm:px-3 py-1 rounded-full font-medium">
+                      {history.length} sessions
+                    </div>
+                    <div className="bg-green-100 text-green-800 px-2 sm:px-3 py-1 rounded-full font-medium">
+                      {history.reduce((sum, entry) => sum + entry.totalGB, 0).toFixed(1)} GB total
+                    </div>
+                  </>
                 )}
-                <button
-                  onClick={handleSignOut}
-                  className="ml-2 p-1 hover:bg-gray-200 rounded transition-colors"
-                  title="Sign out"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
+
+                {/* Admin Panel Link - Only visible to admins */}
+                {isAdmin && (
+                  <a
+                    href="/admin"
+                    className="flex items-center gap-1 sm:gap-2 bg-purple-100 text-purple-700 px-2 sm:px-3 py-1 rounded-full hover:bg-purple-200 transition-colors"
+                  >
+                    <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">Admin Panel</span>
+                    <span className="sm:hidden">Admin</span>
+                  </a>
+                )}
+
+                {/* User Menu - Mobile Optimized */}
+                <div className="flex items-center gap-1 sm:gap-2 bg-gray-100 text-gray-700 px-2 sm:px-3 py-1 rounded-full flex-1 sm:flex-initial">
+                  <User className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                  <span className="font-medium text-xs sm:text-sm truncate max-w-24 sm:max-w-none">
+                    {session?.user?.name || session?.user?.email}
+                  </span>
+                  {/* Show role indicator */}
+                  {isAdmin && (
+                    <span className="text-xs bg-purple-200 text-purple-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">Admin</span>
+                  )}
+                  <button
+                    onClick={handleSignOut}
+                    className="ml-1 sm:ml-2 p-1 hover:bg-gray-200 rounded transition-colors flex-shrink-0"
+                    title="Sign out"
+                  >
+                    <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Tab Navigation - Only shows tabs based on user role */}
-          <div className="flex flex-wrap gap-1">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-5 py-3 rounded-t-lg font-medium transition-all duration-200 ${activeTab === tab.id
-                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                    }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  {tab.name}
-                  {tab.id === "history" && isAdmin && history.length > 0 && (
-                    <span className="bg-white/20 text-xs px-2 py-1 rounded-full">
-                      {history.length}
+            {/* Tab Navigation - Mobile Friendly */}
+            <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3 rounded-t-lg font-medium transition-all duration-200 whitespace-nowrap text-xs sm:text-sm flex-shrink-0 ${activeTab === tab.id
+                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
+                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                      }`}
+                  >
+                    <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="hidden sm:inline">{tab.name}</span>
+                    <span className="sm:hidden">
+                      {tab.id === "bundle-allocator" ? "Allocator" :
+                       tab.id === "bundle-categorizer" ? "Categorizer" : "History"}
                     </span>
-                  )}
-                </button>
-              );
-            })}
+                    {tab.id === "history" && isAdmin && history.length > 0 && (
+                      <span className="bg-white/20 text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
+                        {history.length}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
