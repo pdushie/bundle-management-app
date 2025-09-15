@@ -582,6 +582,7 @@ function BundleAllocatorApp({
     });
   };
 
+  // **UPDATED PROCESS INPUT FUNCTION - NEW DUPLICATE LOGIC**
   const processInput = (text: string) => {
     setInputText(text);
     setIsProcessing(true);
@@ -592,12 +593,11 @@ function BundleAllocatorApp({
         .map((line) => line.trim())
         .filter((line) => line !== "");
 
-      const parsed: PhoneEntry[] = [];
-      const phoneNumbers = new Set<string>();
+      const phoneAllocCombinations = new Set<string>();
       const duplicates = new Set<string>();
       let fixedNumbers = 0;
 
-      // First pass: collect all phone numbers and identify duplicates (using corrected numbers)
+      // First pass: collect all phone number + allocation combinations and identify duplicates
       lines.forEach((line) => {
         const cleanedLine = line.replace(/\./g, " ").trim();
         const parts = cleanedLine.split(/[\s-]+/);
@@ -618,16 +618,23 @@ function BundleAllocatorApp({
               fixedNumbers++;
             }
 
-            if (phoneNumbers.has(finalPhoneNumber)) {
-              duplicates.add(finalPhoneNumber);
+            // Create unique key combining phone number AND allocation
+            const uniqueKey = `${finalPhoneNumber}-${allocGB}`;
+
+            if (phoneAllocCombinations.has(uniqueKey)) {
+              duplicates.add(uniqueKey);
             } else {
-              phoneNumbers.add(finalPhoneNumber);
+              phoneAllocCombinations.add(uniqueKey);
             }
           }
         }
       });
 
       // Second pass: create entries with duplicate flag and validation results
+      // Only keep the first occurrence of each phone number + allocation combination
+      const parsed: PhoneEntry[] = [];
+      const seenCombinations = new Set<string>();
+
       lines.forEach((line) => {
         const cleanedLine = line.replace(/\./g, " ").trim();
         const parts = cleanedLine.split(/[\s-]+/);
@@ -642,24 +649,31 @@ function BundleAllocatorApp({
 
           if (!isNaN(allocGB)) {
             const validation = validateNumber(phoneRaw);
+            const uniqueKey = `${validation.correctedNumber}-${allocGB}`;
             
-            parsed.push({
-              number: validation.correctedNumber,
-              allocationGB: allocGB,
-              isValid: validation.isValid,
-              isDuplicate: duplicates.has(validation.correctedNumber),
-              wasFixed: validation.wasFixed,
-            });
+            // Only add if this is the first occurrence of this combination
+            if (!seenCombinations.has(uniqueKey)) {
+              seenCombinations.add(uniqueKey);
+              
+              parsed.push({
+                number: validation.correctedNumber,
+                allocationGB: allocGB,
+                isValid: validation.isValid,
+                isDuplicate: false, // No entries are marked as duplicate since we remove them
+                wasFixed: validation.wasFixed,
+              });
+            }
+            // Skip duplicate entries (don't add them to parsed array)
           }
         }
       });
 
-      // Show alerts for duplicates and fixed numbers
+      // Show alerts for removed duplicates and fixed numbers
       const alertMessages: string[] = [];
+      const totalDuplicates = lines.length - parsed.length;
       
-      if (duplicates.size > 0) {
-        const duplicateList = Array.from(duplicates).join(', ');
-        alertMessages.push(`⚠️ Duplicate phone numbers detected:\n${duplicateList}\n\nDuplicates will be highlighted in the export.`);
+      if (totalDuplicates > 0) {
+        alertMessages.push(`🗑️ Removed ${totalDuplicates} duplicate entry(ies).\n\nDuplicates are identified by matching both phone number AND data allocation.\nOnly the first occurrence of each combination was kept.`);
       }
       
       if (fixedNumbers > 0) {
