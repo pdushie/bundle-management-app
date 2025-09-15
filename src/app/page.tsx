@@ -470,7 +470,7 @@ function HistoryManager({
   );
 }
 
-// Bundle Allocator App Component with Enhanced Validation and Splitting
+// Bundle Allocator App Component with Enhanced Validation, Splitting, and Excel Support
 function BundleAllocatorApp({
   inputText,
   setInputText,
@@ -506,6 +506,80 @@ function BundleAllocatorApp({
 
     // If still invalid, return the original number as invalid
     return { isValid: false, correctedNumber: num, wasFixed: false };
+  };
+
+  // Function to read Excel (.xlsx) files
+  const readExcelFile = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const buffer = e.target?.result as ArrayBuffer;
+          const workbook = new ExcelJS.Workbook();
+          await workbook.xlsx.load(buffer);
+          
+          let allText = '';
+          workbook.eachSheet((worksheet) => {
+            worksheet.eachRow((row, rowNumber) => {
+              // Skip header row if it exists
+              if (rowNumber === 1) {
+                // Check if this looks like a header row
+                const firstCell = row.getCell(1).text?.toLowerCase() || '';
+                const secondCell = row.getCell(2).text?.toLowerCase() || '';
+                const fourthCell = row.getCell(4).text?.toLowerCase() || '';
+                if (firstCell.includes('phone') || firstCell.includes('msisdn') || firstCell.includes('number') ||
+                    secondCell.includes('data') || secondCell.includes('allocation') || secondCell.includes('gb') ||
+                    fourthCell.includes('data') || fourthCell.includes('mb') || fourthCell.includes('gb')) {
+                  return; // Skip header row
+                }
+              }
+              
+              const phoneNumber = row.getCell(1).text || '';
+              let dataAllocation = '';
+              
+              // Try to get data allocation from different columns
+              // Column 2 first (direct allocation)
+              if (row.getCell(2).text) {
+                dataAllocation = row.getCell(2).text;
+              }
+              // Then try column 4 (Data MB column from template)
+              else if (row.getCell(4).text) {
+                const mbValue = parseFloat(row.getCell(4).text);
+                if (!isNaN(mbValue)) {
+                  // Convert MB to GB
+                  dataAllocation = (mbValue / 1024).toFixed(2) + 'GB';
+                }
+              }
+              
+              if (phoneNumber && dataAllocation) {
+                allText += `${phoneNumber} ${dataAllocation}\n`;
+              }
+            });
+          });
+          resolve(allText);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsArrayBuffer(file);
+    });
+  };
+
+  // Function to read text files (.txt, .csv)
+  const readTextFile = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === "string") {
+          resolve(reader.result);
+        } else {
+          reject(new Error('Failed to read file as text'));
+        }
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsText(file);
+    });
   };
 
   const processInput = (text: string) => {
@@ -601,16 +675,26 @@ function BundleAllocatorApp({
     }, 300);
   };
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    acceptedFiles.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === "string") {
-          processInput(reader.result);
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    for (const file of acceptedFiles) {
+      try {
+        let content: string;
+        
+        // Check file extension to determine how to read it
+        const fileExtension = file.name.toLowerCase().split('.').pop();
+        
+        if (fileExtension === 'xlsx') {
+          content = await readExcelFile(file);
+        } else {
+          content = await readTextFile(file);
         }
-      };
-      reader.readAsText(file);
-    });
+        
+        processInput(content);
+      } catch (error) {
+        console.error('Error reading file:', error);
+        window.alert && window.alert(`❌ Error reading file "${file.name}". Please make sure it's a valid Excel (.xlsx), CSV (.csv), or text (.txt) file.`);
+      }
+    }
   }, []);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -949,7 +1033,7 @@ function BundleAllocatorApp({
               )}
             </div>
 
-            {/* File Drop Zone - Mobile Optimized */}
+            {/* File Drop Zone - Mobile Optimized with Excel support */}
             <div
               onClick={handleDropZoneClick}
               onDragOver={handleDragOver}
@@ -968,18 +1052,18 @@ function BundleAllocatorApp({
                 <p className="text-blue-600 font-bold text-sm sm:text-lg">Drop your file here!</p>
               ) : (
                 <>
-                  <p className="text-gray-700 font-medium mb-1 sm:mb-2 text-sm sm:text-base">Drag & drop CSV or TXT files</p>
-                  <p className="text-xs sm:text-sm text-gray-500">or click to browse files</p>
+                  <p className="text-gray-700 font-medium mb-1 sm:mb-2 text-sm sm:text-base">Drag & drop Excel, CSV or TXT files</p>
+                  <p className="text-xs sm:text-sm text-gray-500">Supports .xlsx, .csv, and .txt files</p>
                 </>
               )}
             </div>
 
-            {/* Hidden file input */}
+            {/* Hidden file input - Updated to accept Excel files */}
             <input
               type="file"
               ref={fileInputRef}
               onChange={handleFileInputChange}
-              accept=".txt,.csv"
+              accept=".txt,.csv,.xlsx"
               className="hidden"
               multiple
             />
@@ -1176,7 +1260,7 @@ function BundleAllocatorApp({
   );
 }
 
-// Bundle Categorizer App Component with Enhanced Validation
+// Bundle Categorizer App Component with Enhanced Validation and Excel Support
 function BundleCategorizerApp({
   rawData,
   setRawData,
