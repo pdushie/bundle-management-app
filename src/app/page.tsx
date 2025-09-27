@@ -361,7 +361,9 @@ function HistoryManager({
                         labelFormatter={(value) => `Date: ${value}`}
                         formatter={(value, name) => {
                           if (name === 'Total Data (GB)') {
-                            return [value > 1023 ? `${(value / 1024).toFixed(2)} TB` : `${value} GB`, name];
+                            // Cast value to number before comparison
+                            const numValue = Number(value);
+                            return [numValue > 1023 ? `${(numValue / 1024).toFixed(2)} TB` : `${numValue} GB`, name];
                           }
                           return [value, name];
                         }}
