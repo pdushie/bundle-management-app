@@ -1,4 +1,5 @@
-import { pgTable, varchar, decimal, integer, boolean, timestamp, serial, bigint, date, text, json } from 'drizzle-orm/pg-core';
+import { pgTable, varchar, decimal, integer, boolean, timestamp, serial, bigint, date, text } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 
 // Move users table to the TOP - Remove self-references
 export const users = pgTable("users", {
@@ -30,7 +31,7 @@ export const orders = pgTable("orders", {
   totalData: decimal('total_data', { precision: 10, scale: 2, mode: 'string' }).notNull(),
   totalCount: integer('total_count').notNull(),
   status: varchar('status', { length: 20 }).notNull(), // 'pending' or 'processed'
-  userId: varchar('user_id').references(() => users.id, { onDelete: 'set null' }),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'set null' }), // Changed to integer to match users.id
   createdAt: timestamp('created_at').defaultNow(),
 });
 
@@ -43,6 +44,23 @@ export const orderEntries = pgTable("order_entries", {
   status: varchar('status', { length: 20 }), // 'pending', 'sent', or 'error'
   createdAt: timestamp('created_at').defaultNow(),
 });
+
+// Define relations for orders
+export const ordersRelations = relations(orders, ({ one, many }) => ({
+  user: one(users, {
+    fields: [orders.userId],
+    references: [users.id],
+  }),
+  entries: many(orderEntries),
+}));
+
+// Define relations for order entries
+export const orderEntriesRelations = relations(orderEntries, ({ one }) => ({
+  order: one(orders, {
+    fields: [orderEntries.orderId],
+    references: [orders.id],
+  }),
+}));
 
 // Now define tables that reference users
 export const historyEntries = pgTable('history_entries', {
@@ -69,8 +87,34 @@ export const phoneEntries = pgTable('phone_entries', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
+// Define relations for history entries
+export const historyEntriesRelations = relations(historyEntries, ({ one, many }) => ({
+  user: one(users, {
+    fields: [historyEntries.userId],
+    references: [users.id],
+  }),
+  phoneEntries: many(phoneEntries),
+}));
+
+// Define relations for phone entries
+export const phoneEntriesRelations = relations(phoneEntries, ({ one }) => ({
+  historyEntry: one(historyEntries, {
+    fields: [phoneEntries.historyEntryId],
+    references: [historyEntries.id],
+  }),
+}));
+
 export const sessions = pgTable("sessions", {
-  sessionToken: varchar("session_token").notNull().primaryKey(),
-  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  id: varchar("id").notNull().primaryKey(),
+  sessionToken: varchar("session_token").notNull().unique(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   expires: timestamp("expires", { mode: "date" }).notNull(),
 });
+
+// Define relations for sessions
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, {
+    fields: [sessions.userId],
+    references: [users.id],
+  }),
+}));

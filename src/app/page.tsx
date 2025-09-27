@@ -11,6 +11,7 @@ import SendOrderApp from "@/components/SendOrderApp";
 import OrdersApp from "@/components/OrdersApp";
 import ProcessedOrdersApp from "@/components/ProcessedOrdersApp";
 import SentOrdersApp from "@/components/SentOrdersApp";
+import OrderTrackingApp from "@/components/OrderTrackingApp";
 import { OrderProvider, useOrderCount } from "@/lib/orderContext";
 import { ORDER_UPDATED_EVENT } from "@/lib/orderNotifications";
 import { requestNotificationPermission, hasNotificationPermission, sendThrottledNotification, playNotificationSound } from '@/lib/notifications';
@@ -382,7 +383,7 @@ function HistoryManager({
                         dataKey="totalGB"
                         stroke="#10b981"
                         strokeWidth={2}
-                        name="Total Data (GB)"
+                        name="Total Data (TB)"
                         dot={{ r: 3 }}
                       />
                     </LineChart>
@@ -2106,6 +2107,11 @@ function AppContent() {
       id: "sent-orders",
       name: "My Sent Orders",
       icon: Send,
+    },
+    {
+      id: "track-orders",
+      name: "Track Order Status",
+      icon: Eye,
     }
   ];
 
@@ -2214,6 +2220,11 @@ function AppContent() {
         if (isSuperAdmin || isRegularUser || isManager) {
           return <SentOrdersApp />;
         }
+        break;
+        
+      case "track-orders":
+        // Track orders tab is accessible to all users
+        return <OrderTrackingApp />;
         break;
         
       case "history":
