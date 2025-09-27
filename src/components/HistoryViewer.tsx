@@ -1,4 +1,6 @@
-﻿// Create a history viewing component that displays order processing history
+﻿"use client";
+
+// Create a history viewing component that displays order processing history
 import React, { useState, useEffect } from "react";
 import { getHistoryEntries, getPhoneEntriesForHistory } from "../lib/historyClient";
 import { Clock, Search, Info, Database, Phone, Check, X, AlertTriangle, ChevronDown, ChevronUp, Loader, Filter } from "lucide-react";

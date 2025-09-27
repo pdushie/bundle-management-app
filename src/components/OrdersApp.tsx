@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { Download, Clock, FileText, User, Database, CheckCircle, XCircle, Loader, Search, SlidersHorizontal, Check, CheckSquare, Square, Archive } from "lucide-react";
 import ExcelJS from "exceljs";
