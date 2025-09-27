@@ -15,7 +15,7 @@ type HistoryEntry = {
   invalidCount: number;
   duplicateCount: number;
   type: string;
-  userId: string | null;
+  userId: number | null; // Changed from string | null to match the API response
   createdAt: Date | null;
 };
 
@@ -83,7 +83,7 @@ export default function HistoryViewer() {
     const matchesSearch = searchTerm === "" || 
       entry.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       entry.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (entry.userId && entry.userId.toLowerCase().includes(searchTerm.toLowerCase()));
+      (entry.userId && entry.userId.toString().includes(searchTerm)); // Convert number to string for searching
 
     const matchesType = typeFilter === "all" || entry.type === typeFilter;
     
