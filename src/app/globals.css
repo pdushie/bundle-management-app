@@ -23,4 +23,60 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Mobile responsive utilities */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Mobile tap highlight fix */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Mobile safe areas */
+@supports (padding: max(0px)) {
+  .safe-bottom {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+  
+  .safe-top {
+    padding-top: max(0.5rem, env(safe-area-inset-top));
+  }
+  
+  .safe-left {
+    padding-left: max(0.5rem, env(safe-area-inset-left));
+  }
+  
+  .safe-right {
+    padding-right: max(0.5rem, env(safe-area-inset-right));
+  }
+}
+
+/* Break long words in mobile view */
+.break-words {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  -ms-word-break: break-all;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* Utility for making elements better at touch targets */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
 }

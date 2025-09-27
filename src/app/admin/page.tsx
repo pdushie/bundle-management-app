@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { Users, Check, X, Clock, MessageCircle, Shield, Calendar, ArrowLeft, Database, User, LogOut } from "lucide-react";
+import UserManagement from "@/components/UserManagement";
 
 interface PendingUser {
   id: string;
@@ -24,6 +25,7 @@ interface UserStats {
 export default function AdminDashboard() {
   const { data: session, status } = useSession() as any;
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<'pending' | 'users'>('pending');
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [userStats, setUserStats] = useState<UserStats>({
     totalUsers: 0,
@@ -47,13 +49,13 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    if (status === "unauthenticated" || (session && session.user?.role !== 'admin')) {
+    if (status === "unauthenticated" || (session && session.user?.role !== 'superadmin')) {
       redirect("/");
     }
   }, [status, session]);
 
   useEffect(() => {
-    if (session?.user?.role === 'admin') {
+    if (session?.user?.role === 'superadmin') {
       fetchPendingUsers();
       fetchUserStats();
     }
@@ -145,7 +147,7 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!session || session.user?.role !== 'admin') {
+  if (!session || session.user?.role !== 'superadmin') {
     return null;
   }
 
@@ -246,92 +248,131 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Pending Users */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-          <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-              <Users className="w-6 h-6 text-blue-600" />
-              Pending Access Requests
-            </h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Review and approve or reject user access requests
-            </p>
+        {/* Admin Dashboard Tabs */}
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-6">
+          <div className="flex border-b border-gray-200">
+            <button 
+              onClick={() => setActiveTab('pending')} 
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'pending' 
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
+                  : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+              }`}
+            >
+              <Clock className="w-4 h-4" />
+              Pending Requests
+              {pendingUsers.length > 0 && (
+                <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">
+                  {pendingUsers.length}
+                </span>
+              )}
+            </button>
+            
+            <button 
+              onClick={() => setActiveTab('users')} 
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'users' 
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
+                  : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              User Management
+            </button>
           </div>
+        </div>
 
-          {isLoading ? (
-            <div className="p-8 text-center">
-              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading pending requests...</p>
+        {activeTab === 'pending' ? (
+          // Pending Users Tab Content
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+                <Users className="w-6 h-6 text-blue-600" />
+                Pending Access Requests
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Review and approve or reject user access requests
+              </p>
             </div>
-          ) : pendingUsers.length === 0 ? (
-            <div className="p-8 text-center">
-              <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Pending Requests</h3>
-              <p className="text-gray-600">All access requests have been processed.</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-gray-200">
-              {pendingUsers.map((user) => (
-                <div key={user.id} className="p-6 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-gray-100 rounded-full">
-                          <Users className="w-4 h-4 text-gray-600" />
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-gray-900">{user.name}</h3>
-                          <p className="text-sm text-gray-600">{user.email}</p>
-                        </div>
-                      </div>
-                      
-                      {user.request_message && (
-                        <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                          <div className="flex items-start gap-2">
-                            <MessageCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                            <div>
-                              <p className="text-sm font-medium text-blue-800 mb-1">Request Message:</p>
-                              <p className="text-sm text-blue-700">{user.request_message}</p>
-                            </div>
+
+            {isLoading ? (
+              <div className="p-8 text-center">
+                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading pending requests...</p>
+              </div>
+            ) : pendingUsers.length === 0 ? (
+              <div className="p-8 text-center">
+                <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Pending Requests</h3>
+                <p className="text-gray-600">All access requests have been processed.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-200">
+                {pendingUsers.map((user) => (
+                  <div key={user.id} className="p-6 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="p-2 bg-gray-100 rounded-full">
+                            <Users className="w-4 h-4 text-gray-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-gray-900">{user.name}</h3>
+                            <p className="text-sm text-gray-600">{user.email}</p>
                           </div>
                         </div>
-                      )}
+                        
+                        {user.request_message && (
+                          <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <div className="flex items-start gap-2">
+                              <MessageCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-sm font-medium text-blue-800 mb-1">Request Message:</p>
+                                <p className="text-sm text-blue-700">{user.request_message}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center gap-2 mt-3 text-xs text-gray-500">
+                          <Calendar className="w-3 h-3" />
+                          Requested {new Date(user.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
                       
-                      <div className="flex items-center gap-2 mt-3 text-xs text-gray-500">
-                        <Calendar className="w-3 h-3" />
-                        Requested {new Date(user.created_at).toLocaleDateString()}
+                      <div className="flex items-center gap-2 ml-4">
+                        <button
+                          onClick={() => handleApprove(user.id)}
+                          disabled={actionLoading === user.id}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+                        >
+                          {actionLoading === user.id ? (
+                            <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <Check className="w-3 h-3" />
+                          )}
+                          Approve
+                        </button>
+                        
+                        <button
+                          onClick={() => setShowRejectModal(user.id)}
+                          disabled={actionLoading === user.id}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 transition-colors disabled:opacity-50"
+                        >
+                          <X className="w-3 h-3" />
+                          Reject
+                        </button>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center gap-2 ml-4">
-                      <button
-                        onClick={() => handleApprove(user.id)}
-                        disabled={actionLoading === user.id}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
-                      >
-                        {actionLoading === user.id ? (
-                          <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <Check className="w-3 h-3" />
-                        )}
-                        Approve
-                      </button>
-                      
-                      <button
-                        onClick={() => setShowRejectModal(user.id)}
-                        disabled={actionLoading === user.id}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 transition-colors disabled:opacity-50"
-                      >
-                        <X className="w-3 h-3" />
-                        Reject
-                      </button>
-                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          // User Management Tab Content
+          <UserManagement />
+        )}
       </div>
 
       {/* Reject Modal */}

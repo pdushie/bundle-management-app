@@ -24,8 +24,8 @@ export async function requireAuth() {
 
 export async function requireAdmin() {
   const session = await requireAuth() as any
-  if (session.user?.role !== 'admin') {
-    throw new Error('Admin access required')
+  if (session.user?.role !== 'superadmin') {
+    throw new Error('Super Admin access required')
   }
   return session
 }
@@ -33,8 +33,8 @@ export async function requireAdmin() {
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
-    maxAge: 30 * 60, // 30 minustes
-    updateAge: 0, // Disable session extension on activity
+    maxAge: 2 * 60 * 60, // 2 hours
+    updateAge: 30 * 60, // Update session every 30 minutes on activity
   },
   secret: process.env.NEXTAUTH_SECRET, // ADD THIS LINE
   pages: {

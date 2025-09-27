@@ -9,5 +9,14 @@ interface SessionProviderClientProps {
 }
 
 export function SessionProviderClient({ children, session }: SessionProviderClientProps) {
-  return <SessionProvider session={session}>{children}</SessionProvider>;
+  return (
+    <SessionProvider 
+      session={session}
+      // Set session to refresh when it's about to expire (30 minutes before expiry)
+      refetchInterval={30 * 60} // 30 minutes in seconds
+      refetchOnWindowFocus={true} // Refresh when window gains focus
+    >
+      {children}
+    </SessionProvider>
+  );
 }

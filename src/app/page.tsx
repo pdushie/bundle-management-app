@@ -2,10 +2,18 @@
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { Upload, FileText, Check, X, Download, Phone, Database, AlertCircle, BarChart, History, Calendar, Eye, Trash2, LogOut, User, Shield } from "lucide-react";
+import { Upload, FileText, Check, X, Download, Phone, Database, AlertCircle, BarChart, History, Calendar, Eye, Trash2, LogOut, User, Shield, Send, FileBox, CheckCircle } from "lucide-react";
+import { orderTrackingUtils } from "@/lib/orderTracking";
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell, LineChart, Line } from "recharts";
 import ExcelJS from "exceljs";
 import JSZip from "jszip";
+import SendOrderApp from "@/components/SendOrderApp";
+import OrdersApp from "@/components/OrdersApp";
+import ProcessedOrdersApp from "@/components/ProcessedOrdersApp";
+import SentOrdersApp from "@/components/SentOrdersApp";
+import { OrderProvider, useOrderCount } from "@/lib/orderContext";
+import { ORDER_UPDATED_EVENT } from "@/lib/orderNotifications";
+import { requestNotificationPermission, hasNotificationPermission, sendThrottledNotification, playNotificationSound } from '@/lib/notifications';
 
 type PhoneEntry = {
   number: string;
@@ -315,7 +323,9 @@ function HistoryManager({
                   <div className="min-w-0 flex-1 overflow-hidden">
                     <p className="text-xs font-medium text-gray-600 truncate">Total Data</p>
                     <p className="text-xs sm:text-lg font-bold text-gray-900 break-words">
-                      {dailySummaries.reduce((sum, day) => sum + day.totalGB, 0).toFixed(1)}GB
+                      {dailySummaries.reduce((sum, day) => sum + day.totalGB, 0) > 1023 ? 
+                        `${(dailySummaries.reduce((sum, day) => sum + day.totalGB, 0) / 1024).toFixed(2)} TB` : 
+                        `${dailySummaries.reduce((sum, day) => sum + day.totalGB, 0).toFixed(1)} GB`}
                     </p>
                   </div>
                 </div>
@@ -349,10 +359,12 @@ function HistoryManager({
                       <YAxis tick={{ fontSize: 10 }} />
                       <Tooltip
                         labelFormatter={(value) => `Date: ${value}`}
-                        formatter={(value, name) => [
-                          name === 'Total Data (GB)' ? `${value} GB` : value,
-                          name
-                        ]}
+                        formatter={(value, name) => {
+                          if (name === 'Total Data (GB)') {
+                            return [value > 1023 ? `${(value / 1024).toFixed(2)} TB` : `${value} GB`, name];
+                          }
+                          return [value, name];
+                        }}
                       />
                       <Legend />
                       <Line
@@ -407,7 +419,11 @@ function HistoryManager({
                         <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-green-600 font-medium">{summary.totalValid}</td>
                         <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-red-600 font-medium">{summary.totalInvalid}</td>
                         <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-yellow-600 font-medium">{summary.totalDuplicates}</td>
-                        <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-bold text-purple-600">{summary.totalGB.toFixed(2)} GB</td>
+                        <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-bold text-purple-600">
+                          {summary.totalGB > 1023 ? 
+                            `${(summary.totalGB / 1024).toFixed(2)} TB` : 
+                            `${summary.totalGB.toFixed(2)} GB`}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -445,7 +461,11 @@ function HistoryManager({
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="text-xs sm:text-sm font-bold text-gray-900">{entry.totalGB.toFixed(2)} GB</p>
+                      <p className="text-xs sm:text-sm font-bold text-gray-900">
+                        {entry.totalGB > 1023 ? 
+                          `${(entry.totalGB / 1024).toFixed(2)} TB` : 
+                          `${entry.totalGB.toFixed(2)} GB`}
+                      </p>
                       <p className="text-xs text-gray-600">{entry.entries.length} entries</p>
                     </div>
                   </div>
@@ -489,23 +509,41 @@ function BundleAllocatorApp({
   const [isExporting, setIsExporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Enhanced validation function that tries to fix numbers by adding leading zero
+  // Enhanced validation function that tries to fix numbers by adding leading zero or cleaning input
   const validateNumber = (num: string): { isValid: boolean; correctedNumber: string; wasFixed: boolean } => {
-    // First, check if the number is already valid
-    if (/^0\d{9}$/.test(num)) {
-      return { isValid: true, correctedNumber: num, wasFixed: false };
+    // Handle empty strings or nulls
+    if (!num || typeof num !== 'string' || num.trim() === '') {
+      return { isValid: false, correctedNumber: num || '', wasFixed: false };
     }
-
-    // Try adding a leading zero if it doesn't start with 0
-    if (!num.startsWith('0')) {
-      const withZero = '0' + num;
-      if (/^0\d{9}$/.test(withZero)) {
-        return { isValid: true, correctedNumber: withZero, wasFixed: true };
-      }
+    
+    // Strip any non-digit characters
+    const digitsOnly = num.replace(/\D/g, '');
+    let wasFixed = false;
+    
+    // Check if there were non-digits that we stripped
+    if (digitsOnly.length !== num.length) {
+      wasFixed = true;
     }
-
+    
+    // First case: Already valid 10 digits starting with 0
+    if (digitsOnly.length === 10 && digitsOnly.startsWith('0')) {
+      return { isValid: true, correctedNumber: digitsOnly, wasFixed: wasFixed };
+    }
+    
+    // Second case: 9 digits - try adding a leading zero
+    if (digitsOnly.length === 9) {
+      const withZero = '0' + digitsOnly;
+      return { isValid: true, correctedNumber: withZero, wasFixed: true };
+    }
+    
+    // Third case: 10 digits but doesn't start with 0 - replace first digit with 0
+    if (digitsOnly.length === 10 && !digitsOnly.startsWith('0')) {
+      const withZero = '0' + digitsOnly.substring(1);
+      return { isValid: true, correctedNumber: withZero, wasFixed: true };
+    }
+    
     // If still invalid, return the original number as invalid
-    return { isValid: false, correctedNumber: num, wasFixed: false };
+    return { isValid: false, correctedNumber: digitsOnly, wasFixed: wasFixed };
   };
 
   // Function to read Excel (.xlsx) files
@@ -906,13 +944,21 @@ function BundleAllocatorApp({
         const fixedCount = entries.filter(entry => entry.wasFixed).length;
         const totalMB = entries.reduce((sum, entry) => sum + (entry.allocationGB * 1024), 0);
         
-        let successMessage = `✅ Files exported and zipped successfully!\n\nData was split into ${fileChunks.length} files due to size (${totalGB.toFixed(2)} GB > ${MAX_TB_PER_FILE} TB limit)\n\nTotal processed: ${entries.length} entries\nValid: ${validCount}\nInvalid: ${invalidCount}\nDuplicates: ${duplicateCount}`;
+        let successMessage = `✅ Files exported and zipped successfully!\n\nData was split into ${fileChunks.length} files due to size (${
+          totalGB > 1023 
+          ? `${(totalGB / 1024).toFixed(2)} TB` 
+          : `${totalGB.toFixed(2)} GB`
+        } > ${MAX_TB_PER_FILE} TB limit)\n\nTotal processed: ${entries.length} entries\nValid: ${validCount}\nInvalid: ${invalidCount}\nDuplicates: ${duplicateCount}`;
         
         if (fixedCount > 0) {
           successMessage += `\nAuto-fixed: ${fixedCount}`;
         }
         
-        successMessage += `\n\nTotal Data: ${totalGB.toFixed(2)} GB (${totalMB.toFixed(0)} MB)`;
+        successMessage += `\n\nTotal Data: ${
+          totalGB > 1023 
+          ? `${(totalGB / 1024).toFixed(2)} TB (${totalMB.toFixed(0)} MB)` 
+          : `${totalGB.toFixed(2)} GB (${totalMB.toFixed(0)} MB)`
+        }`;
 
         window.alert && window.alert(successMessage);
 
@@ -989,7 +1035,11 @@ function BundleAllocatorApp({
           successMessage += `\nAuto-fixed: ${fixedCount}`;
         }
         
-        successMessage += `\n\nTotal Data: ${totalGB.toFixed(2)} GB (${totalMB.toFixed(0)} MB)`;
+        successMessage += `\n\nTotal Data: ${
+          totalGB > 1023 
+          ? `${(totalGB / 1024).toFixed(2)} TB (${totalMB.toFixed(0)} MB)` 
+          : `${totalGB.toFixed(2)} GB (${totalMB.toFixed(0)} MB)`
+        }`;
 
         window.alert && window.alert(successMessage);
       }
@@ -1292,23 +1342,41 @@ function BundleCategorizerApp({
   setChartData: (data: Array<{ allocation: string, count: number }>) => void;
   onAddToHistory: (entries: PhoneEntry[], type: 'bundle-allocator' | 'bundle-categorizer') => void;
 }) {
-  // Enhanced validation function that tries to fix numbers by adding leading zero
+  // Enhanced validation function with more sophisticated fixing capabilities
   const validateNumber = (num: string): { isValid: boolean; correctedNumber: string; wasFixed: boolean } => {
-    // First, check if the number is already valid
-    if (/^0\d{9}$/.test(num)) {
-      return { isValid: true, correctedNumber: num, wasFixed: false };
+    // Handle empty strings or nulls
+    if (!num || typeof num !== 'string' || num.trim() === '') {
+      return { isValid: false, correctedNumber: num || '', wasFixed: false };
     }
-
-    // Try adding a leading zero if it doesn't start with 0
-    if (!num.startsWith('0')) {
-      const withZero = '0' + num;
-      if (/^0\d{9}$/.test(withZero)) {
-        return { isValid: true, correctedNumber: withZero, wasFixed: true };
-      }
+    
+    // Strip any non-digit characters
+    const digitsOnly = num.replace(/\D/g, '');
+    let wasFixed = false;
+    
+    // Check if there were non-digits that we stripped
+    if (digitsOnly.length !== num.length) {
+      wasFixed = true;
     }
-
+    
+    // First case: Already valid 10 digits starting with 0
+    if (digitsOnly.length === 10 && digitsOnly.startsWith('0')) {
+      return { isValid: true, correctedNumber: digitsOnly, wasFixed: wasFixed };
+    }
+    
+    // Second case: 9 digits - try adding a leading zero
+    if (digitsOnly.length === 9) {
+      const withZero = '0' + digitsOnly;
+      return { isValid: true, correctedNumber: withZero, wasFixed: true };
+    }
+    
+    // Third case: 10 digits but doesn't start with 0 - replace first digit with 0
+    if (digitsOnly.length === 10 && !digitsOnly.startsWith('0')) {
+      const withZero = '0' + digitsOnly.substring(1);
+      return { isValid: true, correctedNumber: withZero, wasFixed: true };
+    }
+    
     // If still invalid, return the original number as invalid
-    return { isValid: false, correctedNumber: num, wasFixed: false };
+    return { isValid: false, correctedNumber: digitsOnly, wasFixed: wasFixed };
   };
 
   const parseData = () => {
@@ -1549,8 +1617,347 @@ function BundleCategorizerApp({
   );
 }
 
-// Main App with Authentication and Admin Features
-export default function App() {
+// Using notification utilities imported at the top of the file
+
+// Component to display the tabs with order count notification
+function TabNavigation({ 
+  activeTab, 
+  setActiveTab, 
+  tabs, 
+  isAdmin, 
+  isSuperAdmin,
+  history 
+}: { 
+  activeTab: string; 
+  setActiveTab: (tab: string) => void; 
+  tabs: Array<{ id: string; name: string; icon: any; roles?: string[] }>;
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
+  history: any[];
+}) {
+  // Use the order counts from context
+  const { orderCount, processedOrderCount, sentOrderCount, refreshOrderCount } = useOrderCount();
+  
+  // Using the imported orderTrackingUtils for tracking unread counts
+  // State to track notification indicators
+  const [notificationPermissionRequested, setNotificationPermissionRequested] = useState(false);
+  const [showNotificationBadge, setShowNotificationBadge] = useState(false);
+  const [prevOrderCount, setPrevOrderCount] = useState(0);
+  const [prevProcessedOrderCount, setPrevProcessedOrderCount] = useState(0);
+  const [prevSentOrderCount, setPrevSentOrderCount] = useState(0);
+  
+  // State for unread counts
+  const [unreadPendingOrders, setUnreadPendingOrders] = useState(0);
+  const [unreadProcessedOrders, setUnreadProcessedOrders] = useState(0);
+  const [unreadSentOrders, setUnreadSentOrders] = useState(0);
+  
+  // Request notification permission when component mounts
+  useEffect(() => {
+    const requestPermission = async () => {
+      if (!notificationPermissionRequested) {
+        await requestNotificationPermission();
+        setNotificationPermissionRequested(true);
+      }
+    };
+    
+    requestPermission();
+  }, [notificationPermissionRequested]);
+  
+  // Initialize order tracking when component mounts
+  useEffect(() => {
+    // Initialize tracking with current counts
+    orderTrackingUtils.initializeTracking(
+      orderCount,
+      processedOrderCount,
+      sentOrderCount
+    );
+    
+    // Set the active tab in tracking system
+    orderTrackingUtils.setActiveTab(activeTab);
+    
+    // Get initial unread counts
+    setUnreadPendingOrders(orderTrackingUtils.getUnreadPendingOrders());
+    setUnreadProcessedOrders(orderTrackingUtils.getUnreadProcessedOrders());
+    setUnreadSentOrders(orderTrackingUtils.getUnreadSentOrders());
+    
+    // Initialize previous counts
+    setPrevOrderCount(orderCount);
+    setPrevProcessedOrderCount(processedOrderCount);
+    setPrevSentOrderCount(sentOrderCount);
+    
+  }, [orderCount, processedOrderCount, sentOrderCount, activeTab]);
+  
+  // Update tracking system when tab changes or counts change
+  useEffect(() => {
+    // Set the active tab in tracking system
+    orderTrackingUtils.setActiveTab(activeTab);
+    
+    // Check for order count changes
+    if (orderCount !== prevOrderCount || 
+        processedOrderCount !== prevProcessedOrderCount || 
+        sentOrderCount !== prevSentOrderCount) {
+      
+      // Update the tracking system
+      const { hasNewPending, hasNewProcessed, hasNewSent } = orderTrackingUtils.updateOrderCounts(
+        orderCount,
+        processedOrderCount,
+        sentOrderCount
+      );
+      
+      // Get updated unread counts
+      setUnreadPendingOrders(orderTrackingUtils.getUnreadPendingOrders());
+      setUnreadProcessedOrders(orderTrackingUtils.getUnreadProcessedOrders());
+      setUnreadSentOrders(orderTrackingUtils.getUnreadSentOrders());
+      
+      // Show notification badge for new pending orders
+      if (hasNewPending && activeTab !== 'orders') {
+        setShowNotificationBadge(true);
+        const hideTimer = setTimeout(() => {
+          setShowNotificationBadge(false);
+        }, 5000);
+        
+        // Play notification sound
+        playNotificationSound(0.3).catch(err => console.log('Error playing sound:', err));
+        
+        // Show browser notification if we have permission
+        if (hasNotificationPermission()) {
+          const newOrdersCount = orderCount - prevOrderCount;
+          sendThrottledNotification(
+            `${newOrdersCount} New Order${newOrdersCount > 1 ? 's' : ''}`, 
+            { 
+              body: `You have ${newOrdersCount} new order${newOrdersCount > 1 ? 's' : ''} pending review.`,
+              tag: 'new-orders',
+              requireInteraction: true,
+              // @ts-ignore - Notification onClick is available but may have type issues
+              onClick: () => {
+                window.focus();
+                setActiveTab('orders');
+              }
+            }
+          );
+        }
+        
+        return () => clearTimeout(hideTimer);
+      }
+      
+      // Notify for new processed orders
+      if (hasNewProcessed && activeTab !== 'processed-orders') {
+        // Play notification sound at lower volume for processed orders
+        playNotificationSound(0.2).catch(err => console.log('Error playing sound:', err));
+        
+        // Show browser notification if we have permission
+        if (hasNotificationPermission()) {
+          const newProcessedCount = processedOrderCount - prevProcessedOrderCount;
+          sendThrottledNotification(
+            `${newProcessedCount} Order${newProcessedCount > 1 ? 's' : ''} Processed`, 
+            { 
+              body: `${newProcessedCount} order${newProcessedCount > 1 ? 's have' : ' has'} been processed and ${newProcessedCount > 1 ? 'are' : 'is'} ready for review.`,
+              tag: 'processed-orders',
+              // @ts-ignore
+              onClick: () => {
+                window.focus();
+                setActiveTab('processed-orders');
+              }
+            }
+          );
+        }
+      }
+      
+      // Update previous counts
+      setPrevOrderCount(orderCount);
+      setPrevProcessedOrderCount(processedOrderCount);
+      setPrevSentOrderCount(sentOrderCount);
+    }
+  }, [
+    activeTab, 
+    orderCount, 
+    processedOrderCount, 
+    sentOrderCount,
+    prevOrderCount,
+    prevProcessedOrderCount,
+    prevSentOrderCount,
+    setActiveTab
+  ]);
+  
+  // Refresh counts when the component mounts or when the active tab changes
+  useEffect(() => {
+    // Immediately refresh counts when mounting or switching tabs
+    refreshOrderCount();
+    
+    // Try refreshing again after a short delay (for slow connections)
+    const initialRefreshTimer = setTimeout(() => {
+      refreshOrderCount();
+    }, 1500);
+    
+    // Set up ORDER_UPDATED_EVENT listener
+    const handleOrderUpdate = () => {
+      console.log('TabNavigation: ORDER_UPDATED_EVENT received, refreshing counts');
+      refreshOrderCount();
+    };
+    
+    window.addEventListener(ORDER_UPDATED_EVENT, handleOrderUpdate);
+    
+    // Set up polling interval (every 5 seconds) for more frequent updates
+    const intervalId = setInterval(() => {
+      refreshOrderCount();
+    }, 5000);
+    
+    // Clean up event listener and interval on unmount
+    return () => {
+      clearTimeout(initialRefreshTimer);
+      window.removeEventListener(ORDER_UPDATED_EVENT, handleOrderUpdate);
+      clearInterval(intervalId);
+    };
+  }, [activeTab, refreshOrderCount]);
+  
+  // Handle tab click with tracking integration
+  const handleTabClick = (e: React.MouseEvent, tabId: string) => {
+    // Prevent navigation events
+    if (e && e.preventDefault) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
+    
+    // Set the active tab
+    setActiveTab(tabId);
+    
+    // Update tracking system
+    orderTrackingUtils.setActiveTab(tabId);
+    
+    // Clear unread counts when navigating to a specific tab
+    if (tabId === 'orders') {
+      orderTrackingUtils.clearUnreadPendingOrders();
+      setUnreadPendingOrders(0);
+    } else if (tabId === 'processed-orders') {
+      orderTrackingUtils.clearUnreadProcessedOrders();
+      setUnreadProcessedOrders(0);
+    } else if (tabId === 'sent-orders') {
+      orderTrackingUtils.clearUnreadSentOrders();
+      setUnreadSentOrders(0);
+    }
+    
+    // Refresh counts
+    refreshOrderCount();
+    
+    return false;
+  };
+  
+  return (
+    <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+      {tabs.map((tab) => {
+        const Icon = tab.icon;
+        return (
+          <div 
+            key={tab.id}
+            role="button"
+            tabIndex={0}
+            onClick={(e) => handleTabClick(e, tab.id)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleTabClick(e as any, tab.id);
+              }
+            }}
+            className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3 rounded-t-lg font-medium transition-all duration-200 whitespace-nowrap text-xs sm:text-sm flex-shrink-0 cursor-pointer ${activeTab === tab.id
+                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              }`}
+          >
+            <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">{tab.name}</span>
+            <span className="sm:hidden">
+              {tab.id === "bundle-allocator" ? "Allocator" :
+               tab.id === "bundle-categorizer" ? "Categorizer" :
+               tab.id === "send-order" ? "Send" :
+               tab.id === "orders" ? "Orders" :
+               tab.id === "processed-orders" ? "Processed" :
+               tab.id === "sent-orders" ? "My Orders" : "History"}
+            </span>
+            {tab.id === "history" && isSuperAdmin && history.length > 0 && (
+              <span className="bg-white/20 text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
+                {history.length}
+              </span>
+            )}
+            
+            {/* Orders tab badge with unread indicators */}
+            {tab.id === "orders" && orderCount > 0 && (
+              <span 
+                className={`relative ${
+                  unreadPendingOrders > 0 
+                    ? "bg-red-500 text-white animate-pulse" 
+                    : "bg-blue-500 text-white"
+                } text-xs px-2 py-1 rounded-full cursor-pointer hover:scale-110 transition-transform shadow-md font-bold`}
+                onClick={(e) => {
+                  // If not already on orders tab, navigate to it when badge is clicked
+                  if (activeTab !== tab.id) {
+                    e.stopPropagation(); // Stop propagation to prevent double navigation
+                    handleTabClick(e, tab.id);
+                  }
+                }}
+              >
+                {orderCount}
+                {unreadPendingOrders > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-full font-bold animate-pulse shadow-lg ring-2 ring-red-300">
+                    {unreadPendingOrders > 99 ? '99+' : unreadPendingOrders}
+                  </span>
+                )}
+              </span>
+            )}
+            
+            {/* Processed Orders tab badge with unread indicators */}
+            {tab.id === "processed-orders" && processedOrderCount > 0 && (
+              <span 
+                className={`relative ${
+                  unreadProcessedOrders > 0 
+                    ? "bg-red-500 text-white animate-pulse" 
+                    : "bg-green-500 text-white"
+                } text-xs px-2 py-1 rounded-full cursor-pointer hover:scale-110 transition-transform shadow-md font-bold`}
+                onClick={(e) => {
+                  if (activeTab !== tab.id) {
+                    e.stopPropagation();
+                    handleTabClick(e, tab.id);
+                  }
+                }}
+              >
+                {processedOrderCount}
+                {unreadProcessedOrders > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-full font-bold animate-pulse shadow-lg ring-2 ring-red-300">
+                    {unreadProcessedOrders > 99 ? '99+' : unreadProcessedOrders}
+                  </span>
+                )}
+              </span>
+            )}
+            
+            {/* Sent Orders tab badge with unread indicators */}
+            {tab.id === "sent-orders" && sentOrderCount > 0 && (
+              <span 
+                className={`relative ${
+                  unreadSentOrders > 0 
+                    ? "bg-red-500 text-white animate-pulse" 
+                    : "bg-purple-500 text-white"
+                } text-xs px-2 py-1 rounded-full cursor-pointer hover:scale-110 transition-transform shadow-md font-bold`}
+                onClick={(e) => {
+                  if (activeTab !== tab.id) {
+                    e.stopPropagation();
+                    handleTabClick(e, tab.id);
+                  }
+                }}
+              >
+                {sentOrderCount}
+                {unreadSentOrders > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-full font-bold animate-pulse shadow-lg ring-2 ring-red-300">
+                    {unreadSentOrders > 99 ? '99+' : unreadSentOrders}
+                  </span>
+                )}
+              </span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Main App with Authentication and Role-Based Access
+function AppContent() {
   const { data: session, status } = useSession() as any;
 
   // Show loading while checking authentication
@@ -1582,10 +1989,19 @@ export default function App() {
     );
   }
 
-  // ===== ADMIN ACCESS CHECK FOR HISTORY VISIBILITY =====
+  // ===== ROLE-BASED ACCESS CONTROL =====
+  const isSuperAdmin = session?.user?.role === 'superadmin';
   const isAdmin = session?.user?.role === 'admin';
-
-  const [activeTab, setActiveTab] = useState("bundle-allocator");
+  const isManager = session?.user?.role === 'manager';
+  const isRegularUser = session?.user?.role === 'user';
+  
+  // Set initial active tab based on user role
+  let defaultTab = "send-order"; // Default for most users
+  if (isSuperAdmin || isAdmin || isManager) {
+    defaultTab = "bundle-allocator";
+  }
+  
+  const [activeTab, setActiveTab] = useState(defaultTab);
 
   // Bundle Allocator state
   const [allocatorInputText, setAllocatorInputText] = useState("");
@@ -1635,10 +2051,10 @@ export default function App() {
     }
   };
 
-  // Load history from database - ONLY FOR ADMINS (since non-admins can't see history anyway)
+  // Load history from database - ONLY FOR SUPER ADMINS (since others can't see history anyway)
   useEffect(() => {
     const loadHistory = async () => {
-      if (!isAdmin) return; // Only load history for admins
+      if (!isSuperAdmin) return; // Only load history for super admins
       
       try {
         const response = await fetch('/api/history/load');
@@ -1651,65 +2067,218 @@ export default function App() {
       }
     };
 
-    if (session?.user && isAdmin) {
+    if (session?.user && isSuperAdmin) {
       loadHistory();
     }
-  }, [session, isAdmin]);
+  }, [session, isSuperAdmin]);
 
-  // ===== CONDITIONAL TABS BASED ON ADMIN STATUS =====
-  const tabs = [
+  // ===== CONDITIONAL TABS BASED ON USER ROLE =====
+  // Define base tabs available to everyone
+  const baseTabs = [
     {
       id: "bundle-allocator",
       name: "Bundle Allocator",
       icon: Phone,
     },
     {
-      id: "bundle-categorizer",
+      id: "bundle-categorizer", 
       name: "Bundle Categorizer",
       icon: BarChart,
     },
-    // Only include History & Analytics tab for admin users
-    ...(isAdmin ? [{
-      id: "history" as const,
-      name: "History & Analytics",
-      icon: History,
-    }] : [])
+    {
+      id: "send-order",
+      name: "Send Order",
+      icon: Send,
+    },
+    {
+      id: "orders",
+      name: "Orders",
+      icon: FileBox,
+    },
+    {
+      id: "processed-orders",
+      name: "Processed Orders",
+      icon: CheckCircle,
+    },
+    {
+      id: "sent-orders",
+      name: "My Sent Orders",
+      icon: Send,
+    }
   ];
 
-  const renderActiveComponent = () => {
-    if (activeTab === "bundle-allocator") {
-      return (
-        <BundleAllocatorApp
-          inputText={allocatorInputText}
-          setInputText={setAllocatorInputText}
-          entries={allocatorEntries}
-          setEntries={setAllocatorEntries}
-          onAddToHistory={addToHistory}
-        />
-      );
-    } else if (activeTab === "bundle-categorizer") {
-      return (
-        <BundleCategorizerApp
-          rawData={categorizerRawData}
-          setRawData={setCategorizerRawData}
-          summary={categorizerSummary}
-          setSummary={setCategorizerSummary}
-          chartData={categorizerChartData}
-          setChartData={setCategorizerChartData}
-          onAddToHistory={addToHistory}
-        />
-      );
-    } else if (activeTab === "history" && isAdmin) {
-      // Only render HistoryManager if user is admin
-      return (
-        <HistoryManager
-          history={history}
-          setHistory={setHistory}
-        />
-      );
+  // History tab is only accessible to super admins
+  if (isSuperAdmin) {
+    baseTabs.push({
+      id: "history",
+      name: "History & Analytics",
+      icon: History,
+    });
+  }
+  
+  // Filter tabs based on user role
+  const filteredTabs = baseTabs.filter(tab => {
+    // Super admin users have access to all tabs
+    if (isSuperAdmin) {
+      return true;
     }
+    
+    // Regular users can only access send-order and sent-orders
+    if (isRegularUser) {
+      return tab.id === 'send-order' || tab.id === 'sent-orders';
+    }
+    
+    // Admin users can only access specific tabs
+    if (isAdmin) {
+      return tab.id === 'bundle-allocator' || 
+             tab.id === 'bundle-categorizer' || 
+             tab.id === 'orders' || 
+             tab.id === 'processed-orders';
+    }
+    
+    // Managers can access all tabs except history
+    return tab.id !== 'history';
+  });
+  
+  // Verify the current tab is allowed for user's role
+  const renderActiveComponent = () => {
+    // Find the current tab in the filtered tabs (tabs user has access to)
+    const currentTab = filteredTabs.find(tab => tab.id === activeTab);
+    
+    // If the current tab is not in user's allowed tabs, default to the first allowed tab
+    if (!currentTab && filteredTabs.length > 0) {
+      // User tried to access an unauthorized tab, redirect to default tab
+      setActiveTab(filteredTabs[0].id);
+      return null;
+    }
+    
+    // Render the appropriate component based on the active tab and user role
+    switch (activeTab) {
+      case "bundle-allocator":
+        // Super admins, admins and managers can access
+        if (isSuperAdmin || isAdmin || isManager) {
+          return (
+            <BundleAllocatorApp
+              inputText={allocatorInputText}
+              setInputText={setAllocatorInputText}
+              entries={allocatorEntries}
+              setEntries={setAllocatorEntries}
+              onAddToHistory={addToHistory}
+            />
+          );
+        }
+        break;
+
+      case "bundle-categorizer":
+        // Super admins, admins and managers can access
+        if (isSuperAdmin || isAdmin || isManager) {
+          return (
+            <BundleCategorizerApp
+              rawData={categorizerRawData}
+              setRawData={setCategorizerRawData}
+              summary={categorizerSummary}
+              setSummary={setCategorizerSummary}
+              chartData={categorizerChartData}
+              setChartData={setCategorizerChartData}
+              onAddToHistory={addToHistory}
+            />
+          );
+        }
+        break;
+        
+      case "send-order":
+        // Super admins, users and managers can access
+        if (isSuperAdmin || isRegularUser || isManager) {
+          return <SendOrderApp />;
+        }
+        break;
+        
+      case "orders":
+        // Super admins, admins and managers can access
+        if (isSuperAdmin || isAdmin || isManager) {
+          return <OrdersApp />;
+        }
+        break;
+        
+      case "processed-orders":
+        // Super admins, admins and managers can access
+        if (isSuperAdmin || isAdmin || isManager) {
+          return <ProcessedOrdersApp />;
+        }
+        break;
+        
+      case "sent-orders":
+        // Super admins, users and managers can access
+        if (isSuperAdmin || isRegularUser || isManager) {
+          return <SentOrdersApp />;
+        }
+        break;
+        
+      case "history":
+        // History tab is only accessible to super admins
+        if (isSuperAdmin) {
+          return (
+            <HistoryManager
+              history={history}
+              setHistory={setHistory}
+            />
+          );
+        }
+        break;
+    }
+    
+    // If we reach here, the user doesn't have permission to view the selected tab
+    // Redirect to the first allowed tab
+    if (filteredTabs.length > 0 && filteredTabs[0].id !== activeTab) {
+      setActiveTab(filteredTabs[0].id);
+    }
+    
     return null;
   };
+
+  // This disables URL-based navigation for tabs
+  useEffect(() => {
+    // Handle any browser back/forward navigation
+    const handlePopState = (event: PopStateEvent) => {
+      // This prevents the browser from doing URL-based navigation
+      // and keeps us in the current app state
+      event.preventDefault();
+      event.stopPropagation();
+      
+      // We won't change the active tab based on URL changes
+      // This ensures tab state is only controlled by our click handlers
+      return false;
+    };
+
+    // Add event listener for browser history changes
+    window.addEventListener('popstate', handlePopState);
+    
+    // Clean up the event listener
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+  
+  // Client-side effect to handle initial URL
+  useEffect(() => {
+    // Only run in the browser
+    if (typeof window !== 'undefined') {
+      const initialPath = window.location.pathname.substring(1);
+      
+      // Check if the path matches a tab
+      const matchingTab = filteredTabs.find((tab) => tab.id === initialPath);
+      
+      if (matchingTab) {
+        setActiveTab(matchingTab.id);
+      }
+    }
+  }, [filteredTabs]);
+  
+  // Safe tab switching handler that prevents any navigation side effects
+  const safeTabSwitch = useCallback((tabId: string) => {
+    // Directly set the active tab without any URL or history manipulation
+    setActiveTab(tabId);
+  }, [setActiveTab]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
@@ -1731,8 +2300,8 @@ export default function App() {
 
               {/* User Info & Stats - Mobile Optimized */}
               <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm w-full sm:w-auto">
-                {/* Only show history stats for admins */}
-                {isAdmin && history.length > 0 && activeTab !== "history" && (
+                {/* Only show history stats for super admins */}
+                {isSuperAdmin && history.length > 0 && activeTab !== "history" && (
                   <>
                     <div className="bg-blue-100 text-blue-800 px-2 sm:px-3 py-1 rounded-full font-medium">
                       {history.length} sessions
@@ -1743,16 +2312,32 @@ export default function App() {
                   </>
                 )}
 
-                {/* Admin Panel Link - Only visible to admins */}
-                {isAdmin && (
-                  <a
-                    href="/admin"
-                    className="flex items-center gap-1 sm:gap-2 bg-purple-100 text-purple-700 px-2 sm:px-3 py-1 rounded-full hover:bg-purple-200 transition-colors"
-                  >
-                    <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">Admin Panel</span>
-                    <span className="sm:hidden">Admin</span>
-                  </a>
+                {/* Admin Panel Link - Only visible to super admins */}
+                {isSuperAdmin && (
+                  <>
+                    <a
+                      href="/admin"
+                      className="flex items-center gap-1 sm:gap-2 bg-purple-100 text-purple-700 px-2 sm:px-3 py-1 rounded-full hover:bg-purple-200 transition-colors"
+                      onClick={(e) => {
+                        // Admin panel is an exception - this should navigate
+                      }}
+                    >
+                      <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline">Admin Panel</span>
+                      <span className="sm:hidden">Admin</span>
+                    </a>
+                    <a
+                      href="/test-notifications"
+                      className="flex items-center gap-1 sm:gap-2 bg-orange-100 text-orange-700 px-2 sm:px-3 py-1 rounded-full hover:bg-orange-200 transition-colors"
+                      onClick={(e) => {
+                        // Test page is an exception - this should navigate
+                      }}
+                    >
+                      <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline">Test Notifications</span>
+                      <span className="sm:hidden">Test</span>
+                    </a>
+                  </>
                 )}
 
                 {/* User Menu - Mobile Optimized */}
@@ -1761,9 +2346,15 @@ export default function App() {
                   <span className="font-medium text-xs sm:text-sm truncate max-w-24 sm:max-w-none">
                     {session?.user?.name || session?.user?.email}
                   </span>
-                  {/* Show role indicator */}
-                  {isAdmin && (
+                  {/* Show role indicator for all users */}
+                  {session?.user?.role === 'superadmin' ? (
+                    <span className="text-xs bg-red-200 text-red-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">Super Admin</span>
+                  ) : session?.user?.role === 'admin' ? (
                     <span className="text-xs bg-purple-200 text-purple-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">Admin</span>
+                  ) : session?.user?.role === 'user' ? (
+                    <span className="text-xs bg-blue-200 text-blue-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">User</span>
+                  ) : (
+                    <span className="text-xs bg-green-200 text-green-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">Manager</span>
                   )}
                   <button
                     onClick={handleSignOut}
@@ -1777,33 +2368,14 @@ export default function App() {
             </div>
 
             {/* Tab Navigation - Mobile Friendly */}
-            <div className="flex gap-1 overflow-x-auto scrollbar-hide">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3 rounded-t-lg font-medium transition-all duration-200 whitespace-nowrap text-xs sm:text-sm flex-shrink-0 ${activeTab === tab.id
-                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                      }`}
-                  >
-                    <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span className="hidden sm:inline">{tab.name}</span>
-                    <span className="sm:hidden">
-                      {tab.id === "bundle-allocator" ? "Allocator" :
-                       tab.id === "bundle-categorizer" ? "Categorizer" : "History"}
-                    </span>
-                    {tab.id === "history" && isAdmin && history.length > 0 && (
-                      <span className="bg-white/20 text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
-                        {history.length}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+            <TabNavigation 
+              activeTab={activeTab} 
+              setActiveTab={setActiveTab} 
+              tabs={filteredTabs} 
+              isAdmin={isAdmin}
+              isSuperAdmin={isSuperAdmin}
+              history={history} 
+            />
           </div>
         </div>
       </div>
@@ -1813,5 +2385,14 @@ export default function App() {
         {renderActiveComponent()}
       </div>
     </div>
+  );
+}
+
+// Export the app wrapped with OrderProvider
+export default function App() {
+  return (
+    <OrderProvider>
+      <AppContent />
+    </OrderProvider>
   );
 }
