@@ -9,6 +9,10 @@ const pool = new Pool({
 });
 
 export async function POST(req: NextRequest) {
+  // Define variables at the top scope so they're accessible in the catch block
+  let userId: string = '';
+  let enabled: boolean = false;
+  
   try {
     const session = await getServerSession(authOptions);
     
@@ -19,7 +23,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { userId, enabled } = await req.json();
+    // Parse request body
+    const body = await req.json();
+    userId = body.userId;
+    enabled = body.enabled;
 
     if (!userId || enabled === undefined) {
       return NextResponse.json(
@@ -73,8 +80,9 @@ export async function POST(req: NextRequest) {
     }
   } catch (error) {
     console.error("Database error:", error);
+    // More generic error message that doesn't rely on the enabled variable
     return NextResponse.json(
-      { error: `Failed to ${enabled ? 'enable' : 'disable'} user` },
+      { error: "Failed to update user status" },
       { status: 500 }
     );
   }
