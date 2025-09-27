@@ -1,11 +1,17 @@
+"use client";
+
 import React from 'react';
 import { OrderProvider } from '@/lib/orderContext';
-import App from './app';
 
-export default function AppWithProviders() {
+// This component wraps the app content with the OrderProvider
+export default function AppWithProviders({ 
+  children 
+}: { 
+  children: React.ReactNode 
+}) {
   return (
     <OrderProvider>
-      <App />
+      {children}
     </OrderProvider>
   );
 }

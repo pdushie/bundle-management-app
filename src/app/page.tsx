@@ -2388,11 +2388,14 @@ function AppContent() {
   );
 }
 
-// Export the app wrapped with OrderProvider
-export default function App() {
+// Import our AppWithProviders component
+import AppWithProviders from './AppWithProviders';
+
+// Export the main page component, wrapped with AppWithProviders
+export default function Home() {
   return (
-    <OrderProvider>
+    <AppWithProviders>
       <AppContent />
-    </OrderProvider>
+    </AppWithProviders>
   );
 }

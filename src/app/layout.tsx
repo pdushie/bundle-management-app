@@ -52,7 +52,13 @@ export default async function RootLayout({
       </head>
       <body className={`h-full ${geistSans.variable} ${geistMono.variable}`}>
         <SessionProviderClient session={session}>
-          {children}
+          <div suppressHydrationWarning>
+            {/* The AppWithProviders will provide the OrderProvider to its children */}
+            {/* suppressHydrationWarning is used to avoid hydration mismatch warnings */}
+            <div id="app-root">
+              {children}
+            </div>
+          </div>
         </SessionProviderClient>
       </body>
     </html>
