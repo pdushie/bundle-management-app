@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { orderEntries } from "@/lib/schema";
-import { and, desc, like, gte, lte } from "drizzle-orm";
+import { and, desc, like, gte, lte, eq } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,7 +28,8 @@ export async function POST(req: NextRequest) {
     }
     
     if (status && status !== 'all') {
-      conditions.push(orderEntries.status.equals(status));
+      // Use the imported eq function
+      conditions.push(eq(orderEntries.status, status));
     }
     
     if (startDate && endDate) {
