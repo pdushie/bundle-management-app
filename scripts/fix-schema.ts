@@ -1,0 +1,38 @@
+// Fix schema using the same database connection as the application
+import { db } from '../src/lib/db';
+import { sql } from 'drizzle-orm';
+
+async function fixSchema() {
+  console.log('Fixing database schema...');
+  
+  try {
+    // Check if the column exists
+    const checkResult = await db.execute(sql`
+      SELECT EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = 'user_pricing_profiles' AND column_name = 'updated_at'
+      );
+    `);
+    
+    const columnExists = checkResult[0].exists;
+    
+    if (columnExists) {
+      console.log('Column updated_at already exists in user_pricing_profiles table. No changes needed.');
+      return;
+    }
+
+    // Add the column
+    console.log('Adding updated_at column to user_pricing_profiles table...');
+    await db.execute(sql`
+      ALTER TABLE user_pricing_profiles 
+      ADD COLUMN updated_at TIMESTAMP DEFAULT NOW();
+    `);
+    
+    console.log('Successfully added updated_at column to user_pricing_profiles table.');
+  } catch (error) {
+    console.error('Error fixing schema:', error);
+  }
+}
+
+fixSchema();

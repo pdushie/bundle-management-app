@@ -1,8 +1,7 @@
-"use client";
+import OrderTrackingWrapper from "./OrderTrackingWrapper";
 
-import OrderTrackingApp from "@/components/OrderTrackingApp";
-import { Metadata } from "next";
-
+// This is a server component - it won't have hydration issues
 export default function OrderTrackingPage() {
-  return <OrderTrackingApp />;
+  // We delegate the actual rendering to a client component
+  return <OrderTrackingWrapper />;
 }

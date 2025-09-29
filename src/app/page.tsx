@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { Upload, FileText, Check, X, Download, Phone, Database, AlertCircle, BarChart, History, Calendar, Eye, Trash2, LogOut, User, Shield, Send, FileBox, CheckCircle } from "lucide-react";
+import { Upload, FileText, Check, X, Download, Phone, Database, AlertCircle, BarChart, History, Calendar, Eye, Trash2, LogOut, User, Shield, Send, FileBox, CheckCircle, DollarSign } from "lucide-react";
 import { orderTrackingUtils } from "@/lib/orderTracking";
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell, LineChart, Line } from "recharts";
 import ExcelJS from "exceljs";
@@ -12,6 +12,7 @@ import OrdersApp from "@/components/OrdersApp";
 import ProcessedOrdersApp from "@/components/ProcessedOrdersApp";
 import SentOrdersApp from "@/components/SentOrdersApp";
 import OrderTrackingApp from "@/components/OrderTrackingApp";
+import BillingApp from "@/components/BillingApp";
 import { OrderProvider, useOrderCount } from "@/lib/orderContext";
 import { ORDER_UPDATED_EVENT } from "@/lib/orderNotifications";
 import { requestNotificationPermission, hasNotificationPermission, sendThrottledNotification, playNotificationSound } from '@/lib/notifications';
@@ -79,11 +80,16 @@ function HistoryManager({
   // Calculate daily summaries
   const dailySummaries = availableDates.map(date => {
     const dayEntries = history.filter(entry => entry.date === date);
-    const totalEntries = dayEntries.reduce((sum, entry) => sum + entry.entries.length, 0);
-    const totalGB = dayEntries.reduce((sum, entry) => sum + entry.totalGB, 0);
-    const totalValid = dayEntries.reduce((sum, entry) => sum + entry.validCount, 0);
-    const totalInvalid = dayEntries.reduce((sum, entry) => sum + entry.invalidCount, 0);
-    const totalDuplicates = dayEntries.reduce((sum, entry) => sum + entry.duplicateCount, 0);
+    const totalEntries = dayEntries.reduce((sum, entry) => sum + (entry.entries ? entry.entries.length : 0), 0);
+    // Handle totalGB conversion safely
+    const totalGB = dayEntries.reduce((sum, entry) => {
+      const entryGB = entry.totalGB !== undefined ? 
+        (typeof entry.totalGB === 'string' ? parseFloat(entry.totalGB) : Number(entry.totalGB)) : 0;
+      return sum + (isNaN(entryGB) ? 0 : entryGB);
+    }, 0);
+    const totalValid = dayEntries.reduce((sum, entry) => sum + (entry.validCount || 0), 0);
+    const totalInvalid = dayEntries.reduce((sum, entry) => sum + (entry.invalidCount || 0), 0);
+    const totalDuplicates = dayEntries.reduce((sum, entry) => sum + (entry.duplicateCount || 0), 0);
     const sessionsCount = dayEntries.length;
 
     return {
@@ -1668,25 +1674,59 @@ function TabNavigation({
   
   // Initialize order tracking when component mounts
   useEffect(() => {
+    console.log('Initializing order tracking component with counts:', {
+      orderCount,
+      processedOrderCount, 
+      sentOrderCount
+    });
+    
+    // Ensure counts are valid numbers
+    const safeOrderCount = orderCount || 0;
+    const safeProcessedOrderCount = processedOrderCount || 0;
+    const safeSentOrderCount = sentOrderCount || 0;
+    
     // Initialize tracking with current counts
     orderTrackingUtils.initializeTracking(
-      orderCount,
-      processedOrderCount,
-      sentOrderCount
+      safeOrderCount,
+      safeProcessedOrderCount,
+      safeSentOrderCount
     );
     
     // Set the active tab in tracking system
     orderTrackingUtils.setActiveTab(activeTab);
     
     // Get initial unread counts
-    setUnreadPendingOrders(orderTrackingUtils.getUnreadPendingOrders());
-    setUnreadProcessedOrders(orderTrackingUtils.getUnreadProcessedOrders());
-    setUnreadSentOrders(orderTrackingUtils.getUnreadSentOrders());
+    const pendingUnread = orderTrackingUtils.getUnreadPendingOrders();
+    const processedUnread = orderTrackingUtils.getUnreadProcessedOrders();
+    const sentUnread = orderTrackingUtils.getUnreadSentOrders();
+    
+    console.log('Initial unread counts:', {
+      pendingUnread,
+      processedUnread,
+      sentUnread
+    });
+    
+    setUnreadPendingOrders(pendingUnread);
+    setUnreadProcessedOrders(processedUnread);
+    setUnreadSentOrders(sentUnread);
     
     // Initialize previous counts
-    setPrevOrderCount(orderCount);
-    setPrevProcessedOrderCount(processedOrderCount);
-    setPrevSentOrderCount(sentOrderCount);
+    setPrevOrderCount(safeOrderCount);
+    setPrevProcessedOrderCount(safeProcessedOrderCount);
+    setPrevSentOrderCount(safeSentOrderCount);
+    
+    // If no orders, no need to continue
+    if (safeOrderCount === 0 && safeProcessedOrderCount === 0 && safeSentOrderCount === 0) {
+      return;
+    }
+    
+    // Only set unread counts if explicitly requested, starting with 0 by default
+    // Removing auto-assignment of unread counts on component mount
+    console.log('Initial counts maintained at:', {
+      pendingUnread,
+      processedUnread,
+      sentUnread
+    });
     
   }, [orderCount, processedOrderCount, sentOrderCount, activeTab]);
   
@@ -1695,22 +1735,54 @@ function TabNavigation({
     // Set the active tab in tracking system
     orderTrackingUtils.setActiveTab(activeTab);
     
+    console.log('Current counts in TabNavigation:', { 
+      orderCount, 
+      processedOrderCount, 
+      sentOrderCount,
+      prevOrderCount,
+      prevProcessedOrderCount,
+      prevSentOrderCount
+    });
+    
+    // Ensure all counts are valid numbers, defaulting to 0 if undefined
+    const safeOrderCount = orderCount || 0;
+    const safeProcessedOrderCount = processedOrderCount || 0;
+    const safeSentOrderCount = sentOrderCount || 0;
+    const safePrevOrderCount = prevOrderCount || 0;
+    const safePrevProcessedOrderCount = prevProcessedOrderCount || 0;
+    const safePrevSentOrderCount = prevSentOrderCount || 0;
+    
     // Check for order count changes
-    if (orderCount !== prevOrderCount || 
-        processedOrderCount !== prevProcessedOrderCount || 
-        sentOrderCount !== prevSentOrderCount) {
+    if (safeOrderCount !== safePrevOrderCount || 
+        safeProcessedOrderCount !== safePrevProcessedOrderCount || 
+        safeSentOrderCount !== safePrevSentOrderCount) {
+      
+      console.log('Detected count change, updating tracking system');
       
       // Update the tracking system
       const { hasNewPending, hasNewProcessed, hasNewSent } = orderTrackingUtils.updateOrderCounts(
-        orderCount,
-        processedOrderCount,
-        sentOrderCount
+        safeOrderCount,
+        safeProcessedOrderCount,
+        safeSentOrderCount
       );
       
       // Get updated unread counts
-      setUnreadPendingOrders(orderTrackingUtils.getUnreadPendingOrders());
-      setUnreadProcessedOrders(orderTrackingUtils.getUnreadProcessedOrders());
-      setUnreadSentOrders(orderTrackingUtils.getUnreadSentOrders());
+      const updatedPendingUnread = orderTrackingUtils.getUnreadPendingOrders();
+      const updatedProcessedUnread = orderTrackingUtils.getUnreadProcessedOrders();
+      const updatedSentUnread = orderTrackingUtils.getUnreadSentOrders();
+      
+      console.log('Updated unread counts:', {
+        pendingUnread: updatedPendingUnread,
+        processedUnread: updatedProcessedUnread,
+        sentUnread: updatedSentUnread,
+        hasNewPending,
+        hasNewProcessed,
+        hasNewSent
+      });
+      
+      setUnreadPendingOrders(updatedPendingUnread);
+      setUnreadProcessedOrders(updatedProcessedUnread);
+      setUnreadSentOrders(updatedSentUnread);
       
       // Show notification badge for new pending orders
       if (hasNewPending && activeTab !== 'orders') {
@@ -1724,7 +1796,7 @@ function TabNavigation({
         
         // Show browser notification if we have permission
         if (hasNotificationPermission()) {
-          const newOrdersCount = orderCount - prevOrderCount;
+          const newOrdersCount = safeOrderCount - safePrevOrderCount;
           sendThrottledNotification(
             `${newOrdersCount} New Order${newOrdersCount > 1 ? 's' : ''}`, 
             { 
@@ -1746,11 +1818,11 @@ function TabNavigation({
       // Notify for new processed orders
       if (hasNewProcessed && activeTab !== 'processed-orders') {
         // Play notification sound at lower volume for processed orders
-        playNotificationSound(0.2).catch(err => console.log('Error playing sound:', err));
+        playNotificationSound(0.9).catch(err => console.log('Error playing sound:', err));
         
         // Show browser notification if we have permission
         if (hasNotificationPermission()) {
-          const newProcessedCount = processedOrderCount - prevProcessedOrderCount;
+          const newProcessedCount = safeProcessedOrderCount - safePrevProcessedOrderCount;
           sendThrottledNotification(
             `${newProcessedCount} Order${newProcessedCount > 1 ? 's' : ''} Processed`, 
             { 
@@ -1767,9 +1839,9 @@ function TabNavigation({
       }
       
       // Update previous counts
-      setPrevOrderCount(orderCount);
-      setPrevProcessedOrderCount(processedOrderCount);
-      setPrevSentOrderCount(sentOrderCount);
+      setPrevOrderCount(safeOrderCount);
+      setPrevProcessedOrderCount(safeProcessedOrderCount);
+      setPrevSentOrderCount(safeSentOrderCount);
     }
   }, [
     activeTab, 
@@ -1792,6 +1864,16 @@ function TabNavigation({
       refreshOrderCount();
     }, 1500);
     
+    // Initialize notification counters with zero values
+    // This ensures badges start with 0 instead of 1
+    if (orderCount === 0 && processedOrderCount === 0 && sentOrderCount === 0) {
+      console.log('No counts found, initializing notification badges to zero');
+      orderTrackingUtils.updateOrderCounts(0, 0, 0);
+      setUnreadPendingOrders(0);
+      setUnreadProcessedOrders(0);
+      setUnreadSentOrders(0);
+    }
+    
     // Set up ORDER_UPDATED_EVENT listener
     const handleOrderUpdate = () => {
       console.log('TabNavigation: ORDER_UPDATED_EVENT received, refreshing counts');
@@ -1800,10 +1882,19 @@ function TabNavigation({
     
     window.addEventListener(ORDER_UPDATED_EVENT, handleOrderUpdate);
     
-    // Set up polling interval (every 5 seconds) for more frequent updates
+    // Set up polling interval with a much longer interval (1 minute)
+    // This reduces bandwidth usage while still keeping data reasonably fresh
     const intervalId = setInterval(() => {
       refreshOrderCount();
-    }, 5000);
+      console.log('Low-frequency poll refresh - Current counts:', {
+        pending: orderCount, 
+        processed: processedOrderCount, 
+        sent: sentOrderCount,
+        unreadPending: unreadPendingOrders,
+        unreadProcessed: unreadProcessedOrders,
+        unreadSent: unreadSentOrders
+      });
+    }, 60000); // 1 minute
     
     // Clean up event listener and interval on unmount
     return () => {
@@ -1811,7 +1902,8 @@ function TabNavigation({
       window.removeEventListener(ORDER_UPDATED_EVENT, handleOrderUpdate);
       clearInterval(intervalId);
     };
-  }, [activeTab, refreshOrderCount]);
+  }, [activeTab, refreshOrderCount, orderCount, processedOrderCount, sentOrderCount, 
+      unreadPendingOrders, unreadProcessedOrders, unreadSentOrders]);
   
   // Handle tab click with tracking integration
   const handleTabClick = (e: React.MouseEvent, tabId: string) => {
@@ -1881,12 +1973,12 @@ function TabNavigation({
             )}
             
             {/* Orders tab badge with unread indicators */}
-            {tab.id === "orders" && orderCount > 0 && (
+            {tab.id === "orders" && (
               <span 
                 className={`relative ${
                   unreadPendingOrders > 0 
                     ? "bg-red-500 text-white animate-pulse" 
-                    : "bg-blue-500 text-white"
+                    : orderCount > 0 ? "bg-blue-500 text-white" : "bg-gray-300 text-gray-700"
                 } text-xs px-2 py-1 rounded-full cursor-pointer hover:scale-110 transition-transform shadow-md font-bold`}
                 onClick={(e) => {
                   // If not already on orders tab, navigate to it when badge is clicked
@@ -1896,7 +1988,7 @@ function TabNavigation({
                   }
                 }}
               >
-                {orderCount}
+                {orderCount !== undefined ? orderCount : 0}
                 {unreadPendingOrders > 0 && (
                   <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-full font-bold animate-pulse shadow-lg ring-2 ring-red-300">
                     {unreadPendingOrders > 99 ? '99+' : unreadPendingOrders}
@@ -1906,12 +1998,12 @@ function TabNavigation({
             )}
             
             {/* Processed Orders tab badge with unread indicators */}
-            {tab.id === "processed-orders" && processedOrderCount > 0 && (
+            {tab.id === "processed-orders" && (
               <span 
                 className={`relative ${
                   unreadProcessedOrders > 0 
                     ? "bg-red-500 text-white animate-pulse" 
-                    : "bg-green-500 text-white"
+                    : processedOrderCount > 0 ? "bg-green-500 text-white" : "bg-gray-300 text-gray-700"
                 } text-xs px-2 py-1 rounded-full cursor-pointer hover:scale-110 transition-transform shadow-md font-bold`}
                 onClick={(e) => {
                   if (activeTab !== tab.id) {
@@ -1920,7 +2012,7 @@ function TabNavigation({
                   }
                 }}
               >
-                {processedOrderCount}
+                {processedOrderCount !== undefined ? processedOrderCount : 0}
                 {unreadProcessedOrders > 0 && (
                   <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-full font-bold animate-pulse shadow-lg ring-2 ring-red-300">
                     {unreadProcessedOrders > 99 ? '99+' : unreadProcessedOrders}
@@ -1930,12 +2022,12 @@ function TabNavigation({
             )}
             
             {/* Sent Orders tab badge with unread indicators */}
-            {tab.id === "sent-orders" && sentOrderCount > 0 && (
+            {tab.id === "sent-orders" && (
               <span 
                 className={`relative ${
                   unreadSentOrders > 0 
                     ? "bg-red-500 text-white animate-pulse" 
-                    : "bg-purple-500 text-white"
+                    : sentOrderCount > 0 ? "bg-purple-500 text-white" : "bg-gray-300 text-gray-700"
                 } text-xs px-2 py-1 rounded-full cursor-pointer hover:scale-110 transition-transform shadow-md font-bold`}
                 onClick={(e) => {
                   if (activeTab !== tab.id) {
@@ -1944,7 +2036,7 @@ function TabNavigation({
                   }
                 }}
               >
-                {sentOrderCount}
+                {sentOrderCount !== undefined ? sentOrderCount : 0}
                 {unreadSentOrders > 0 && (
                   <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-full font-bold animate-pulse shadow-lg ring-2 ring-red-300">
                     {unreadSentOrders > 99 ? '99+' : unreadSentOrders}
@@ -1993,16 +2085,34 @@ function AppContent() {
   }
 
   // ===== ROLE-BASED ACCESS CONTROL =====
-  const isSuperAdmin = session?.user?.role === 'superadmin';
-  const isAdmin = session?.user?.role === 'admin';
-  const isManager = session?.user?.role === 'manager';
-  const isRegularUser = session?.user?.role === 'user';
+  // Convert role to lowercase for case-insensitive comparison
+  const userRole = session?.user?.role?.toLowerCase();
+  const isSuperAdmin = userRole === 'superadmin';
+  const isAdmin = userRole === 'admin';
+  const isRegularUser = userRole === 'user';
+  
+  // Debug role information
+  console.log('User role:', userRole);
+  console.log('Role flags:', { isSuperAdmin, isAdmin, isRegularUser });
   
   // Set initial active tab based on user role
   let defaultTab = "send-order"; // Default for most users
   if (isSuperAdmin || isAdmin || isManager) {
     defaultTab = "bundle-allocator";
   }
+  
+  // Check URL parameters for forced history tab
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const showHistory = urlParams.get('showHistory');
+      
+      if (showHistory === 'true' && (isSuperAdmin || isAdmin || isManager)) {
+        console.log('Forcing history tab via URL parameter');
+        setActiveTab('history');
+      }
+    }
+  }, [isSuperAdmin, isAdmin, isManager]);
   
   const [activeTab, setActiveTab] = useState(defaultTab);
 
@@ -2054,26 +2164,26 @@ function AppContent() {
     }
   };
 
-  // Load history from database - ONLY FOR SUPER ADMINS (since others can't see history anyway)
+  // Load history from database - FOR SUPER ADMINS, ADMINS, AND MANAGERS
   useEffect(() => {
     const loadHistory = async () => {
-      if (!isSuperAdmin) return; // Only load history for super admins
+      if (!isSuperAdmin && !isAdmin && !isManager) return; // Only load history for authorized users
       
       try {
         const response = await fetch('/api/history/load');
         if (response.ok) {
           const data = await response.json();
-          setHistory(data.history || []);
+          setHistory(data.historyEntries || []);
         }
       } catch (error) {
         console.error('Failed to load history from database:', error);
       }
     };
 
-    if (session?.user && isSuperAdmin) {
+    if (session?.user && (isSuperAdmin || isAdmin || isManager)) {
       loadHistory();
     }
-  }, [session, isSuperAdmin]);
+  }, [session, isSuperAdmin, isAdmin, isManager]);
 
   // ===== CONDITIONAL TABS BASED ON USER ROLE =====
   // Define base tabs available to everyone
@@ -2112,11 +2222,16 @@ function AppContent() {
       id: "track-orders",
       name: "Track Order Status",
       icon: Eye,
+    },
+    {
+      id: "billing",
+      name: "Billing",
+      icon: DollarSign,
     }
   ];
 
-  // History tab is only accessible to super admins
-  if (isSuperAdmin) {
+  // History tab is accessible to super admins and admins
+  if (isSuperAdmin || isAdmin) {
     baseTabs.push({
       id: "history",
       name: "History & Analytics",
@@ -2128,25 +2243,39 @@ function AppContent() {
   const filteredTabs = baseTabs.filter(tab => {
     // Super admin users have access to all tabs
     if (isSuperAdmin) {
-      return true;
+      console.log(`Tab ${tab.id} - Superadmin access: true`);
+      return true; // Super admins get access to all tabs including history
     }
     
-    // Regular users can only access send-order and sent-orders
+    // Regular users can only access send-order, sent-orders, and billing
     if (isRegularUser) {
-      return tab.id === 'send-order' || tab.id === 'sent-orders';
+      const hasAccess = tab.id === 'send-order' || tab.id === 'sent-orders' || tab.id === 'billing';
+      console.log(`Tab ${tab.id} - Regular user access: ${hasAccess}`);
+      return hasAccess;
     }
     
-    // Admin users can only access specific tabs
+    // Admin users can access specific tabs, including track-orders and history
     if (isAdmin) {
-      return tab.id === 'bundle-allocator' || 
+      const hasAccess = tab.id === 'bundle-allocator' || 
              tab.id === 'bundle-categorizer' || 
              tab.id === 'orders' || 
-             tab.id === 'processed-orders';
+             tab.id === 'processed-orders' || 
+             tab.id === 'track-orders' ||
+             tab.id === 'history';  // Explicitly include history tab for admins
+      console.log(`Tab ${tab.id} - Admin access: ${hasAccess}`);
+      return hasAccess;
     }
     
-    // Managers can access all tabs except history
-    return tab.id !== 'history';
+    // Default behavior for other roles
+    const defaultAccess = tab.id !== 'history';
+    console.log(`Tab ${tab.id} - Default access: ${defaultAccess}`);
+    return defaultAccess;
   });
+  
+  // Log the final filtered tabs
+  console.log('Filtered tabs for role', userRole, ':', filteredTabs.map(tab => tab.id));
+  
+  // No need for extra logging
   
   // Verify the current tab is allowed for user's role
   const renderActiveComponent = () => {
@@ -2163,8 +2292,8 @@ function AppContent() {
     // Render the appropriate component based on the active tab and user role
     switch (activeTab) {
       case "bundle-allocator":
-        // Super admins, admins and managers can access
-        if (isSuperAdmin || isAdmin || isManager) {
+        // Super admins and admins can access
+        if (isSuperAdmin || isAdmin) {
           return (
             <BundleAllocatorApp
               inputText={allocatorInputText}
@@ -2178,8 +2307,8 @@ function AppContent() {
         break;
 
       case "bundle-categorizer":
-        // Super admins, admins and managers can access
-        if (isSuperAdmin || isAdmin || isManager) {
+        // Super admins and admins can access
+        if (isSuperAdmin || isAdmin) {
           return (
             <BundleCategorizerApp
               rawData={categorizerRawData}
@@ -2195,47 +2324,66 @@ function AppContent() {
         break;
         
       case "send-order":
-        // Super admins, users and managers can access
-        if (isSuperAdmin || isRegularUser || isManager) {
+        // Super admins and users can access
+        if (isSuperAdmin || isRegularUser) {
           return <SendOrderApp />;
         }
         break;
         
       case "orders":
-        // Super admins, admins and managers can access
-        if (isSuperAdmin || isAdmin || isManager) {
+        // Super admins and admins can access
+        if (isSuperAdmin || isAdmin) {
           return <OrdersApp />;
         }
         break;
         
       case "processed-orders":
-        // Super admins, admins and managers can access
-        if (isSuperAdmin || isAdmin || isManager) {
+        // Super admins and admins can access
+        if (isSuperAdmin || isAdmin) {
           return <ProcessedOrdersApp />;
         }
         break;
         
       case "sent-orders":
-        // Super admins, users and managers can access
-        if (isSuperAdmin || isRegularUser || isManager) {
+        // Super admins and users can access
+        if (isSuperAdmin || isRegularUser) {
           return <SentOrdersApp />;
         }
         break;
         
       case "track-orders":
-        // Track orders tab is accessible to all users
-        return <OrderTrackingApp />;
+        // Track orders tab is accessible to super admins and admins
+        if (isSuperAdmin || isAdmin) {
+          return <OrderTrackingApp />;
+        }
         break;
         
       case "history":
-        // History tab is only accessible to super admins
-        if (isSuperAdmin) {
+        // History tab is accessible to super admins, admins, and managers
+        console.log('History tab selected. Role checks:', { 
+          isSuperAdmin, 
+          isAdmin, 
+          isManager, 
+          shouldRender: isSuperAdmin || isAdmin || isManager 
+        });
+        
+        if (isSuperAdmin || isAdmin || isManager) {
+          console.log('Rendering HistoryManager component');
           return (
             <HistoryManager
               history={history}
               setHistory={setHistory}
             />
           );
+        } else {
+          console.log('User role not authorized to view history tab');
+        }
+        break;
+        
+      case "billing":
+        // Billing tab is accessible to super admins, regular users and managers
+        if (isSuperAdmin || isRegularUser || isManager) {
+          return <BillingApp />;
         }
         break;
     }
@@ -2272,6 +2420,16 @@ function AppContent() {
     };
   }, []);
   
+  // Debug section for development - Only visible with debug parameter
+  const [showDebug, setShowDebug] = useState(false);
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      setShowDebug(urlParams.get('debug') === 'true');
+    }
+  }, []);
+  
   // Client-side effect to handle initial URL
   useEffect(() => {
     // Only run in the browser
@@ -2293,6 +2451,8 @@ function AppContent() {
     setActiveTab(tabId);
   }, [setActiveTab]);
 
+  // No URL parameter tracking needed
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Header with Tabs - Mobile Optimized */}
@@ -2313,14 +2473,22 @@ function AppContent() {
 
               {/* User Info & Stats - Mobile Optimized */}
               <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm w-full sm:w-auto">
-                {/* Only show history stats for super admins */}
-                {isSuperAdmin && history.length > 0 && activeTab !== "history" && (
+                {/* Show history stats for authorized users */}
+                {(isSuperAdmin || isAdmin || isManager) && history.length > 0 && activeTab !== "history" && (
                   <>
                     <div className="bg-blue-100 text-blue-800 px-2 sm:px-3 py-1 rounded-full font-medium">
                       {history.length} sessions
                     </div>
                     <div className="bg-green-100 text-green-800 px-2 sm:px-3 py-1 rounded-full font-medium">
-                      {history.reduce((sum, entry) => sum + entry.totalGB, 0).toFixed(1)} GB total
+                      {history.reduce((sum, entry) => {
+                        // Parse totalGB as a number first, or use 0 if it can't be parsed
+                        const entryGB = typeof entry.totalGB === 'number' 
+                          ? entry.totalGB 
+                          : typeof entry.totalGB === 'string'
+                            ? parseFloat(entry.totalGB) || 0
+                            : 0;
+                        return sum + entryGB;
+                      }, 0).toFixed(1)} GB total
                     </div>
                   </>
                 )}
@@ -2396,6 +2564,68 @@ function AppContent() {
       {/* Tab Content */}
       <div className="tab-content">
         {renderActiveComponent()}
+        
+        {/* Debug section */}
+        {showDebug && (
+          <div className="mt-8 p-4 bg-gray-100 rounded-xl border border-gray-300">
+            <h3 className="text-lg font-bold mb-4">Debug Information</h3>
+            
+            <div className="mb-4">
+              <h4 className="font-semibold mb-1">User Role:</h4>
+              <div className="bg-white p-2 rounded border border-gray-200 text-sm">
+                <div><strong>Role:</strong> {session?.user?.role}</div>
+                <div><strong>Role Type:</strong> {typeof session?.user?.role}</div>
+                <div><strong>Lowercase Role:</strong> {session?.user?.role?.toLowerCase()}</div>
+                <div><strong>Is Superadmin:</strong> {(session?.user?.role?.toLowerCase() === 'superadmin').toString()}</div>
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <h4 className="font-semibold mb-1">Role Flags:</h4>
+              <div className="bg-white p-2 rounded border border-gray-200 text-sm">
+                <div><strong>isSuperAdmin:</strong> {isSuperAdmin.toString()}</div>
+                <div><strong>isAdmin:</strong> {isAdmin.toString()}</div>
+                <div><strong>isManager:</strong> {isManager.toString()}</div>
+                <div><strong>isRegularUser:</strong> {isRegularUser.toString()}</div>
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <h4 className="font-semibold mb-1">Tabs:</h4>
+              <div className="bg-white p-2 rounded border border-gray-200 text-sm">
+                <div><strong>Active Tab:</strong> {activeTab}</div>
+                <div className="mt-2"><strong>Available Tabs:</strong></div>
+                <ul className="list-disc pl-6">
+                  {filteredTabs.map(tab => (
+                    <li key={tab.id}>{tab.id} ({tab.name})</li>
+                  ))}
+                </ul>
+                <div className="mt-2"><strong>Base Tabs:</strong></div>
+                <ul className="list-disc pl-6">
+                  {baseTabs.map(tab => (
+                    <li key={tab.id}>{tab.id} ({tab.name})</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            
+            <div>
+              <button 
+                onClick={() => setActiveTab('history')}
+                className="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 mr-2"
+              >
+                Force History Tab
+              </button>
+              
+              <button 
+                onClick={() => console.log('Session:', session)}
+                className="px-3 py-1.5 bg-gray-600 text-white rounded hover:bg-gray-700"
+              >
+                Log Session
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

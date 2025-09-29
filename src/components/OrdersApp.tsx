@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Download, Clock, FileText, User, Database, CheckCircle, XCircle, Loader, Search, SlidersHorizontal, Check, CheckSquare, Square, Archive } from "lucide-react";
+import { Download, Clock, FileText, User, Database, CheckCircle, XCircle, Loader, Search, SlidersHorizontal, Check, CheckSquare, Square, Archive, DollarSign } from "lucide-react";
 import ExcelJS from "exceljs";
 import JSZip from "jszip";
 import { getPendingOrdersOldestFirst, getOrdersOldestFirst, saveOrders, updateOrder } from "../lib/orderClient";
@@ -20,6 +20,7 @@ type Order = {
   userEmail: string;
   totalData: number;
   totalCount: number;
+  orderCost?: number;
   status: "pending" | "processed";
   entries: Array<{
     number: string;
@@ -81,11 +82,12 @@ type Order = {
     // Add event listeners for all relevant events
     window.addEventListener(ORDER_UPDATED_EVENT, handleOrderUpdate);
     
-    // Set up polling interval (every 15 seconds) - reduced from 30 seconds
+    // Set up polling interval with a much longer interval (2 minutes)
+    // This reduces bandwidth usage and compute hours while still keeping data reasonably fresh
     const intervalId = setInterval(() => {
-      console.log('OrdersApp: Polling interval triggered');
+      console.log('OrdersApp: Low-frequency polling triggered');
       fetchOrders();
-    }, 15000);
+    }, 120000); // 2 minutes
     
     // Clean up
     return () => {
@@ -94,7 +96,7 @@ type Order = {
     };
   }, []);
   
-  // Load orders from database or generate mock data if none exist
+  // Load orders from database but don't generate mock data
   useEffect(() => {
     let isMounted = true;
     
@@ -108,54 +110,8 @@ type Order = {
         
         if (!isMounted) return;
         
-        if (allOrders.length > 0) {
-          // If we have orders in database, use those
-          setOrders(allOrders);
-        } else {
-          // Otherwise generate mock data
-          const mockOrders: Order[] = Array.from({ length: 10 }, (_, i) => {
-            const date = new Date();
-            date.setDate(date.getDate() - i); // Each order is a day apart
-            
-            const status: Order["status"][] = ["pending", "processed"];
-            const randomStatus = status[Math.floor(Math.random() * status.length)];
-            
-            const phoneCount = Math.floor(Math.random() * 45) + 5; // Between 5 and 50
-            const totalGB = Number((Math.random() * 100 + 10).toFixed(2)); // Between 10 and 110 GB
-            
-            // Generate mock entries
-            const entries = Array.from({ length: phoneCount }, (_, j) => {
-              const entryStatus: OrderEntryStatus = 
-                randomStatus === "processed" ? "sent" : "pending";
-                
-              return {
-                number: `0${Math.floor(Math.random() * 900000000) + 100000000}`, // Random 10-digit number starting with 0
-                allocationGB: Number((totalGB / phoneCount).toFixed(2)),
-                status: entryStatus
-              };
-            });
-            
-            return {
-              id: `order-${Date.now()}-${i}`,
-              timestamp: date.getTime(),
-              date: date.toISOString().split('T')[0],
-              time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              userName: ["John Doe", "Jane Smith", "Alex Johnson", "Sam Wilson", "Maria Garcia"][i % 5],
-              userEmail: ["john@example.com", "jane@example.com", "alex@example.com", "sam@example.com", "maria@example.com"][i % 5],
-              totalData: totalGB,
-              totalCount: phoneCount,
-              status: randomStatus,
-              entries,
-              isSelected: false
-            };
-          });
-          
-          // Save mock data to database for persistence
-          setOrders(mockOrders);
-          if (isMounted) {
-            await saveOrders(mockOrders);
-          }
-        }
+        // Always just use whatever orders are in the database, even if empty
+        setOrders(allOrders);
         
         // Refresh the order count in the context only once after loading orders
         // Not in the dependency array to avoid infinite loops
@@ -1360,6 +1316,16 @@ type Order = {
                           <span className="text-sm font-medium text-gray-900">
                             {order.totalCount} numbers
                           </span>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          {order.orderCost !== undefined ? (
+                            <div className="flex items-center text-amber-600">
+                              <DollarSign className="h-4 w-4 mr-1" />
+                              <span className="text-sm font-medium">{order.orderCost.toFixed(2)}</span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">Not calculated</span>
+                          )}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
                           <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyle.bgColor} ${statusStyle.textColor} gap-1.5`}>

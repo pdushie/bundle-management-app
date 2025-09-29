@@ -5,7 +5,7 @@ import { getUserOrdersOldestFirst, Order } from '@/lib/orderClient';
 import { useOrderCount } from '@/lib/orderContext';
 import { ORDER_UPDATED_EVENT, ORDER_SENT_EVENT, notifyCountUpdated } from '@/lib/orderNotifications';
 import { useSession } from 'next-auth/react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, DollarSign, Phone, Database } from 'lucide-react';
 
 export default function SentOrdersApp() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -15,6 +15,7 @@ export default function SentOrdersApp() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage] = useState<number>(25);
   const [filterText, setFilterText] = useState<string>('');
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const { refreshOrderCount } = useOrderCount();
   const { data: session } = useSession();
   const userEmail = session?.user?.email || '';
@@ -61,11 +62,12 @@ export default function SentOrdersApp() {
     window.addEventListener(ORDER_UPDATED_EVENT, handleOrderUpdate);
     window.addEventListener(ORDER_SENT_EVENT, handleOrderSent);
     
-    // Set up polling interval (every 15 seconds) - reduced from 30 seconds
+    // Set up polling interval with a much longer interval (2 minutes)
+    // This reduces bandwidth usage and compute hours while still keeping data reasonably fresh
     const intervalId = setInterval(() => {
-      console.log('SentOrdersApp: Polling interval triggered');
+      console.log('SentOrdersApp: Low-frequency polling triggered');
       fetchUserOrders();
-    }, 15000);
+    }, 120000); // 2 minutes
     
     // Clean up
     return () => {
@@ -91,6 +93,8 @@ export default function SentOrdersApp() {
     return (
       order.id.toLowerCase().includes(searchTerm) ||
       order.status.toLowerCase().includes(searchTerm) ||
+      (order.pricingProfileName && order.pricingProfileName.toLowerCase().includes(searchTerm)) ||
+      (order.estimatedCost !== null && order.estimatedCost.toString().includes(searchTerm)) ||
       new Date(order.timestamp).toLocaleDateString().includes(searchTerm)
     );
   });
@@ -203,6 +207,7 @@ export default function SentOrdersApp() {
                     </th>
                     <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Data</th>
                     <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Entries</th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Cost</th>
                     <th 
                       className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider cursor-pointer hover:text-blue-600"
                       onClick={() => toggleSort('status')}
@@ -220,7 +225,11 @@ export default function SentOrdersApp() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {currentPageOrders.map((order) => (
-                    <tr key={order.id} className="hover:bg-gray-50">
+                    <tr 
+                      key={order.id} 
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => setSelectedOrder(order)}
+                    >
                       <td className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-900 font-medium">{order.id}</td>
                       <td className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-500">
                         {new Date(order.timestamp).toLocaleString()}
@@ -235,6 +244,17 @@ export default function SentOrdersApp() {
                       </td>
                       <td className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-900">
                         {order.totalCount}
+                      </td>
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm">
+                        {order.estimatedCost !== undefined && order.estimatedCost !== null ? (
+                          <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
+                            GHS {order.estimatedCost.toFixed(2)}
+                          </span>
+                        ) : order.pricingProfileName ? (
+                          <span className="text-gray-500">{order.pricingProfileName}</span>
+                        ) : (
+                          <span className="text-gray-400">N/A</span>
+                        )}
                       </td>
                       <td className="px-3 sm:px-6 py-2 sm:py-4">
                         <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -292,6 +312,119 @@ export default function SentOrdersApp() {
           </div>
         )}
       </div>
+      
+      {/* Order Details Modal */}
+      {selectedOrder && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-purple-50 to-indigo-50">
+              <h2 className="text-lg font-bold text-gray-900">Order Details</h2>
+              <button 
+                onClick={() => setSelectedOrder(null)}
+                className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-4 border-b border-gray-200">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Order ID</p>
+                  <p className="font-medium">{selectedOrder.id}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Date</p>
+                  <p className="font-medium">{new Date(selectedOrder.timestamp).toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Status</p>
+                  <p className="font-medium">
+                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      selectedOrder.status === "processed"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}>
+                      {selectedOrder.status === "processed" ? "Processed" : "Pending"}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Pricing Information */}
+            {selectedOrder.pricingProfileName && (
+              <div className="p-4 border-b border-gray-200 bg-green-50">
+                <div className="flex items-center gap-2 mb-2">
+                  <DollarSign className="w-5 h-5 text-green-600" />
+                  <h3 className="font-medium">Pricing Information</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Pricing Plan</p>
+                    <p className="font-medium">{selectedOrder.pricingProfileName}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Total Data</p>
+                    <p className="font-medium">
+                      {selectedOrder.totalData > 1023 
+                        ? `${(selectedOrder.totalData / 1024).toFixed(2)} TB` 
+                        : `${selectedOrder.totalData} GB`}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Total Cost</p>
+                    <p className="font-bold text-lg">
+                      {selectedOrder.estimatedCost !== undefined && selectedOrder.estimatedCost !== null 
+                        ? `GHS ${selectedOrder.estimatedCost.toFixed(2)}` 
+                        : 'N/A'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div className="p-4 overflow-auto flex-grow">
+              <h3 className="font-medium mb-3">Order Entries ({selectedOrder.totalCount})</h3>
+              <div className="grid grid-cols-1 gap-2 max-h-[50vh] overflow-y-auto">
+                <div className="bg-gray-100 px-4 py-2 grid grid-cols-3 rounded-md text-sm font-medium text-gray-700">
+                  <div>Phone Number</div>
+                  <div>Data Allocation</div>
+                  <div>Cost</div>
+                </div>
+                {selectedOrder.entries.map((entry, index) => (
+                  <div key={index} className="border border-gray-200 px-4 py-3 grid grid-cols-3 rounded-md hover:bg-gray-50">
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-gray-400" />
+                      <span>{entry.number}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Database className="w-4 h-4 text-purple-400" />
+                      <span>{entry.allocationGB} GB</span>
+                    </div>
+                    <div>
+                      {entry.cost !== undefined && entry.cost !== null ? (
+                        <span className="text-green-600 font-medium">GHS {entry.cost.toFixed(2)}</span>
+                      ) : (
+                        <span className="text-gray-400">N/A</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="p-4 border-t border-gray-200 flex justify-end">
+              <button 
+                onClick={() => setSelectedOrder(null)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

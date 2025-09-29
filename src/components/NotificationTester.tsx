@@ -11,6 +11,9 @@ import { useOrderCount } from '../lib/orderContext';
 export default function NotificationTester() {
   const [notificationStatus, setNotificationStatus] = useState('');
   const [testResult, setTestResult] = useState<any>(null);
+  const [customOrderCount, setCustomOrderCount] = useState<number>(0);
+  const [customProcessedCount, setCustomProcessedCount] = useState<number>(0);
+  const [customSentCount, setCustomSentCount] = useState<number>(0);
   const { 
     orderCount, 
     processedOrderCount, 
@@ -48,8 +51,8 @@ export default function NotificationTester() {
   // Simulate new pending orders coming in
   const simulateNewPendingOrders = async () => {
     try {
-      await simulateNewOrders({ orderCount: 1 });
-      setNotificationStatus('Simulated new pending orders');
+      await simulateNewOrders({ orderCount: customOrderCount });
+      setNotificationStatus(`Simulated ${customOrderCount} new pending orders`);
     } catch (error) {
       console.error('Error simulating new orders:', error);
       setNotificationStatus(`Error: ${error instanceof Error ? error.message : String(error)}`);
@@ -59,8 +62,8 @@ export default function NotificationTester() {
   // Simulate new processed orders
   const simulateNewProcessedOrders = async () => {
     try {
-      await simulateNewOrders({ processedCount: 1 });
-      setNotificationStatus('Simulated new processed orders');
+      await simulateNewOrders({ processedCount: customProcessedCount });
+      setNotificationStatus(`Simulated ${customProcessedCount} new processed orders`);
     } catch (error) {
       console.error('Error simulating processed orders:', error);
       setNotificationStatus(`Error: ${error instanceof Error ? error.message : String(error)}`);
@@ -70,12 +73,28 @@ export default function NotificationTester() {
   // Simulate new sent orders
   const simulateNewSentOrders = async () => {
     try {
-      await simulateNewOrders({ sentCount: 1 });
-      setNotificationStatus('Simulated new sent orders');
+      await simulateNewOrders({ sentCount: customSentCount });
+      setNotificationStatus(`Simulated ${customSentCount} new sent orders`);
     } catch (error) {
       console.error('Error simulating sent orders:', error);
       setNotificationStatus(`Error: ${error instanceof Error ? error.message : String(error)}`);
     }
+  };
+  
+  // Handle count input changes
+  const handleOrderCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    setCustomOrderCount(isNaN(value) ? 0 : Math.max(0, value));
+  };
+
+  const handleProcessedCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    setCustomProcessedCount(isNaN(value) ? 0 : Math.max(0, value));
+  };
+
+  const handleSentCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    setCustomSentCount(isNaN(value) ? 0 : Math.max(0, value));
   };
 
   // Force refresh the order counts
@@ -138,26 +157,60 @@ export default function NotificationTester() {
         </div>
       </div>
       
-      <div className="space-y-2 mb-4">
+      <div className="space-y-4 mb-4">
         <h3 className="font-medium">Simulate Events:</h3>
-        <div className="flex flex-wrap gap-2">
+        
+        <div className="flex items-center gap-2">
+          <div className="w-24">
+            <input
+              type="number"
+              min="0"
+              value={customOrderCount}
+              onChange={handleOrderCountChange}
+              className="w-full px-2 py-1 border rounded text-center"
+            />
+          </div>
           <button
             className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition"
             onClick={simulateNewPendingOrders}
           >
-            Simulate New Order
+            Simulate {customOrderCount === 0 ? 'Zero' : 'New'} Order{customOrderCount !== 1 ? 's' : ''}
           </button>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <div className="w-24">
+            <input
+              type="number"
+              min="0"
+              value={customProcessedCount}
+              onChange={handleProcessedCountChange}
+              className="w-full px-2 py-1 border rounded text-center"
+            />
+          </div>
           <button
             className="px-3 py-1 bg-amber-500 text-white rounded hover:bg-amber-600 transition"
             onClick={simulateNewProcessedOrders}
           >
-            Simulate Processed Order
+            Simulate {customProcessedCount === 0 ? 'Zero' : ''} Processed Order{customProcessedCount !== 1 ? 's' : ''}
           </button>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <div className="w-24">
+            <input
+              type="number"
+              min="0"
+              value={customSentCount}
+              onChange={handleSentCountChange}
+              className="w-full px-2 py-1 border rounded text-center"
+            />
+          </div>
           <button
             className="px-3 py-1 bg-orange-500 text-white rounded hover:bg-orange-600 transition"
             onClick={simulateNewSentOrders}
           >
-            Simulate Sent Order
+            Simulate {customSentCount === 0 ? 'Zero' : ''} Sent Order{customSentCount !== 1 ? 's' : ''}
           </button>
         </div>
       </div>

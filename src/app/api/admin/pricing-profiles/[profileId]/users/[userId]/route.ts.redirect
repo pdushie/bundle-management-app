@@ -1,0 +1,32 @@
+import { NextRequest, NextResponse } from "next/server";
+
+// This is a simplified handler that redirects to our new, simplified API endpoint
+export async function POST(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const { profileId, userId } = req.params || {};
+  
+  // Redirect to the simplified API
+  return NextResponse.redirect(
+    new URL(`/api/admin/user-profile-assignment`, req.url)
+  );
+}
+
+export async function PUT(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const { profileId, userId } = req.params || {};
+  
+  // Redirect to the simplified API
+  return NextResponse.redirect(
+    new URL(`/api/admin/user-profile-assignment`, req.url)
+  );
+}
+
+export async function DELETE(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const { profileId, userId } = req.params || {};
+  
+  // Redirect to the simplified API
+  return NextResponse.redirect(
+    new URL(`/api/admin/user-profile-assignment?userId=${userId}&profileId=${profileId}`, req.url)
+  );
+}

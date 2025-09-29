@@ -20,8 +20,15 @@ export type Order = {
     number: string;
     allocationGB: number;
     status?: OrderEntryStatus;
+    cost?: number | null; // Individual cost for this entry
   }>;
   isSelected?: boolean;
+  // Optional fields for the pricing system
+  cost?: number;
+  estimatedCost?: number | null; // Total estimated cost of the order for frontend display
+  pricingProfileId?: number; // ID of the pricing profile used
+  pricingProfileName?: string; // Name of the pricing profile used
+  userId?: number;
 };
 
 export type OrderWithoutEntries = Omit<Order, 'entries'>;
@@ -36,7 +43,8 @@ const mapDbOrderToOrder = async (dbOrder: any): Promise<Order> => {
     id: entry.id,
     number: entry.number,
     allocationGB: parseFloat(entry.allocationGB as string),
-    status: entry.status as OrderEntryStatus
+    status: entry.status as OrderEntryStatus,
+    cost: entry.cost ? parseFloat(entry.cost as string) : null // Include individual entry cost
   }));
   
   // Return complete order with entries
@@ -51,7 +59,11 @@ const mapDbOrderToOrder = async (dbOrder: any): Promise<Order> => {
     totalCount: dbOrder.totalCount,
     status: dbOrder.status as "pending" | "processed",
     entries,
-    isSelected: false // Always initialize as not selected
+    isSelected: false, // Always initialize as not selected
+    cost: dbOrder.cost ? parseFloat(dbOrder.cost as string) : null, // Include cost from database
+    estimatedCost: dbOrder.cost ? parseFloat(dbOrder.cost as string) : null, // Set estimatedCost for frontend display
+    pricingProfileId: dbOrder.pricingProfileId || undefined,
+    pricingProfileName: dbOrder.pricingProfileName || undefined
   };
 };
 
@@ -69,25 +81,87 @@ export const saveOrder = async (order: Order): Promise<void> => {
       totalData: order.totalData.toString(),
       totalCount: order.totalCount,
       status: order.status,
-      userId: null // This could be populated from session if needed
+      userId: order.userId || null // Get userId from the order
     });
     
-    // Insert all entries for this order
+    // Insert all entries for this order in a single batch operation
     if (order.entries && order.entries.length > 0) {
-      for (const entry of order.entries) {
-        await db.insert(orderEntries).values({
-          orderId: order.id,
-          number: entry.number,
-          allocationGB: entry.allocationGB.toString(),
-          status: entry.status || "pending"
-        });
-      }
+      // Create an array of entry objects for batch insertion
+      const entriesForBatch = order.entries.map(entry => ({
+        orderId: order.id,
+        number: entry.number,
+        allocationGB: entry.allocationGB.toString(),
+        status: entry.status || "pending"
+      }));
+      
+      // Batch insert all entries at once
+      await db.insert(orderEntries).values(entriesForBatch);
     }
     
     // Server-side operations don't directly notify client
     // Client notification happens via API responses
   } catch (error) {
     console.error('Failed to save order to database:', error);
+    throw error;
+  }
+};
+
+// Save a new order with cost information to the database
+export const saveOrderWithCost = async (order: Order): Promise<void> => {
+  try {
+    // Insert the order first - no transaction
+    await db.insert(orders).values({
+      id: order.id,
+      timestamp: order.timestamp,
+      date: order.date,
+      time: order.time,
+      userName: order.userName,
+      userEmail: order.userEmail,
+      totalData: order.totalData.toString(),
+      totalCount: order.totalCount,
+      status: order.status,
+      userId: order.userId || null, // Get userId from the order
+      cost: order.cost ? order.cost.toString() : null, // Include cost if present
+      pricingProfileId: order.pricingProfileId || null,
+      pricingProfileName: order.pricingProfileName || null
+    });
+    
+    // Insert all entries for this order in a single batch operation
+    if (order.entries && order.entries.length > 0) {
+      // Calculate individual entry costs (if total cost is available)
+      // This is a simple proportional distribution of the total cost based on data allocation
+      let entriesWithCost = order.entries;
+      if (order.cost && order.cost > 0) {
+        const totalCost = order.cost;
+        const totalData = order.totalData;
+        
+        // Calculate cost per GB (avoiding division by zero)
+        const costPerGB = totalData > 0 ? totalCost / totalData : 0;
+        
+        // Assign proportional cost to each entry
+        entriesWithCost = order.entries.map(entry => ({
+          ...entry,
+          cost: parseFloat((entry.allocationGB * costPerGB).toFixed(2))
+        }));
+      }
+      
+      // Create an array of entry objects for batch insertion
+      const entriesForBatch = entriesWithCost.map(entry => ({
+        orderId: order.id,
+        number: entry.number,
+        allocationGB: entry.allocationGB.toString(),
+        status: entry.status || "pending",
+        cost: entry.cost !== undefined && entry.cost !== null ? entry.cost.toString() : null
+      }));
+      
+      // Batch insert all entries at once
+      await db.insert(orderEntries).values(entriesForBatch);
+    }
+    
+    // Server-side operations don't directly notify client
+    // Client notification happens via API responses
+  } catch (error) {
+    console.error('Failed to save order with cost to database:', error);
     throw error;
   }
 };
@@ -211,7 +285,7 @@ export const getPendingOrdersOldestFirst = async (): Promise<Order[]> => {
     const dbOrders = await db
       .select()
       .from(orders)
-      .where(eq(orders.status, "pending"))
+      .where(eq(orders.status, 'pending'))
       .orderBy(asc(orders.timestamp));
     
     // Map to application orders with entries
@@ -235,7 +309,7 @@ export const getProcessedOrdersOldestFirst = async (): Promise<Order[]> => {
     const dbOrders = await db
       .select()
       .from(orders)
-      .where(eq(orders.status, "processed"))
+      .where(eq(orders.status, 'processed'))
       .orderBy(asc(orders.timestamp));
     
     // Map to application orders with entries
@@ -290,11 +364,12 @@ export const clearOrders = async (): Promise<void> => {
   }
 };
 
-// Get order counts for various categories
+// Get order counts for various categories - FIXED VERSION with direct SQL
 export const getOrderCounts = async (userEmail?: string): Promise<{
   pendingCount: number;
   processedCount: number;
   userOrderCount: number;
+  connectionError?: boolean;
 }> => {
   const defaultCounts = {
     pendingCount: 0,
@@ -313,97 +388,43 @@ export const getOrderCounts = async (userEmail?: string): Promise<{
       // Create error with connection error details
       const connectionError = new Error('Database connection failed');
       (connectionError as any).cause = connError;
-      throw connectionError;
+      // Return default counts with connection error flag instead of throwing
+      return { ...defaultCounts, connectionError: true };
     }
 
-    // Use a more resilient approach with retries and better error handling
-    const maxRetries = 3;
-    let retryCount = 0;
-    let pendingCount = 0;
-    let processedCount = 0;
+    // DIRECT SQL APPROACH - Bypass Drizzle ORM for greater reliability
+    // This avoids potential quoting issues with ORM
+    
+    // Get pending orders count with direct SQL
+    console.log('Getting pending orders count with direct SQL');
+    const pendingResult = await neonClient`SELECT COUNT(*) FROM orders WHERE status = 'pending'`;
+    const pendingCount = parseInt(pendingResult[0]?.count || '0', 10);
+    console.log('Pending orders count:', pendingCount);
+    
+    // Get processed orders count with direct SQL
+    console.log('Getting processed orders count with direct SQL');
+    const processedResult = await neonClient`SELECT COUNT(*) FROM orders WHERE status = 'processed'`;
+    const processedCount = parseInt(processedResult[0]?.count || '0', 10);
+    console.log('Processed orders count:', processedCount);
+    
+    // Count user orders if userEmail is provided with direct SQL
     let userOrderCount = 0;
-    let lastError: any;
-    
-    // Define executeWithRetry as a const function expression instead of a function declaration
-    const executeWithRetry = async <T>(queryFn: () => Promise<T>, errorContext: string): Promise<T | null> => {
-      for (let i = 0; i <= maxRetries; i++) {
-        try {
-          // Add small delay on retries with exponential backoff
-          if (i > 0) {
-            const backoffDelay = Math.min(Math.pow(2, i) * 500, 5000); // Max 5 second delay
-            console.log(`Retrying ${errorContext} after ${backoffDelay}ms delay...`);
-            await new Promise(resolve => setTimeout(resolve, backoffDelay));
-          }
-          
-          return await queryFn();
-        } catch (error) {
-          console.error(`${errorContext} (attempt ${i + 1}/${maxRetries + 1}):`, error);
-          
-          // Check specifically for ECONNRESET errors which may require longer delays
-          const isConnReset = error instanceof Error && 
-            (error.message.includes('ECONNRESET') || 
-             (error as any).cause && String((error as any).cause).includes('ECONNRESET'));
-             
-          if (isConnReset) {
-            console.log('Detected ECONNRESET error, will wait longer before retry');
-            // Add additional delay for connection reset errors
-            await new Promise(resolve => setTimeout(resolve, 2000)); 
-          }
-          
-          lastError = error;
-          
-          // If we've reached max retries, return null
-          if (i === maxRetries) {
-            return null;
-          }
-        }
-      }
-      return null;
-    };
-    
-    // Get pending orders count - using count for better reliability
-    const pendingResult = await executeWithRetry(
-      () => db.select({ count: orders.id })
-           .from(orders)
-           .where(eq(orders.status, "pending")),
-      "Failed to count pending orders"
-    );
-    
-    if (pendingResult && pendingResult[0]) {
-      pendingCount = Number(pendingResult[0].count) || 0;
-    }
-    
-    // Get processed orders count
-    const processedResult = await executeWithRetry(
-      () => db.select({ count: orders.id })
-           .from(orders)
-           .where(eq(orders.status, "processed")),
-      "Failed to count processed orders"
-    );
-    
-    if (processedResult && processedResult[0]) {
-      processedCount = Number(processedResult[0].count) || 0;
-    }
-    
-    // Count user orders if userEmail is provided
     if (userEmail) {
-      const userResult = await executeWithRetry(
-        () => db.select({ count: orders.id })
-             .from(orders)
-             .where(eq(orders.userEmail, userEmail)),
-        `Failed to count orders for user ${userEmail}`
-      );
-      
-      if (userResult && userResult[0]) {
-        userOrderCount = Number(userResult[0].count) || 0;
-      }
+      console.log('Getting user orders count with direct SQL for:', userEmail);
+      const userResult = await neonClient`SELECT COUNT(*) FROM orders WHERE user_email = ${userEmail}`;
+      userOrderCount = parseInt(userResult[0]?.count || '0', 10);
+      console.log('User orders count:', userOrderCount);
     }
     
-    return {
+    // Return all counts
+    const counts = {
       pendingCount,
       processedCount,
       userOrderCount
     };
+    
+    console.log('Final order counts:', counts);
+    return counts;
   } catch (error) {
     console.error('Failed to get order counts from database:', error);
     
@@ -419,6 +440,7 @@ export const getOrderCounts = async (userEmail?: string): Promise<{
       }
     }
     
-    return defaultCounts;
+    // Return default counts with connection error flag
+    return { ...defaultCounts, connectionError: true };
   }
 };

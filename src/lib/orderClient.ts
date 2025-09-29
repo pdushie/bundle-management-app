@@ -19,7 +19,11 @@ export type Order = {
     number: string;
     allocationGB: number;
     status?: OrderEntryStatus;
+    cost?: number | null; // Individual cost for this entry
   }>;
+  pricingProfileId?: number; // ID of the pricing profile used
+  pricingProfileName?: string; // Name of the pricing profile used
+  estimatedCost?: number | null; // Total estimated cost of the order
   isSelected?: boolean;
 };
 
@@ -300,6 +304,8 @@ export const getOrderCounts = async (userEmail?: string): Promise<{
     // Prepare the request body, ensuring it's never empty JSON
     const requestBody = userEmail ? JSON.stringify({ userEmail }) : JSON.stringify({ });
     
+    console.log('Fetching order counts for user:', userEmail || 'anonymous');
+    
     // Use our fetchWithRetry utility
     const response = await fetchWithRetry(
       '/api/orders/counts',
@@ -321,7 +327,16 @@ export const getOrderCounts = async (userEmail?: string): Promise<{
       return defaultCounts;
     }
     
-    return data;
+    // Ensure all count values are valid numbers
+    const sanitizedData = {
+      pendingCount: typeof data.pendingCount === 'number' ? data.pendingCount : 0,
+      processedCount: typeof data.processedCount === 'number' ? data.processedCount : 0,
+      userOrderCount: typeof data.userOrderCount === 'number' ? data.userOrderCount : 0,
+    };
+    
+    console.log('Received order counts from API:', sanitizedData);
+    
+    return sanitizedData;
   } catch (error) {
     console.error('Failed to get order counts after retries:', error);
     

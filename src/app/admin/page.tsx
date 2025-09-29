@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { redirect } from "next/navigation";
-import { Users, Check, X, Clock, MessageCircle, Shield, Calendar, ArrowLeft, Database, User, LogOut } from "lucide-react";
+import { Users, Check, X, Clock, MessageCircle, Shield, Calendar, ArrowLeft, Database, User, LogOut, DollarSign } from "lucide-react";
 import UserManagement from "@/components/UserManagement";
+import PricingProfiles from "@/components/PricingProfiles";
 
 interface PendingUser {
   id: string;
@@ -25,7 +26,7 @@ interface UserStats {
 export default function AdminDashboard() {
   const { data: session, status } = useSession() as any;
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'pending' | 'users'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'users' | 'pricing'>('pending');
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [userStats, setUserStats] = useState<UserStats>({
     totalUsers: 0,
@@ -279,6 +280,18 @@ export default function AdminDashboard() {
               <Users className="w-4 h-4" />
               User Management
             </button>
+            
+            <button 
+              onClick={() => setActiveTab('pricing')} 
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'pricing' 
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
+                  : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+              }`}
+            >
+              <DollarSign className="w-4 h-4" />
+              Pricing Profiles
+            </button>
           </div>
         </div>
 
@@ -369,9 +382,12 @@ export default function AdminDashboard() {
               </div>
             )}
           </div>
-        ) : (
+        ) : activeTab === 'users' ? (
           // User Management Tab Content
           <UserManagement />
+        ) : (
+          // Pricing Profiles Tab Content
+          <PricingProfiles />
         )}
       </div>
 

@@ -4,14 +4,29 @@ import React, { useState, useEffect } from "react";
 import { Search, Calendar, Phone, Database, Loader, Filter, ArrowUpDown, Check, AlertTriangle, Clock, CheckCircle } from "lucide-react";
 import { useSession } from "next-auth/react";
 
+// Helper function for consistent date formatting across server and client
+function formatDate(date: Date): string {
+  // Format as YYYY-MM-DD HH:MM:SS - this is consistent across environments
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 // Define types for order tracking
 type OrderEntry = {
-  id: number;
+  id: number | string;
   orderId: string;
   number: string;
   allocationGB: string;
   status: string;
   createdAt: string;
+  source?: 'order_entries' | 'phone_entries';
+  originalEntry?: any;
 };
 
 // Main component for order tracking
@@ -37,9 +52,12 @@ export default function OrderTrackingApp() {
   const [sortField, setSortField] = useState<keyof OrderEntry>("createdAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
-  // Fetch order entries when component mounts
+  // Fetch order entries when component mounts, but only on the client side
   useEffect(() => {
-    fetchOrderEntries();
+    // Ensure this only runs on the client side
+    if (typeof window !== 'undefined') {
+      fetchOrderEntries();
+    }
   }, []);
   
   // Function to fetch order entries with or without filters
@@ -134,35 +152,47 @@ export default function OrderTrackingApp() {
 
   // Apply sorting when orderEntries changes
   useEffect(() => {
-    // Apply sorting only - we handle filtering on the server
-    const sorted = [...orderEntries].sort((a, b) => {
-      let aValue = a[sortField];
-      let bValue = b[sortField];
+    // Only run this on the client side to prevent hydration issues
+    if (typeof window !== 'undefined') {
+      // Apply sorting only - we handle filtering on the server
+      const sorted = [...orderEntries].sort((a, b) => {
+        let aValue = a[sortField];
+        let bValue = b[sortField];
+        
+        if (sortField === "createdAt") {
+          aValue = new Date(aValue as string).getTime().toString();
+          bValue = new Date(bValue as string).getTime().toString();
+        }
+        
+        if (aValue < bValue) {
+          return sortDirection === "asc" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortDirection === "asc" ? 1 : -1;
+        }
+        return 0;
+      });
       
-      if (sortField === "createdAt") {
-        aValue = new Date(aValue as string).getTime().toString();
-        bValue = new Date(bValue as string).getTime().toString();
-      }
-      
-      if (aValue < bValue) {
-        return sortDirection === "asc" ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return sortDirection === "asc" ? 1 : -1;
-      }
-      return 0;
-    });
-    
-    setFilteredEntries(sorted);
-    // Reset to first page when data changes
-    setCurrentPage(1);
+      setFilteredEntries(sorted);
+      // Reset to first page when data changes
+      setCurrentPage(1);
+    }
   }, [orderEntries, sortField, sortDirection]);
 
-  // Get current entries for pagination
+  // Get current entries for pagination - ensure this is calculated consistently between server and client
   const indexOfLastEntry = currentPage * entriesPerPage;
   const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
-  const currentEntries = filteredEntries.slice(indexOfFirstEntry, indexOfLastEntry);
-  const totalPages = Math.ceil(filteredEntries.length / entriesPerPage);
+  // Initialize with a safe default value
+  const [currentEntries, setCurrentEntries] = useState<OrderEntry[]>([]);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  
+  // Use effect to calculate pagination values only on client-side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCurrentEntries(filteredEntries.slice(indexOfFirstEntry, indexOfLastEntry));
+      setTotalPages(Math.ceil(filteredEntries.length / entriesPerPage));
+    }
+  }, [filteredEntries, indexOfFirstEntry, indexOfLastEntry, entriesPerPage]);
 
   // Function to toggle sorting
   const handleSort = (field: keyof OrderEntry) => {
@@ -175,33 +205,35 @@ export default function OrderTrackingApp() {
   };
 
   // Function to get status badge style
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, source?: string) => {
+    const badgeText = source === 'phone_entries' ? (status + ' (History)') : status;
+    
     switch (status) {
       case "pending":
         return (
           <span className="flex items-center px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs font-medium">
             <Clock className="w-3 h-3 mr-1" />
-            Pending
+            {badgeText}
           </span>
         );
       case "sent":
         return (
           <span className="flex items-center px-2 py-1 rounded-full bg-green-100 text-green-800 text-xs font-medium">
             <CheckCircle className="w-3 h-3 mr-1" />
-            Sent
+            {badgeText}
           </span>
         );
       case "error":
         return (
           <span className="flex items-center px-2 py-1 rounded-full bg-red-100 text-red-800 text-xs font-medium">
             <AlertTriangle className="w-3 h-3 mr-1" />
-            Error
+            {badgeText}
           </span>
         );
       default:
         return (
           <span className="flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-800 text-xs font-medium">
-            {status}
+            {badgeText}
           </span>
         );
     }
@@ -407,14 +439,20 @@ export default function OrderTrackingApp() {
           <tbody className="bg-white divide-y divide-gray-200">
             {currentEntries.length > 0 ? (
               currentEntries.map((entry) => (
-                <tr key={entry.id} className="hover:bg-gray-50">
+                <tr key={typeof entry.id === 'number' ? entry.id : String(entry.id)} 
+                    className={`hover:bg-gray-50 ${entry.source === 'phone_entries' ? 'bg-blue-50' : ''}`}>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                    {new Date(entry.createdAt).toLocaleString()}
+                    {formatDate(new Date(entry.createdAt))}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-medium">
                     <div className="flex items-center">
                       <Phone className="w-4 h-4 mr-2 text-blue-500" />
                       {entry.number}
+                      {entry.source === 'phone_entries' && (
+                        <span className="ml-1 px-1.5 py-0.5 bg-blue-100 text-blue-800 text-xs rounded">
+                          History
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
@@ -423,10 +461,12 @@ export default function OrderTrackingApp() {
                       : `${(Number(entry.allocationGB) * 1024).toFixed(0)} MB`}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    {getStatusBadge(entry.status)}
+                    {getStatusBadge(entry.status, entry.source)}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                    {entry.orderId}
+                    {entry.source === 'phone_entries' 
+                      ? `History: ${entry.orderId}`
+                      : entry.orderId}
                   </td>
                 </tr>
               ))

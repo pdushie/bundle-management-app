@@ -2,11 +2,12 @@
 # This script helps manage database operations for the Bundle Management App
 
 param (
-    [Parameter(Mandatory=$false)]
-    [switch]$check,
+    [Parameter(Position = 0, Mandatory = $false)]
+    [ValidateSet("check", "info", "truncate", "drop", "clean", "create", "backup", "help", "node")]
+    [string]$Command = "help",
     
-    [Parameter(Mandatory=$false)]
-    [switch]$backup,
+    [Parameter(Position = 1, ValueFromRemainingArguments = $true)]
+    [string[]]$AdditionalArgs,
     
     [Parameter(Mandatory=$false)]
     [string]$backupPath = "./backups"
@@ -18,8 +19,60 @@ $successColor = "Green"
 $warningColor = "Yellow"
 $errorColor = "Red"
 
+# ANSI color codes for PowerShell
+$ColorReset = "`e[0m"
+$ColorRed = "`e[31m"
+$ColorGreen = "`e[32m"
+$ColorYellow = "`e[33m"
+$ColorBlue = "`e[34m"
+$ColorMagenta = "`e[35m"
+$ColorCyan = "`e[36m"
+$ColorBold = "`e[1m"
+
+function Write-ColorText {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$Text,
+        
+        [Parameter(Mandatory = $false)]
+        [string]$Color = ""
+    )
+    
+    Write-Host "$Color$Text$ColorReset"
+}
+
+function Show-Banner {
+    Write-ColorText "┌────────────────────────────────────────────────┐" $ColorBlue
+    Write-ColorText "│              DATABASE MANAGEMENT               │" "$ColorBlue$ColorBold"
+    Write-ColorText "└────────────────────────────────────────────────┘" $ColorBlue
+    Write-Host ""
+}
+
+function Show-Help {
+    Write-ColorText "Usage: ./db-manage.ps1 <command> [options]" $ColorYellow
+    Write-Host ""
+    Write-ColorText "Available commands:" $ColorBold
+    Write-Host "  check                  - Check database tables existence"
+    Write-Host "  info                   - Show database information"
+    Write-Host "  truncate [tables...]   - Truncate specific tables (removes all data)"
+    Write-Host "  drop [tables...]       - Drop specific tables (removes table structure)"
+    Write-Host "  clean                  - Clean test data from the database"
+    Write-Host "  create [schema.sql]    - Create tables from schema file"
+    Write-Host "  backup [path]          - Backup the database (default: ./backups)"
+    Write-Host "  node [args...]         - Run db-manage.js directly with Node.js"
+    Write-Host "  help                   - Show this help message"
+    Write-Host ""
+    Write-ColorText "Examples:" $ColorBold
+    Write-Host "  ./db-manage.ps1 check"
+    Write-Host "  ./db-manage.ps1 info"
+    Write-Host "  ./db-manage.ps1 truncate orders order_entries"
+    Write-Host "  ./db-manage.ps1 backup ./my-backups"
+    Write-Host "  ./db-manage.ps1 clean"
+    Write-Host ""
+}
+
 # Function to load environment variables
-function Load-EnvVariables {
+function Import-EnvVariables {
     Write-Host "Loading environment variables..." -ForegroundColor $infoColor
     
     if (Test-Path ".env.local") {
@@ -100,7 +153,7 @@ function Test-DatabaseConnection {
 }
 
 # Function to check database schema
-function Check-DatabaseSchema {
+function Test-DatabaseSchema {
     Write-Host "Checking database schema..." -ForegroundColor $infoColor
     
     try {
@@ -129,10 +182,10 @@ function Backup-Database {
     try {
         # Extract database name from connection string for pg_dump
         if ($env:DATABASE_URL -match "postgres://.*?:.*?@(.*?)/(.*?)(\?|$)") {
-            $host = $matches[1]
+            $dbHost = $matches[1]
             $dbName = $matches[2]
             
-            $output = & pg_dump -O -x -h $host -d $dbName -f $backupFile 2>&1
+            $output = & pg_dump -O -x -h $dbHost -d $dbName -f $backupFile 2>&1
             if ($LASTEXITCODE -eq 0) {
                 Write-Host "Database backup successful: $backupFile" -ForegroundColor $successColor
                 return $true
@@ -164,21 +217,127 @@ function Backup-Database {
     }
 }
 
+# Run Node.js db-manage.js script
+function Invoke-NodeDbManage {
+    param (
+        [Parameter(Mandatory = $false)]
+        [string[]]$Arguments
+    )
+    
+    $dbManageScript = Join-Path $PSScriptRoot "db-manage.js"
+    if (-not (Test-Path $dbManageScript)) {
+        Write-Host "Error: db-manage.js script not found!" -ForegroundColor $errorColor
+        Write-Host "Expected location: $dbManageScript" -ForegroundColor $warningColor
+        return $false
+    }
+    
+    Write-Host "Running Node.js database manager..." -ForegroundColor $infoColor
+    
+    # Build the argument list
+    $nodeArgs = @($dbManageScript)
+    if ($Arguments) {
+        $nodeArgs += $Arguments
+    }
+    
+    # Execute the Node.js script
+    & node $nodeArgs
+    
+    # Check the exit code
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "Command completed successfully." -ForegroundColor $successColor
+        return $true
+    } else {
+        Write-Host "Command failed with exit code: $LASTEXITCODE" -ForegroundColor $errorColor
+        return $false
+    }
+}
+
 # Main script execution
-if (-not (Load-EnvVariables)) {
-    exit 1
+Show-Banner
+
+# Process commands based on the command parameter
+switch ($Command) {
+    "help" {
+        Show-Help
+    }
+    
+    "check" {
+        if (-not (Import-EnvVariables)) {
+            exit 1
+        }
+        
+        if (-not (Test-DatabaseConnection)) {
+            exit 1
+        }
+        
+        Test-DatabaseSchema
+    }
+    
+    "backup" {
+        if (-not (Import-EnvVariables)) {
+            exit 1
+        }
+        
+        if (-not (Test-DatabaseConnection)) {
+            exit 1
+        }
+        
+        # Override backup path if provided as an argument
+        if ($AdditionalArgs -and $AdditionalArgs.Count -gt 0) {
+            $backupPath = $AdditionalArgs[0]
+        }
+        
+        Backup-Database
+    }
+    
+    "node" {
+        if (-not (Import-EnvVariables)) {
+            exit 1
+        }
+        
+        Invoke-NodeDbManage -Arguments $AdditionalArgs
+    }
+    
+    "info" {
+        if (-not (Import-EnvVariables)) {
+            exit 1
+        }
+        
+        Invoke-NodeDbManage -Arguments @("info")
+    }
+    
+    "truncate" {
+        if (-not (Import-EnvVariables)) {
+            exit 1
+        }
+        
+        Invoke-NodeDbManage -Arguments (@("truncate") + $AdditionalArgs)
+    }
+    
+    "drop" {
+        if (-not (Import-EnvVariables)) {
+            exit 1
+        }
+        
+        Invoke-NodeDbManage -Arguments (@("drop") + $AdditionalArgs)
+    }
+    
+    "clean" {
+        if (-not (Import-EnvVariables)) {
+            exit 1
+        }
+        
+        Invoke-NodeDbManage -Arguments @("clean")
+    }
+    
+    "create" {
+        if (-not (Import-EnvVariables)) {
+            exit 1
+        }
+        
+        Invoke-NodeDbManage -Arguments (@("create") + $AdditionalArgs)
+    }
 }
 
-if (-not (Test-DatabaseConnection)) {
-    exit 1
-}
-
-if ($check) {
-    Check-DatabaseSchema
-}
-
-if ($backup) {
-    Backup-Database
-}
-
-Write-Host "Database management script completed successfully!" -ForegroundColor $successColor
+Write-Host ""
+Write-Host "Database management script completed!" -ForegroundColor $successColor

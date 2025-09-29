@@ -25,17 +25,17 @@ export async function simulateNewOrders(options: {
   // Simulate the events that would be fired when orders are updated
   if (triggerEvent) {
     if (orderCount !== undefined) {
-      console.log(`Simulating ${orderCount} new orders`);
+      console.log(`Simulating ${orderCount} ${orderCount === 0 ? 'zero' : 'new'} orders`);
       notifyOrderUpdated({ type: 'new', count: orderCount });
     }
     
     if (processedCount !== undefined) {
-      console.log(`Simulating ${processedCount} newly processed orders`);
+      console.log(`Simulating ${processedCount} ${processedCount === 0 ? 'zero' : 'newly processed'} orders`);
       notifyOrderProcessed();
     }
     
     if (sentCount !== undefined) {
-      console.log(`Simulating ${sentCount} newly sent orders`);
+      console.log(`Simulating ${sentCount} ${sentCount === 0 ? 'zero' : 'newly sent'} orders`);
       notifyOrderSent();
     }
     

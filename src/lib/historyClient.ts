@@ -4,12 +4,23 @@ import { HistoryEntry, PhoneEntry } from './historyDbOperations';
 // Get all history entries
 export const getHistoryEntries = async (): Promise<HistoryEntry[]> => {
   try {
-    const response = await fetch('/api/history', {
+    // Try first with /api/history
+    let response = await fetch('/api/history', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
     });
+
+    // If not found, try with /api/history/load as fallback
+    if (response.status === 404) {
+      response = await fetch('/api/history/load', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    }
 
     if (!response.ok) {
       throw new Error('Failed to load history entries');

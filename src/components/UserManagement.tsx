@@ -6,13 +6,14 @@ import {
   UserPlus, 
   Key, 
   ShieldCheck, 
-  Edit2, 
   AlertCircle, 
   X, 
   Check, 
   ToggleLeft, 
-  ToggleRight
+  ToggleRight,
+  DollarSign
 } from "lucide-react";
+import ManageUserPricing from "./ManageUserPricing";
 
 interface UserData {
   id: string;
@@ -50,6 +51,7 @@ export default function UserManagement() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
   const [isUpdateRoleModalOpen, setIsUpdateRoleModalOpen] = useState(false);
+  const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   
   // Create user form state
@@ -377,6 +379,16 @@ export default function UserManagement() {
                         <ShieldCheck className="w-5 h-5" />
                       </button>
                       <button
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setIsPricingModalOpen(true);
+                        }}
+                        className="text-green-600 hover:text-green-900 p-1 rounded-md hover:bg-green-50"
+                        title="Manage Pricing"
+                      >
+                        <DollarSign className="w-5 h-5" />
+                      </button>
+                      <button
                         onClick={() => handleToggleStatus(user)}
                         className={`${
                           user.status === "approved" 
@@ -663,6 +675,32 @@ export default function UserManagement() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Pricing Modal */}
+      {isPricingModalOpen && selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">Manage User Pricing</h3>
+                <button
+                  onClick={() => setIsPricingModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <ManageUserPricing 
+                userId={selectedUser.id}
+                userName={selectedUser.name}
+                userEmail={selectedUser.email}
+                onClose={() => setIsPricingModalOpen(false)}
+              />
             </div>
           </div>
         </div>

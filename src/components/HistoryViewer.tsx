@@ -237,13 +237,29 @@ export default function HistoryViewer() {
                             <div>
                               <div className="text-sm font-bold text-gray-900">
                                 {entry.totalGB ? (
-                                  parseFloat(entry.totalGB) > 1023 ? 
-                                    `${(parseFloat(entry.totalGB) / 1024).toFixed(2)} TB` : 
-                                    `${parseFloat(entry.totalGB).toFixed(2)} GB`
+                                  // Make sure to safely parse the totalGB value
+                                  (() => {
+                                    const totalGB = typeof entry.totalGB === 'number' 
+                                      ? entry.totalGB 
+                                      : parseFloat(entry.totalGB) || 0;
+                                    
+                                    return totalGB > 1023 
+                                      ? `${(totalGB / 1024).toFixed(2)} TB` 
+                                      : `${totalGB.toFixed(2)} GB`;
+                                  })()
                                 ) : "0 GB"}
                               </div>
                               <div className="text-xs text-gray-500">
-                                {entry.totalGB ? (parseFloat(entry.totalGB) * 1024).toLocaleString() : "0"} MB
+                                {entry.totalGB ? (
+                                  // Make sure to safely parse the totalGB value
+                                  (() => {
+                                    const totalGB = typeof entry.totalGB === 'number' 
+                                      ? entry.totalGB 
+                                      : parseFloat(entry.totalGB) || 0;
+                                    
+                                    return (totalGB * 1024).toLocaleString();
+                                  })()
+                                ) : "0"} MB
                               </div>
                             </div>
                           </div>
@@ -327,13 +343,29 @@ export default function HistoryViewer() {
                                           <td className="px-3 py-2 whitespace-nowrap">
                                             <div className="text-sm text-gray-900">
                                               {phone.allocationGB ? (
-                                                parseFloat(phone.allocationGB) > 1023 ? 
-                                                  `${(parseFloat(phone.allocationGB) / 1024).toFixed(2)} TB` : 
-                                                  `${parseFloat(phone.allocationGB).toFixed(2)} GB`
+                                                // Make sure to safely parse the allocationGB value
+                                                (() => {
+                                                  const allocationGB = typeof phone.allocationGB === 'number' 
+                                                    ? phone.allocationGB 
+                                                    : parseFloat(phone.allocationGB) || 0;
+                                                  
+                                                  return allocationGB > 1023 
+                                                    ? `${(allocationGB / 1024).toFixed(2)} TB` 
+                                                    : `${allocationGB.toFixed(2)} GB`;
+                                                })()
                                               ) : "0 GB"}
                                             </div>
                                             <div className="text-xs text-gray-500">
-                                              {phone.allocationGB ? (parseFloat(phone.allocationGB) * 1024).toLocaleString() : "0"} MB
+                                              {phone.allocationGB ? (
+                                                // Make sure to safely parse the allocationGB value
+                                                (() => {
+                                                  const allocationGB = typeof phone.allocationGB === 'number' 
+                                                    ? phone.allocationGB 
+                                                    : parseFloat(phone.allocationGB) || 0;
+                                                  
+                                                  return (allocationGB * 1024).toLocaleString();
+                                                })()
+                                              ) : "0"} MB
                                             </div>
                                           </td>
                                           <td className="px-3 py-2 whitespace-nowrap">

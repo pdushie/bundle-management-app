@@ -54,11 +54,12 @@ export default function ProcessedOrdersApp() {
     window.addEventListener(ORDER_UPDATED_EVENT, handleOrderUpdate);
     window.addEventListener(ORDER_PROCESSED_EVENT, handleOrderProcessed);
     
-    // Set up polling interval (every 15 seconds) - reduced from 30 seconds
+    // Set up polling interval with a much longer interval (2 minutes)
+    // This reduces bandwidth usage and compute hours while still keeping data reasonably fresh
     const intervalId = setInterval(() => {
-      console.log('ProcessedOrdersApp: Polling interval triggered');
+      console.log('ProcessedOrdersApp: Low-frequency polling triggered');
       fetchProcessedOrders();
-    }, 15000);
+    }, 120000); // 2 minutes
     
     // Clean up
     return () => {

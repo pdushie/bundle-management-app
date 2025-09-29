@@ -17,7 +17,14 @@ export async function GET(request: NextRequest) {
     // Get history entries
     const historyEntries = await getHistoryEntries();
     
-    return NextResponse.json({ historyEntries });
+    // Log the result for debugging
+    console.log(`History entries found: ${historyEntries.length}`);
+    
+    // Return in a consistent format that the component can use
+    return NextResponse.json({ 
+      history: historyEntries,
+      historyEntries: historyEntries 
+    });
   } catch (error) {
     console.error('Error in history route:', error);
     return NextResponse.json(

@@ -32,6 +32,9 @@ export const orders = pgTable("orders", {
   totalCount: integer('total_count').notNull(),
   status: varchar('status', { length: 20 }).notNull(), // 'pending' or 'processed'
   userId: integer('user_id').references(() => users.id, { onDelete: 'set null' }), // Changed to integer to match users.id
+  cost: decimal('cost', { precision: 10, scale: 2, mode: 'string' }), // Total order cost
+  pricingProfileId: integer('pricing_profile_id'), // ID of the pricing profile used
+  pricingProfileName: varchar('pricing_profile_name', { length: 255 }), // Name of the pricing profile used
   createdAt: timestamp('created_at').defaultNow(),
 });
 
@@ -42,6 +45,7 @@ export const orderEntries = pgTable("order_entries", {
   number: varchar('number', { length: 15 }).notNull(),
   allocationGB: decimal('allocation_gb', { precision: 10, scale: 2, mode: 'string' }).notNull(),
   status: varchar('status', { length: 20 }), // 'pending', 'sent', or 'error'
+  cost: decimal('cost', { precision: 10, scale: 2, mode: 'string' }), // Individual entry cost
   createdAt: timestamp('created_at').defaultNow(),
 });
 
@@ -117,4 +121,68 @@ export const sessionsRelations = relations(sessions, ({ one }) => ({
     fields: [sessions.userId],
     references: [users.id],
   }),
+}));
+
+// Pricing profiles schema
+export const pricingProfiles = pgTable("pricing_profiles", {
+  id: serial("id").primaryKey(),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  basePrice: decimal("base_price", { precision: 10, scale: 2, mode: 'string' }).notNull(),
+  dataPricePerGB: decimal("data_price_per_gb", { precision: 10, scale: 2, mode: 'string' }), // Make this optional for tiered pricing
+  minimumCharge: decimal("minimum_charge", { precision: 10, scale: 2, mode: 'string' }).notNull().default("0"),
+  isActive: boolean("is_active").notNull().default(true),
+  isTiered: boolean("is_tiered").notNull().default(false), // New field to indicate tiered pricing
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// New table for tiered pricing entries
+export const pricingTiers = pgTable("pricing_tiers", {
+  id: serial("id").primaryKey(),
+  profileId: integer("profile_id").notNull().references(() => pricingProfiles.id, { onDelete: "cascade" }),
+  dataGB: decimal("data_gb", { precision: 10, scale: 2, mode: 'string' }).notNull(), // Data allocation in GB
+  price: decimal("price", { precision: 10, scale: 2, mode: 'string' }).notNull(), // Price for this tier
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User pricing profile associations
+export const userPricingProfiles = pgTable("user_pricing_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  profileId: integer("profile_id").notNull().references(() => pricingProfiles.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Add cost field to orders
+export const ordersWithCost = {
+  ...orders,
+  cost: decimal("cost", { precision: 10, scale: 2, mode: 'string' }),
+};
+
+// Define relations for pricing profiles
+export const pricingProfilesRelations = relations(pricingProfiles, ({ many }) => ({
+  userAssociations: many(userPricingProfiles),
+}));
+
+// Define relations for user pricing profiles
+export const userPricingProfilesRelations = relations(userPricingProfiles, ({ one }) => ({
+  user: one(users, {
+    fields: [userPricingProfiles.userId],
+    references: [users.id],
+  }),
+  profile: one(pricingProfiles, {
+    fields: [userPricingProfiles.profileId],
+    references: [pricingProfiles.id],
+  }),
+}));
+
+// Add relation to users for pricing profiles
+export const usersRelations = relations(users, ({ many }) => ({
+  sessions: many(sessions),
+  orders: many(orders),
+  historyEntries: many(historyEntries),
+  pricingProfile: many(userPricingProfiles),
 }));

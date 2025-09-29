@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Upload, Download, CheckCircle, AlertCircle, Loader, FileText } from "lucide-react";
+import { Send, Upload, Download, CheckCircle, AlertCircle, Loader, FileText, DollarSign } from "lucide-react";
 import ExcelJS from "exceljs";
 import { addOrder } from "../lib/orderClient";
 import { useOrderCount } from "../lib/orderContext";
 import { useSession } from "next-auth/react";
 import { notifyOrderSent, notifyCountUpdated } from "../lib/orderNotifications";
+import { getCurrentUserPricing, calculatePrice } from "../lib/pricingClient";
 
 type OrderStatus = "idle" | "preparing" | "sending" | "success" | "error";
 
@@ -18,6 +19,7 @@ type OrderEntry = {
   isValid?: boolean;
   wasFixed?: boolean;
   isDuplicate?: boolean;
+  cost?: number | null;
 };
 
 // Helper functions to save and load order entries from localStorage
@@ -59,6 +61,9 @@ export default function SendOrderApp() {
   const [manualInputText, setManualInputText] = useState<string>("");
   const [inputMethod, setInputMethod] = useState<"file" | "manual">("file");
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [pricingData, setPricingData] = useState<any>(null);
+  const [totalCost, setTotalCost] = useState<number | null>(null);
+  const [loadingPricing, setLoadingPricing] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const invalidEntryRefs = useRef<(HTMLDivElement | null)[]>([]);
   
@@ -80,6 +85,26 @@ export default function SendOrderApp() {
       }
     }
   }, []);
+  
+  // Fetch the user's pricing profile
+  useEffect(() => {
+    async function loadUserPricing() {
+      try {
+        setLoadingPricing(true);
+        const data = await getCurrentUserPricing();
+        setPricingData(data);
+        console.log("User pricing data loaded:", data);
+      } catch (error) {
+        console.error("Error loading user pricing:", error);
+      } finally {
+        setLoadingPricing(false);
+      }
+    }
+    
+    if (session?.user) {
+      loadUserPricing();
+    }
+  }, [session?.user]);
 
   // Function to read Excel (.xlsx) files
   // Enhanced validation function that ensures each character is a digit and phone number has exactly 10 digits
@@ -248,14 +273,16 @@ export default function SendOrderApp() {
               const finalValid = isValidNumber && validation.isValid !== false;
               console.log(`Double-checking ${validation.correctedNumber}: regex=${isValidNumber}, validation=${validation.isValid}, final=${finalValid}`);
               
-              parsed.push({
+              const entry = {
                 number: validation.correctedNumber,
                 allocationGB: allocGB,
                 status: "pending",
                 isValid: finalValid, // Use the combined check for strictest validation
                 wasFixed: validation.wasFixed,
                 isDuplicate: false // No entries are marked as duplicate since we remove them
-              });
+              };
+              
+              parsed.push(entry);
               
               // Log if there's a difference between our validation function and this check
               if (isValidNumber !== validation.isValid) {
@@ -480,14 +507,16 @@ export default function SendOrderApp() {
               const finalValid = isValidNumber && entry.validation.isValid !== false;
               console.log(`Final validation for ${entry.phoneNumber}: regex=${isValidNumber}, validation=${entry.validation.isValid}, final=${finalValid}`);
               
-              entries.push({
+              const newEntry = {
                 number: entry.phoneNumber,
                 allocationGB: entry.dataAllocation,
                 status: "pending",
                 isValid: finalValid, // Use the combined check for strictest validation
                 wasFixed: entry.validation.wasFixed,
                 isDuplicate: false // No entries are marked as duplicate since we remove them
-              });
+              };
+              
+              entries.push(newEntry);
               
               // Log if there's a difference between our validation function and this check
               if (isValidNumber !== entry.validation.isValid) {
@@ -650,39 +679,17 @@ export default function SendOrderApp() {
     setStatus("sending");
     setProgressPercent(0);
     
-    // Simulate API calls with batch processing
-    let processed = 0;
-    const batchSize = 5; // Process 5 entries at a time
+    // Process entries in a more efficient way (no artificial delays)
     const totalEntries = orderEntries.length;
+    const updatedEntries: OrderEntry[] = orderEntries.map(entry => ({
+      ...entry,
+      status: "sent",
+      message: "Order sent successfully"
+    }));
     
-    const updatedEntries = [...orderEntries];
-    
-    for (let i = 0; i < totalEntries; i += batchSize) {
-      const batch = updatedEntries.slice(i, i + batchSize);
-      
-      // Simulate API call for each entry in the batch
-      await Promise.all(batch.map(async (entry, index) => {
-        const batchIndex = i + index;
-        if (batchIndex < totalEntries) {
-          // Simulate API call - always successful
-          await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 700));
-          
-          // Always set to success
-          updatedEntries[batchIndex] = {
-            ...entry,
-            status: "sent",
-            message: "Order sent successfully"
-          };
-        }
-      }));
-      
-      processed += batch.length;
-      setProgressPercent(Math.min((processed / totalEntries) * 100, 100));
-      setOrderEntries([...updatedEntries]);
-      
-      // Small delay between batches
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
+    // Update entries at once with 100% progress
+    setOrderEntries(updatedEntries);
+    setProgressPercent(100);
     
     setStatus("success");
     
@@ -704,11 +711,23 @@ export default function SendOrderApp() {
         totalData: Number(totalData.toFixed(2)),
         totalCount: updatedEntries.length,
         status: "pending" as const, // New orders always start with pending status
-        entries: updatedEntries.map((entry: OrderEntry) => ({
-          number: entry.number,
-          allocationGB: entry.allocationGB,
-          status: "pending" as const
-        })),
+        entries: updatedEntries.map((entry: OrderEntry) => {
+          const entryCost = pricingData?.hasProfile 
+            ? calculatePrice(pricingData.profile, entry.allocationGB) 
+            : null;
+            
+          return {
+            number: entry.number,
+            allocationGB: entry.allocationGB,
+            status: "pending" as const,
+            // Include individual cost for each entry
+            cost: entryCost
+          };
+        }),
+        // Add pricing information if available
+        pricingProfileId: pricingData?.profile?.id,
+        pricingProfileName: pricingData?.profile?.name,
+        estimatedCost: totalCost,
         isSelected: false
       };
       
@@ -729,6 +748,15 @@ export default function SendOrderApp() {
       
       // Clear the manual input text box
       setManualInputText("");
+      
+      // Reset the interface to initial state after a delay (5 seconds)
+      setTimeout(() => {
+        console.log("SendOrderApp: Auto-resetting interface after successful order submission");
+        setOrderEntries([]);
+        setStatus("idle");
+        setErrorMessage("");
+        setProgressPercent(0);
+      }, 5000); // 5 seconds delay
     }
   };
 
@@ -838,6 +866,26 @@ export default function SendOrderApp() {
   useEffect(() => {
     saveOrderEntriesToStorage(orderEntries, manualInputText);
   }, [orderEntries, manualInputText]);
+  
+  // Calculate total cost whenever order entries or pricing data changes
+  useEffect(() => {
+    if (pricingData?.hasProfile && pricingData?.profile && orderEntries.length > 0) {
+      // Calculate cost for each individual allocation and sum them up
+      const totalCostValue = orderEntries.reduce((sum, entry) => {
+        const entryCost = calculatePrice(pricingData.profile, entry.allocationGB);
+        return sum + (entryCost || 0);
+      }, 0);
+      
+      // Round to 2 decimal places for display
+      const roundedCost = parseFloat(totalCostValue.toFixed(2));
+      setTotalCost(roundedCost);
+      
+      const totalGB = orderEntries.reduce((sum, entry) => sum + entry.allocationGB, 0);
+      console.log("Calculated total cost:", roundedCost, "for", totalGB, "GB (applying pricing to each allocation)");
+    } else {
+      setTotalCost(null);
+    }
+  }, [orderEntries, pricingData]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
@@ -969,7 +1017,7 @@ export default function SendOrderApp() {
           </div>
         )}
 
-        {/* Order Details */}
+          {/* Order Details */}
         {orderEntries.length > 0 && (
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-4 sm:mb-8 transition-all hover:shadow-2xl">
             <div className="p-3 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 flex justify-between items-center flex-wrap gap-3">
@@ -983,6 +1031,16 @@ export default function SendOrderApp() {
                     <>, {invalidCount} invalid, {fixedCount} auto-fixed</>
                   )}
                 </p>
+                
+                {/* Cost information for users with pricing profiles */}
+                {pricingData?.hasProfile && totalCost !== null && (
+                  <div className="mt-1 flex items-center gap-2">
+                    <DollarSign className="w-3.5 h-3.5 text-green-600" />
+                    <p className="text-sm text-green-700 font-medium">
+                      Estimated cost: GHS {totalCost.toFixed(2)}
+                    </p>
+                  </div>
+                )}
               </div>
               
               {/* Action buttons */}
@@ -1013,9 +1071,7 @@ export default function SendOrderApp() {
                     Send Orders
                   </button>
                 </div>
-              )}
-
-              {/* Progress bar for sending */}
+              )}              {/* Progress bar for sending */}
               {status === "sending" && (
                 <div className="w-full sm:w-auto flex items-center gap-3">
                   <div className="w-full sm:w-48 bg-gray-200 rounded-full h-2.5">
@@ -1096,6 +1152,53 @@ export default function SendOrderApp() {
                 <p className="text-xl font-bold text-cyan-700">{fixedCount}</p>
               </div>
             </div>
+            
+            {/* Pricing Summary */}
+            {pricingData?.hasProfile && totalCost !== null && (
+              <div className="px-3 sm:px-6 pb-3 sm:pb-6">
+                <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-3 sm:p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <DollarSign className="w-5 h-5 text-emerald-600" />
+                    <h3 className="font-medium text-emerald-800">Order Cost Summary</h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <p className="text-xs text-emerald-700">Pricing Plan</p>
+                      <p className="font-medium">{pricingData.profile.name}</p>
+                    </div>
+                    
+                    <div>
+                      <p className="text-xs text-emerald-700">Total Data</p>
+                      <p className="font-medium">
+                        {totalGB > 1023 
+                          ? `${(totalGB / 1024).toFixed(2)} TB` 
+                          : `${totalGB.toFixed(2)} GB`}
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <p className="text-xs text-emerald-700">Estimated Cost</p>
+                      <p className="font-bold text-lg">GHS {totalCost.toFixed(2)}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-2 text-xs text-emerald-700">
+                    <p>* Cost calculated by applying pricing to each individual allocation</p>
+                    
+                    {pricingData.profile.isTiered && pricingData.profile.tiers && 
+                     orderEntries.some(entry => 
+                       entry.allocationGB > Math.max(...pricingData.profile.tiers.map((t: any) => parseFloat(t.dataGB)))
+                     ) && (
+                      <p className="mt-1">
+                        Some allocations exceed defined pricing tiers. 
+                        For these, price is calculated at 4 GHS per GB.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Order entries list */}
             <div className="max-h-80 sm:max-h-96 overflow-y-auto px-3 sm:px-6 pb-3 sm:pb-6">
@@ -1184,6 +1287,11 @@ export default function SendOrderApp() {
                     <div className="text-right">
                       <p className="text-sm font-bold">{entry.allocationGB.toFixed(2)} GB</p>
                       <p className="text-xs text-gray-500">{(entry.allocationGB * 1024).toFixed(0)} MB</p>
+                      {pricingData?.hasProfile && (
+                        <p className="text-xs text-green-600 font-medium mt-1">
+                          GHS {calculatePrice(pricingData.profile, entry.allocationGB)?.toFixed(2)}
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}

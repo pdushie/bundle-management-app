@@ -155,12 +155,12 @@ export const OrderProvider = ({ children }: OrderProviderProps) => {
     window.addEventListener(ORDER_SENT_EVENT, handleOrderSent);
     window.addEventListener(COUNT_UPDATED_EVENT, handleCountUpdate);
 
-    // Set up polling interval (every 15 seconds) as a fallback
-    // Reduced from 30 seconds to 15 seconds for more frequent updates
+    // Set up polling interval with a much longer interval (2 minutes)
+    // This drastically reduces API calls while still providing eventual consistency
     const intervalId = setInterval(() => {
-      console.log('Polling interval triggered, refreshing counts');
+      console.log('Background polling interval triggered, refreshing counts');
       refreshOrderCount();
-    }, 15000);
+    }, 120000); // 2 minutes
 
     // Clean up the event listeners and interval
     return () => {
