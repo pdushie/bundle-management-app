@@ -31,6 +31,30 @@ export default function BillingApp() {
         // Format the date as YYYY-MM-DD for the API
         const dateString = selectedDate.toISOString().split('T')[0];
         const data = await getUserBilling(dateString);
+        console.log("Billing data received:", data);
+        console.log("Total amount:", data.totalAmount);
+        
+        // Debug order costs
+        if (data && data.orders) {
+          console.log("Orders with costs:");
+          data.orders.forEach((order: any) => {
+            console.log(`- ${order.id}: estimatedCost=${order.estimatedCost}, status=${order.status}`);
+          });
+          
+          // Calculate total ourselves to verify
+          const calculatedTotal = data.orders.reduce((total: number, order: any) => {
+            return total + (Number(order.estimatedCost) || 0);
+          }, 0);
+          
+          console.log(`API reports totalAmount: ${data.totalAmount}, Calculated: ${calculatedTotal}`);
+          
+          // If there's a significant difference, use our calculation
+          if (Math.abs(data.totalAmount - calculatedTotal) > 0.01) {
+            console.log(`Fixing total amount from ${data.totalAmount} to ${calculatedTotal}`);
+            data.totalAmount = calculatedTotal;
+          }
+        }
+        
         setBillingData(data);
       } catch (err: any) {
         console.error('Error fetching billing data:', err);
@@ -242,7 +266,11 @@ export default function BillingApp() {
                 </div>
                 <div className="bg-purple-50 border border-purple-100 rounded-lg p-4">
                   <p className="text-sm text-purple-600 mb-1">Total Amount</p>
-                  <p className="text-2xl font-bold">{formatCurrency(billingData.totalAmount)}</p>
+                  <p className="text-2xl font-bold">{formatCurrency(billingData.totalAmount || 0)}</p>
+                  <p className="text-xs text-purple-500 mt-1">
+                    {billingData.orders.some(order => order.status === "pending") ? 
+                      "* Includes pending orders" : ""}
+                  </p>
                 </div>
               </div>
 
@@ -276,6 +304,7 @@ export default function BillingApp() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
                           {formatCurrency(order.estimatedCost || 0)}
+                          {order.status === "pending" && " (Pending)"}
                         </td>
                       </tr>
                     ))}

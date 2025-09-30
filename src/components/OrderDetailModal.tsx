@@ -5,6 +5,7 @@ type OrderEntry = {
   number: string;
   allocationGB: number;
   status?: string;
+  cost?: number | null; // Add cost to OrderEntry type
 };
 
 type Order = {
@@ -17,6 +18,8 @@ type Order = {
   totalData: number;
   totalCount: number;
   orderCost?: number;
+  estimatedCost?: number; // Add estimated cost
+  status?: string; // Add status field
   entries: OrderEntry[];
 };
 
@@ -45,6 +48,10 @@ export function OrderDetailModal({
     return null;
   }
   
+  // We won't calculate costPerGB as we need to use the actual tier pricing
+  // The entries should already have their costs calculated on the server 
+  // based on the applicable pricing tier
+  
   // Filter entries based on search term
   const filteredEntries = searchTerm 
     ? order.entries.filter(entry => 
@@ -62,6 +69,16 @@ export function OrderDetailModal({
     hour: '2-digit',
     minute: '2-digit'
   }).format(orderDate);
+  
+  // Format currency helper
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-GH', { 
+      style: 'currency', 
+      currency: 'GHS',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2 
+    }).format(amount);
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -77,6 +94,15 @@ export function OrderDetailModal({
                 <Package className="w-5 h-5 text-blue-700" />
               </div>
               <h2 className="text-xl font-bold text-gray-900">Order #{order.id.substring(0, 8)}</h2>
+              {order.status && (
+                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  order.status === 'pending' 
+                    ? 'bg-yellow-100 text-yellow-800' 
+                    : 'bg-green-100 text-green-800'
+                }`}>
+                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                </div>
+              )}
             </div>
             <p className="text-sm text-gray-600">{formattedDate}</p>
           </div>
@@ -116,12 +142,16 @@ export function OrderDetailModal({
             <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full font-medium text-sm">
               {order.totalData.toFixed(2)} GB
             </div>
-            {order.orderCost !== undefined && (
+            {(order.orderCost !== undefined || order.estimatedCost !== undefined) && (
               <div className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-medium text-sm flex items-center">
                 <DollarSign className="w-4 h-4 mr-0.5" />
-                {order.orderCost.toFixed(2)}
+                {formatCurrency(order.estimatedCost || order.orderCost || 0)}
+                {order.status === 'pending' && order.estimatedCost && (
+                  <span className="ml-1 text-xs opacity-75">(Est.)</span>
+                )}
               </div>
             )}
+            {/* We're not displaying cost per GB as we use tier-based pricing */}
           </div>
         </div>
         
@@ -150,23 +180,37 @@ export function OrderDetailModal({
         {/* Numbers List */}
         <div className="flex-1 overflow-auto p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {filteredEntries.map((entry, idx) => (
-              <div 
-                key={idx} 
-                className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 flex justify-between items-center"
-              >
-                <div>
-                  <p className="font-medium">{entry.number}</p>
-                  <p className="text-sm text-gray-600">{entry.allocationGB.toFixed(2)} GB</p>
-                </div>
-                {entry.status === 'sent' && (
-                  <div className="flex items-center gap-1 text-green-600 text-sm">
-                    <CheckCircle className="w-4 h-4" />
-                    <span>Sent</span>
+            {filteredEntries.map((entry, idx) => {
+              // Use the entry cost directly from the entry object
+              // Each entry should have its cost calculated server-side based on tier pricing
+              const entryCost = entry.cost !== undefined && entry.cost !== null
+                ? entry.cost
+                : null;
+                
+              return (
+                <div 
+                  key={idx} 
+                  className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 flex justify-between items-center"
+                >
+                  <div>
+                    <p className="font-medium">{entry.number}</p>
+                    <p className="text-sm text-gray-600">{entry.allocationGB.toFixed(2)} GB</p>
+                    {entryCost !== null && (
+                      <p className="text-sm text-amber-600 font-medium flex items-center mt-1">
+                        <DollarSign className="w-3 h-3 mr-0.5" />
+                        {formatCurrency(entryCost)}
+                      </p>
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
+                  {entry.status === 'sent' && (
+                    <div className="flex items-center gap-1 text-green-600 text-sm">
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Sent</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
           
           {filteredEntries.length === 0 && (

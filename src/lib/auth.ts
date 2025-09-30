@@ -89,6 +89,13 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
+          console.log('User authenticated:', { 
+            id: user.id, 
+            email: user.email, 
+            name: user.name, 
+            role: user.role 
+          });
+          
           return {
             id: user.id,
             email: user.email,
@@ -104,6 +111,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        console.log('JWT callback - user data:', { id: user.id, role: user.role });
         return {
           ...token,
           id: user.id,
@@ -113,6 +121,7 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
+      console.log('Session callback - token data:', { id: token.id, role: token.role });
       return {
         ...session,
         user: {

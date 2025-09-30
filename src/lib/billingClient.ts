@@ -12,6 +12,7 @@ export interface BillingSummary {
     time: string;
     totalCount: number;
     totalData: number;
+    status: string;
     pricingProfileName?: string;
     estimatedCost: number;
   }>;

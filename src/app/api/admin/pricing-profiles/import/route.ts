@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { checkAuthAdmin } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 import * as XLSX from 'xlsx';
 
 export async function POST(request: NextRequest) {
   // Check admin authentication
-  const user = await checkAuthAdmin();
-  if (!user) {
+  try {
+    const session = await requireAdmin();
+  } catch (error) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

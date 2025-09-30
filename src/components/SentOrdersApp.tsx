@@ -26,6 +26,20 @@ export default function SentOrdersApp() {
     try {
       setLoading(true);
       const userOrders = await getUserOrdersOldestFirst(userEmail);
+      
+      // Log the orders to see if entry costs are present
+      console.log('User orders with entry costs:', 
+        userOrders.map(order => ({
+          id: order.id,
+          totalData: order.totalData,
+          entries: order.entries.map(e => ({
+            number: e.number,
+            allocationGB: e.allocationGB,
+            cost: e.cost
+          }))
+        }))
+      );
+      
       setOrders(userOrders);
       refreshOrderCount();
     } catch (error) {

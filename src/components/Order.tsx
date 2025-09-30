@@ -10,6 +10,8 @@ type OrderProps = {
   totalData: number;
   totalCount: number;
   orderCost?: number;
+  estimatedCost?: number; // Add estimated cost
+  status?: string; // Add status field
   isSelected?: boolean;
   onSelect?: (id: string) => void;
   onProcess?: (id: string) => void;
@@ -24,10 +26,21 @@ export function Order({
   totalData,
   totalCount,
   orderCost,
+  estimatedCost,
+  status,
   isSelected = false,
   onSelect,
   onProcess
 }: OrderProps) {
+  // Format currency helper
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-GH', { 
+      style: 'currency', 
+      currency: 'GHS',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2 
+    }).format(amount);
+  };
   // Parse the order date for relative time
   const orderDate = new Date(`${date}T${time}`);
   const timeAgo = formatDistanceToNow(orderDate, { addSuffix: true });
@@ -85,11 +98,14 @@ export function Order({
             {totalData.toFixed(2)} GB
           </span>
         </div>
-        {orderCost !== undefined && (
+        {(orderCost !== undefined || estimatedCost !== undefined) && (
           <div>
             <span className="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded-full flex items-center">
               <DollarSign className="w-3 h-3 mr-0.5" />
-              {orderCost.toFixed(2)}
+              {formatCurrency(estimatedCost || orderCost || 0)}
+              {status === 'pending' && estimatedCost && (
+                <span className="ml-1 text-xs opacity-75">(Est.)</span>
+              )}
             </span>
           </div>
         )}

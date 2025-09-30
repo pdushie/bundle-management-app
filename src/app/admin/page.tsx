@@ -198,6 +198,17 @@ export default function AdminDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Admin Quick Actions */}
+        <div className="flex justify-end mb-6">
+          <button
+            onClick={() => router.push('/admin/update-entry-costs')}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200"
+          >
+            <Database className="w-4 h-4" />
+            Update All Order Pricing
+          </button>
+        </div>
+        
         {/* Enhanced Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">

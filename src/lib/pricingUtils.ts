@@ -35,10 +35,16 @@ const DEFAULT_PRICING: PricingProfile = {
   name: "Default",
   description: "Default pricing for users without a profile",
   basePrice: "10.00",
-  dataPricePerGB: "5.00",
+  dataPricePerGB: null, // No longer used with tier-only pricing
   minimumCharge: "10.00",
   isActive: true,
-  isTiered: false
+  isTiered: true, // Always use tiered pricing
+  tiers: [
+    { dataGB: "1", price: "5.00" },
+    { dataGB: "2", price: "10.00" },
+    { dataGB: "5", price: "25.00" },
+    { dataGB: "10", price: "50.00" }
+  ]
 };
 
 /**
@@ -62,7 +68,11 @@ export async function getUserPricingProfile(userId: number): Promise<PricingProf
 
     // If user has a profile assigned and it's active, use it
     if (userProfile?.profile && userProfile.profile.isActive) {
-      return userProfile.profile;
+      // Force the profile to be tiered
+      return {
+        ...userProfile.profile,
+        isTiered: true
+      };
     }
 
     // Try to get the standard pricing profile
@@ -71,7 +81,11 @@ export async function getUserPricingProfile(userId: number): Promise<PricingProf
       .limit(1);
 
     if (standardProfile.length > 0) {
-      return standardProfile[0];
+      // Force the profile to be tiered
+      return {
+        ...standardProfile[0],
+        isTiered: true
+      };
     }
 
     // If no standard profile found, get the first active profile
@@ -80,7 +94,11 @@ export async function getUserPricingProfile(userId: number): Promise<PricingProf
       .limit(1);
 
     if (anyProfile.length > 0) {
-      return anyProfile[0];
+      // Force the profile to be tiered
+      return {
+        ...anyProfile[0],
+        isTiered: true
+      };
     }
 
     // Fall back to default pricing
@@ -114,20 +132,32 @@ export async function calculateOrderCost(userId: number, totalData: number): Pro
     const minimumCharge = parseFloat(pricingProfile.minimumCharge);
     let calculatedCost: number;
 
-    // Calculate cost based on pricing method
-    if (pricingProfile.isTiered && tiers.length > 0) {
-      // Tiered pricing logic
-      // Sort tiers by data size
-      const sortedTiers = [...tiers].sort((a, b) => 
-        parseFloat(a.dataGB) - parseFloat(b.dataGB)
-      );
-      
-      // Find the applicable tier (exact match or next higher tier)
+    // Handle cases where tiers might not be available yet
+    if (tiers.length === 0) {
+      console.error('No pricing tiers found for profile:', pricingProfile.name);
+      throw new Error(`No pricing tiers available for profile: ${pricingProfile.name}`);
+    }
+
+    // Always use tiered pricing logic
+    // Sort tiers by data size
+    const sortedTiers = [...tiers].sort((a, b) => 
+      parseFloat(a.dataGB) - parseFloat(b.dataGB)
+    );
+    
+    // Find exact tier match if possible
+    let exactTier = sortedTiers.find(tier => 
+      parseFloat(tier.dataGB) === totalData
+    );
+    
+    if (exactTier) {
+      calculatedCost = basePrice + parseFloat(exactTier.price);
+    } else {
+      // Find the next higher tier
       let applicableTier = sortedTiers.find(tier => 
-        parseFloat(tier.dataGB) >= totalData
+        parseFloat(tier.dataGB) > totalData
       );
       
-      // If no suitable tier found, use the highest tier
+      // If no higher tier, use the highest tier
       if (!applicableTier && sortedTiers.length > 0) {
         applicableTier = sortedTiers[sortedTiers.length - 1];
       }
@@ -135,13 +165,9 @@ export async function calculateOrderCost(userId: number, totalData: number): Pro
       if (applicableTier) {
         calculatedCost = basePrice + parseFloat(applicableTier.price);
       } else {
-        // Fallback if no tiers are defined
-        calculatedCost = basePrice + (totalData * 5); // default rate
+        // This should never happen since we check for empty tiers at the beginning
+        throw new Error(`Could not determine pricing tier for ${totalData}GB allocation`);
       }
-    } else {
-      // Formula-based pricing
-      const dataPricePerGB = parseFloat(pricingProfile.dataPricePerGB || '5.00');
-      calculatedCost = basePrice + (totalData * dataPricePerGB);
     }
 
     // Apply minimum charge if needed

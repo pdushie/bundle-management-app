@@ -21,11 +21,13 @@ type Order = {
   totalData: number;
   totalCount: number;
   orderCost?: number;
+  estimatedCost?: number;
   status: "pending" | "processed";
   entries: Array<{
     number: string;
     allocationGB: number;
     status?: OrderEntryStatus;
+    cost?: number | null;
   }>;
   isSelected?: boolean;
 };export default function OrdersApp() {
@@ -1222,6 +1224,9 @@ type Order = {
                     </div>
                   </th>
                   <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Cost
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Status
                   </th>
                   <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -1232,7 +1237,7 @@ type Order = {
               <tbody className="bg-white divide-y divide-gray-200">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-12 text-center">
+                    <td colSpan={7} className="px-4 py-12 text-center">
                       <div className="flex flex-col items-center justify-center">
                         <Loader className="h-8 w-8 text-blue-500 animate-spin mb-3" />
                         <p className="text-gray-500">Loading orders...</p>
@@ -1241,7 +1246,7 @@ type Order = {
                   </tr>
                 ) : allFilteredOrders.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-12 text-center">
+                    <td colSpan={7} className="px-4 py-12 text-center">
                       <div className="flex flex-col items-center justify-center">
                         <FileText className="h-8 w-8 text-gray-400 mb-3" />
                         <p className="text-gray-500">No orders found</p>
@@ -1318,10 +1323,20 @@ type Order = {
                           </span>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          {order.orderCost !== undefined ? (
+                          {(order.orderCost !== undefined || order.estimatedCost !== undefined) ? (
                             <div className="flex items-center text-amber-600">
                               <DollarSign className="h-4 w-4 mr-1" />
-                              <span className="text-sm font-medium">{order.orderCost.toFixed(2)}</span>
+                              <span className="text-sm font-medium">
+                                {new Intl.NumberFormat('en-GH', { 
+                                  style: 'currency', 
+                                  currency: 'GHS',
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2 
+                                }).format(order.estimatedCost || order.orderCost || 0)}
+                              </span>
+                              {order.status === 'pending' && order.estimatedCost && (
+                                <span className="ml-1 text-xs text-amber-500">(Est.)</span>
+                              )}
                             </div>
                           ) : (
                             <span className="text-xs text-gray-400">Not calculated</span>

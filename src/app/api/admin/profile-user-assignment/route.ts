@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "../../../../../lib/db";
-import { userPricingProfiles } from "../../../../../lib/schema";
+import { db } from "@/lib/db";
+import { userPricingProfiles } from "@/lib/schema";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../../../../lib/auth";
+import { authOptions } from "@/lib/auth";
 import { and, eq } from "drizzle-orm";
 
 /**

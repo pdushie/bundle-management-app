@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { Upload, FileText, Check, X, Download, Phone, Database, AlertCircle, BarChart, History, Calendar, Eye, Trash2, LogOut, User, Shield, Send, FileBox, CheckCircle, DollarSign } from "lucide-react";
+import { Upload, FileText, Check, Download, Phone, Database, AlertCircle, BarChart, History, Calendar, Eye, Trash2, LogOut, User, Shield, Send, FileBox, CheckCircle, DollarSign, Calculator } from "lucide-react";
 import { orderTrackingUtils } from "@/lib/orderTracking";
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell, LineChart, Line } from "recharts";
 import ExcelJS from "exceljs";
@@ -13,6 +13,7 @@ import ProcessedOrdersApp from "@/components/ProcessedOrdersApp";
 import SentOrdersApp from "@/components/SentOrdersApp";
 import OrderTrackingApp from "@/components/OrderTrackingApp";
 import BillingApp from "@/components/BillingApp";
+import AccountingApp from "@/components/AccountingApp";
 import { OrderProvider, useOrderCount } from "@/lib/orderContext";
 import { ORDER_UPDATED_EVENT } from "@/lib/orderNotifications";
 import { requestNotificationPermission, hasNotificationPermission, sendThrottledNotification, playNotificationSound } from '@/lib/notifications';
@@ -61,10 +62,12 @@ const createTimestamp = (): string => {
 // History Manager Component
 function HistoryManager({
   history,
-  setHistory
+  setHistory,
+  isSuperAdmin
 }: {
   history: HistoryEntry[];
   setHistory: (history: HistoryEntry[]) => void;
+  isSuperAdmin: boolean;
 }) {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [viewMode, setViewMode] = useState<'summary' | 'detailed'>('summary');
@@ -104,6 +107,12 @@ function HistoryManager({
   });
 
   const clearHistory = async () => {
+    // Only allow superadmin to clear history
+    if (!isSuperAdmin) {
+      window.alert && window.alert("❌ Only superadmin can clear history data.");
+      return;
+    }
+    
     const shouldClear = window.confirm && window.confirm("Are you sure you want to clear all history? This action cannot be undone.");
     if (shouldClear) {
       try {
@@ -268,14 +277,17 @@ function HistoryManager({
                   Export
                 </button>
 
-                <button
-                  onClick={clearHistory}
-                  disabled={history.length === 0}
-                  className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
-                >
-                  <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                  Clear
-                </button>
+                {isSuperAdmin && (
+                  <button
+                    onClick={clearHistory}
+                    disabled={history.length === 0}
+                    className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
+                    title="Only superadmin can clear history"
+                  >
+                    <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                    Clear
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -1936,7 +1948,7 @@ function TabNavigation({
   };
   
   return (
-    <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+    <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-1 w-full" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
       {tabs.map((tab) => {
         const Icon = tab.icon;
         return (
@@ -1951,20 +1963,29 @@ function TabNavigation({
                 handleTabClick(e as any, tab.id);
               }
             }}
-            className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3 rounded-t-lg font-medium transition-all duration-200 whitespace-nowrap text-xs sm:text-sm flex-shrink-0 cursor-pointer ${activeTab === tab.id
+            className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3 rounded-t-lg font-medium transition-all duration-200 whitespace-nowrap text-xs sm:text-sm cursor-pointer min-w-max ${
+                tab.id === "history" ? "sm:min-w-[180px] " : ""
+              }${activeTab === tab.id
                 ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
                 : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
               }`}
           >
-            <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden sm:inline">{tab.name}</span>
+            <Icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+            <span 
+              className="hidden sm:inline truncate" 
+              title={tab.name} // Add tooltip for desktop view
+              style={{ maxWidth: tab.id === "history" ? "150px" : "120px" }} // Give more space to History & Analytics
+            >
+              {tab.name}
+            </span>
             <span className="sm:hidden">
               {tab.id === "bundle-allocator" ? "Allocator" :
                tab.id === "bundle-categorizer" ? "Categorizer" :
                tab.id === "send-order" ? "Send" :
                tab.id === "orders" ? "Orders" :
                tab.id === "processed-orders" ? "Processed" :
-               tab.id === "sent-orders" ? "My Orders" : "History"}
+               tab.id === "sent-orders" ? "My Orders" : 
+               tab.id === "history" ? "History & A." : "History"}
             </span>
             {tab.id === "history" && isSuperAdmin && history.length > 0 && (
               <span className="bg-white/20 text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
@@ -2087,32 +2108,37 @@ function AppContent() {
   // ===== ROLE-BASED ACCESS CONTROL =====
   // Convert role to lowercase for case-insensitive comparison
   const userRole = session?.user?.role?.toLowerCase();
+  // Enhanced role checking
   const isSuperAdmin = userRole === 'superadmin';
   const isAdmin = userRole === 'admin';
   const isRegularUser = userRole === 'user';
   
-  // Debug role information
-  console.log('User role:', userRole);
-  console.log('Role flags:', { isSuperAdmin, isAdmin, isRegularUser });
+
   
   // Set initial active tab based on user role
   let defaultTab = "send-order"; // Default for most users
-  if (isSuperAdmin || isAdmin || isManager) {
+  if (isSuperAdmin || isAdmin) {
     defaultTab = "bundle-allocator";
   }
   
-  // Check URL parameters for forced history tab
+  // Check URL parameters for forced history tab or any other tab
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const showHistory = urlParams.get('showHistory');
+      const forceTab = urlParams.get('forceTab');
       
-      if (showHistory === 'true' && (isSuperAdmin || isAdmin || isManager)) {
-        console.log('Forcing history tab via URL parameter');
+      // Handle history tab force
+      if (showHistory === 'true' && (isSuperAdmin || isAdmin)) {
         setActiveTab('history');
       }
+      
+      // Handle any tab force
+      if (forceTab) {
+        setActiveTab(forceTab);
+      }
     }
-  }, [isSuperAdmin, isAdmin, isManager]);
+  }, [isSuperAdmin, isAdmin]);
   
   const [activeTab, setActiveTab] = useState(defaultTab);
 
@@ -2167,7 +2193,7 @@ function AppContent() {
   // Load history from database - FOR SUPER ADMINS, ADMINS, AND MANAGERS
   useEffect(() => {
     const loadHistory = async () => {
-      if (!isSuperAdmin && !isAdmin && !isManager) return; // Only load history for authorized users
+      if (!isSuperAdmin && !isAdmin) return; // Only load history for authorized users
       
       try {
         const response = await fetch('/api/history/load');
@@ -2180,10 +2206,10 @@ function AppContent() {
       }
     };
 
-    if (session?.user && (isSuperAdmin || isAdmin || isManager)) {
+    if (session?.user && (isSuperAdmin || isAdmin)) {
       loadHistory();
     }
-  }, [session, isSuperAdmin, isAdmin, isManager]);
+  }, [session, isSuperAdmin, isAdmin]);
 
   // ===== CONDITIONAL TABS BASED ON USER ROLE =====
   // Define base tabs available to everyone
@@ -2221,18 +2247,25 @@ function AppContent() {
     {
       id: "track-orders",
       name: "Track Order Status",
-      icon: Eye,
+      icon: AlertCircle, // Changed from Eye to AlertCircle
     },
     {
       id: "billing",
       name: "Billing",
       icon: DollarSign,
+    },
+    {
+      id: "accounting",
+      name: "Accounting",
+      icon: Calculator,
+      roles: ["admin", "superadmin"] // Restrict to admin roles
     }
   ];
 
   // History tab is accessible to super admins and admins
   if (isSuperAdmin || isAdmin) {
-    baseTabs.push({
+    // Insert the history tab at the 7th position (index 6)
+    baseTabs.splice(6, 0, {
       id: "history",
       name: "History & Analytics",
       icon: History,
@@ -2241,16 +2274,15 @@ function AppContent() {
   
   // Filter tabs based on user role
   const filteredTabs = baseTabs.filter(tab => {
+    // Special debug for history tab
     // Super admin users have access to all tabs
     if (isSuperAdmin) {
-      console.log(`Tab ${tab.id} - Superadmin access: true`);
       return true; // Super admins get access to all tabs including history
     }
     
     // Regular users can only access send-order, sent-orders, and billing
     if (isRegularUser) {
       const hasAccess = tab.id === 'send-order' || tab.id === 'sent-orders' || tab.id === 'billing';
-      console.log(`Tab ${tab.id} - Regular user access: ${hasAccess}`);
       return hasAccess;
     }
     
@@ -2261,21 +2293,17 @@ function AppContent() {
              tab.id === 'orders' || 
              tab.id === 'processed-orders' || 
              tab.id === 'track-orders' ||
-             tab.id === 'history';  // Explicitly include history tab for admins
-      console.log(`Tab ${tab.id} - Admin access: ${hasAccess}`);
+             tab.id === 'history' ||
+             tab.id === 'accounting'; // Explicitly include accounting tab for admins
       return hasAccess;
     }
     
     // Default behavior for other roles
     const defaultAccess = tab.id !== 'history';
-    console.log(`Tab ${tab.id} - Default access: ${defaultAccess}`);
     return defaultAccess;
   });
   
-  // Log the final filtered tabs
-  console.log('Filtered tabs for role', userRole, ':', filteredTabs.map(tab => tab.id));
-  
-  // No need for extra logging
+  // Safety check is no longer needed as we're now adding the history tab at the beginning of baseTabs for superadmins
   
   // Verify the current tab is allowed for user's role
   const renderActiveComponent = () => {
@@ -2359,31 +2387,41 @@ function AppContent() {
         break;
         
       case "history":
-        // History tab is accessible to super admins, admins, and managers
-        console.log('History tab selected. Role checks:', { 
-          isSuperAdmin, 
-          isAdmin, 
-          isManager, 
-          shouldRender: isSuperAdmin || isAdmin || isManager 
-        });
+        // History tab is accessible to super admins and admins
         
-        if (isSuperAdmin || isAdmin || isManager) {
-          console.log('Rendering HistoryManager component');
+        // Always render history tab if the user is a superadmin
+        if (session?.user?.role?.toLowerCase() === 'superadmin') {
           return (
             <HistoryManager
               history={history}
               setHistory={setHistory}
+              isSuperAdmin={true}
             />
           );
-        } else {
-          console.log('User role not authorized to view history tab');
+        }
+        // Also render for admin
+        else if (isSuperAdmin || isAdmin) {
+          return (
+            <HistoryManager
+              history={history}
+              setHistory={setHistory}
+              isSuperAdmin={false}
+            />
+          );
         }
         break;
         
       case "billing":
         // Billing tab is accessible to super admins, regular users and managers
-        if (isSuperAdmin || isRegularUser || isManager) {
+        if (isSuperAdmin || isRegularUser) {
           return <BillingApp />;
+        }
+        break;
+        
+      case "accounting":
+        // Accounting tab is only accessible to admins and super admins
+        if (isSuperAdmin || isAdmin) {
+          return <AccountingApp tabActive={true} />;
         }
         break;
     }
@@ -2420,16 +2458,6 @@ function AppContent() {
     };
   }, []);
   
-  // Debug section for development - Only visible with debug parameter
-  const [showDebug, setShowDebug] = useState(false);
-  
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      setShowDebug(urlParams.get('debug') === 'true');
-    }
-  }, []);
-  
   // Client-side effect to handle initial URL
   useEffect(() => {
     // Only run in the browser
@@ -2451,8 +2479,6 @@ function AppContent() {
     setActiveTab(tabId);
   }, [setActiveTab]);
 
-  // No URL parameter tracking needed
-  
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Header with Tabs - Mobile Optimized */}
@@ -2474,7 +2500,7 @@ function AppContent() {
               {/* User Info & Stats - Mobile Optimized */}
               <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm w-full sm:w-auto">
                 {/* Show history stats for authorized users */}
-                {(isSuperAdmin || isAdmin || isManager) && history.length > 0 && activeTab !== "history" && (
+                {(isSuperAdmin || isAdmin) && history.length > 0 && activeTab !== "history" && (
                   <>
                     <div className="bg-blue-100 text-blue-800 px-2 sm:px-3 py-1 rounded-full font-medium">
                       {history.length} sessions
@@ -2564,68 +2590,8 @@ function AppContent() {
       {/* Tab Content */}
       <div className="tab-content">
         {renderActiveComponent()}
-        
-        {/* Debug section */}
-        {showDebug && (
-          <div className="mt-8 p-4 bg-gray-100 rounded-xl border border-gray-300">
-            <h3 className="text-lg font-bold mb-4">Debug Information</h3>
-            
-            <div className="mb-4">
-              <h4 className="font-semibold mb-1">User Role:</h4>
-              <div className="bg-white p-2 rounded border border-gray-200 text-sm">
-                <div><strong>Role:</strong> {session?.user?.role}</div>
-                <div><strong>Role Type:</strong> {typeof session?.user?.role}</div>
-                <div><strong>Lowercase Role:</strong> {session?.user?.role?.toLowerCase()}</div>
-                <div><strong>Is Superadmin:</strong> {(session?.user?.role?.toLowerCase() === 'superadmin').toString()}</div>
-              </div>
-            </div>
-            
-            <div className="mb-4">
-              <h4 className="font-semibold mb-1">Role Flags:</h4>
-              <div className="bg-white p-2 rounded border border-gray-200 text-sm">
-                <div><strong>isSuperAdmin:</strong> {isSuperAdmin.toString()}</div>
-                <div><strong>isAdmin:</strong> {isAdmin.toString()}</div>
-                <div><strong>isManager:</strong> {isManager.toString()}</div>
-                <div><strong>isRegularUser:</strong> {isRegularUser.toString()}</div>
-              </div>
-            </div>
-            
-            <div className="mb-4">
-              <h4 className="font-semibold mb-1">Tabs:</h4>
-              <div className="bg-white p-2 rounded border border-gray-200 text-sm">
-                <div><strong>Active Tab:</strong> {activeTab}</div>
-                <div className="mt-2"><strong>Available Tabs:</strong></div>
-                <ul className="list-disc pl-6">
-                  {filteredTabs.map(tab => (
-                    <li key={tab.id}>{tab.id} ({tab.name})</li>
-                  ))}
-                </ul>
-                <div className="mt-2"><strong>Base Tabs:</strong></div>
-                <ul className="list-disc pl-6">
-                  {baseTabs.map(tab => (
-                    <li key={tab.id}>{tab.id} ({tab.name})</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            
-            <div>
-              <button 
-                onClick={() => setActiveTab('history')}
-                className="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 mr-2"
-              >
-                Force History Tab
-              </button>
-              
-              <button 
-                onClick={() => console.log('Session:', session)}
-                className="px-3 py-1.5 bg-gray-600 text-white rounded hover:bg-gray-700"
-              >
-                Log Session
-              </button>
-            </div>
-          </div>
-        )}
+
+
       </div>
     </div>
   );

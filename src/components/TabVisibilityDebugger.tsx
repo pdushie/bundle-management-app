@@ -5,14 +5,13 @@ import { useEffect, useState } from "react";
 
 export default function TabVisibilityDebugger() {
   const { data: session } = useSession();
-  const [visibleTabs, setVisibleTabs] = useState([]);
+  const [visibleTabs, setVisibleTabs] = useState<Array<{id: string, name: string}>>([]);
   
   useEffect(() => {
     if (!session?.user) return;
     
     const isSuperAdmin = session?.user?.role === 'superadmin';
     const isAdmin = session?.user?.role === 'admin';
-    const isManager = session?.user?.role === 'manager';
     const isRegularUser = session?.user?.role === 'user';
     
     // Define base tabs available to everyone
@@ -24,11 +23,12 @@ export default function TabVisibilityDebugger() {
       { id: "processed-orders", name: "Processed Orders" },
       { id: "sent-orders", name: "My Sent Orders" },
       { id: "track-orders", name: "Track Order Status" },
-      { id: "billing", name: "Billing" }
+      { id: "billing", name: "Billing" },
+      { id: "accounting", name: "Accounting" }
     ];
 
-    // Add history tab for admins, superadmins and managers
-    if (isSuperAdmin || isAdmin || isManager) {
+    // Add history tab for admins and superadmins
+    if (isSuperAdmin || isAdmin) {
       baseTabs.push({
         id: "history",
         name: "History & Analytics"
@@ -37,8 +37,21 @@ export default function TabVisibilityDebugger() {
     
     // Filter tabs based on user role (same logic as in page.tsx)
     const filtered = baseTabs.filter(tab => {
+      // Add debugging for the history tab specifically
+      if (tab.id === 'history') {
+        console.log('TabVisibilityDebugger - History tab check:', {
+          isSuperAdmin,
+          isAdmin,
+          role: session?.user?.role,
+          shouldShow: isSuperAdmin || isAdmin
+        });
+      }
+      
       // Super admin users have access to all tabs
       if (isSuperAdmin) {
+        if (tab.id === 'history') {
+          console.log('TabVisibilityDebugger - Superadmin should see history tab');
+        }
         return true; // Superadmins should see all tabs including history
       }
       
@@ -49,17 +62,18 @@ export default function TabVisibilityDebugger() {
       
       // Admin users can access specific tabs, including track-orders
       if (isAdmin) {
-        return tab.id === 'bundle-allocator' || 
+        const hasAccess = tab.id === 'bundle-allocator' || 
               tab.id === 'bundle-categorizer' || 
               tab.id === 'orders' || 
               tab.id === 'processed-orders' || 
               tab.id === 'track-orders' ||
-              tab.id === 'history'; // Should be accessible based on our changes
-      }
-      
-      // Managers can access all tabs
-      if (isManager) {
-        return true; // Managers should see all tabs
+              tab.id === 'history' ||
+              tab.id === 'accounting'; // Explicitly include accounting tab for admins
+        
+        if (tab.id === 'history') {
+          console.log('TabVisibilityDebugger - Admin access to history:', hasAccess);
+        }
+        return hasAccess;
       }
       
       // Default behavior for other roles

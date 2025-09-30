@@ -61,7 +61,9 @@ const mapDbOrderToOrder = async (dbOrder: any): Promise<Order> => {
     entries,
     isSelected: false, // Always initialize as not selected
     cost: dbOrder.cost ? parseFloat(dbOrder.cost as string) : null, // Include cost from database
-    estimatedCost: dbOrder.cost ? parseFloat(dbOrder.cost as string) : null, // Set estimatedCost for frontend display
+    // Make sure estimatedCost is always set, even for pending orders
+    estimatedCost: dbOrder.estimatedCost ? parseFloat(dbOrder.estimatedCost as string) : 
+                  (dbOrder.cost ? parseFloat(dbOrder.cost as string) : null),
     pricingProfileId: dbOrder.pricingProfileId || undefined,
     pricingProfileName: dbOrder.pricingProfileName || undefined
   };
@@ -122,28 +124,17 @@ export const saveOrderWithCost = async (order: Order): Promise<void> => {
       status: order.status,
       userId: order.userId || null, // Get userId from the order
       cost: order.cost ? order.cost.toString() : null, // Include cost if present
+      estimatedCost: order.estimatedCost ? order.estimatedCost.toString() : order.cost ? order.cost.toString() : null, // Include estimatedCost
       pricingProfileId: order.pricingProfileId || null,
       pricingProfileName: order.pricingProfileName || null
     });
     
     // Insert all entries for this order in a single batch operation
     if (order.entries && order.entries.length > 0) {
-      // Calculate individual entry costs (if total cost is available)
-      // This is a simple proportional distribution of the total cost based on data allocation
+      // Get entries with costs from the order directly
+      // The costs should have been calculated in the API layer using the entryCostCalculator
+      // If entries already have costs, use them as is
       let entriesWithCost = order.entries;
-      if (order.cost && order.cost > 0) {
-        const totalCost = order.cost;
-        const totalData = order.totalData;
-        
-        // Calculate cost per GB (avoiding division by zero)
-        const costPerGB = totalData > 0 ? totalCost / totalData : 0;
-        
-        // Assign proportional cost to each entry
-        entriesWithCost = order.entries.map(entry => ({
-          ...entry,
-          cost: parseFloat((entry.allocationGB * costPerGB).toFixed(2))
-        }));
-      }
       
       // Create an array of entry objects for batch insertion
       const entriesForBatch = entriesWithCost.map(entry => ({

@@ -33,6 +33,7 @@ export const orders = pgTable("orders", {
   status: varchar('status', { length: 20 }).notNull(), // 'pending' or 'processed'
   userId: integer('user_id').references(() => users.id, { onDelete: 'set null' }), // Changed to integer to match users.id
   cost: decimal('cost', { precision: 10, scale: 2, mode: 'string' }), // Total order cost
+  estimatedCost: decimal('estimated_cost', { precision: 10, scale: 2, mode: 'string' }), // Estimated cost for display
   pricingProfileId: integer('pricing_profile_id'), // ID of the pricing profile used
   pricingProfileName: varchar('pricing_profile_name', { length: 255 }), // Name of the pricing profile used
   createdAt: timestamp('created_at').defaultNow(),

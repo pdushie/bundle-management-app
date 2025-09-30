@@ -1,27 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getCurrent              {profile.isTiered ? (
-            <div>
-              <p className="mb-2 text-gray-700">Tiered pricing based on data size:</p>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="px-4 py-2 text-left">Data (GB)</th>
-                    <th className="px-4 py-2 text-right">Price (GHS)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {profile.tiers?.sort((a: any, b: any) => parseFloat(a.dataGB) - parseFloat(b.dataGB)).map((tier: any) => (
-                    <tr key={tier.id} className="border-t border-gray-200">
-                      <td className="px-4 py-2">{tier.dataGB}</td>
-                      <td className="px-4 py-2 text-right">{tier.price}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <p className="mt-2 text-xs text-gray-600">
-                Note: For data sizes exceeding the defined tiers, pricing will be calculated at 4 GHS per GB.
-              </p>
-            </div>tePrice } from '../lib/pricingClient';
+import { getCurrentUserPricing, calculatePrice } from '@/lib/pricingClient';
 
 interface PricingDisplayProps {
   showDetails?: boolean; // Whether to show detailed pricing info
