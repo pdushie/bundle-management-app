@@ -50,8 +50,9 @@ export async function GET(request: NextRequest) {
 
     // Generate PDF
     const doc = new PDFDocument({ margin: 30 });
-    let buffers: Uint8Array[] = [];
-    doc.on('data', (chunk: Uint8Array) => buffers.push(chunk));
+    const chunks: Buffer[] = [];
+    
+    doc.on('data', (chunk: Buffer) => chunks.push(chunk));
 
     doc.fontSize(18).text(`Billing Report - ${formattedDate}`, { align: 'center' });
     doc.moveDown();
@@ -81,22 +82,30 @@ export async function GET(request: NextRequest) {
 
     doc.end();
 
-    // Wait for PDF generation to complete and create proper buffer
-    const pdfBuffer = await new Promise<Uint8Array>((resolve) => {
+    // Wait for PDF generation to complete
+    const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
       doc.on('end', () => {
-        const buffer = Buffer.concat(buffers);
-        resolve(new Uint8Array(buffer));
+        try {
+          resolve(Buffer.concat(chunks));
+        } catch (error) {
+          reject(error);
+        }
+      });
+      
+      doc.on('error', (error) => {
+        reject(error);
       });
     });
 
-    const headers = new Headers();
-    headers.set('Content-Type', 'application/pdf');
-    headers.set('Content-Disposition', `attachment; filename="Billing_${dateParam}.pdf"`);
-
-    return new NextResponse(pdfBuffer, {
+    // Create a response with the correct headers
+    return new Response(pdfBuffer, {
       status: 200,
-      headers
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="Billing_${dateParam}.pdf"`,
+      },
     });
+
   } catch (error) {
     console.error('Error exporting billing PDF:', error);
     return NextResponse.json(
