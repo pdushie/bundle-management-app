@@ -68,7 +68,7 @@ export async function GET(
         JOIN users u ON upp.user_id = u.id
         WHERE upp.profile_id = ${profileId}
       `);
-      assignedUsers = rawAssignedUsers.map(row => ({
+      assignedUsers = rawAssignedUsers.rows.map(row => ({
         ...row,
         user: row.user
       }));
