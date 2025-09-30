@@ -27,7 +27,7 @@ export type Order = {
   pricingProfileId?: number;
   pricingProfileName?: string;
   userId?: number;
-// ...existing code...
+};
 
 export type OrderWithoutEntries = Omit<Order, 'entries'>;
 
@@ -125,7 +125,6 @@ export const addOrder = async (order: Order): Promise<void> => {
     console.error('Failed to add order to database:', error);
     throw error;
   }
-};
 };
 
 // Get pending orders (not yet processed) sorted by timestamp with oldest first
