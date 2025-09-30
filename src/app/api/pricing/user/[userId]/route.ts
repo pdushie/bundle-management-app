@@ -7,12 +7,10 @@ import { eq } from "drizzle-orm";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { userId: string } }
+  context: { params: Promise<{ userId: string }> }
 ) {
+  const { userId } = await context.params;
   try {
-    // Ensure params is fully resolved before accessing its properties
-    const resolvedParams = await Promise.resolve(params);
-    const { userId } = resolvedParams;
     const session = await getServerSession(authOptions);
     
     if (!session) {
