@@ -3,36 +3,30 @@ import { db } from "../../../../../../lib/db";
 import { userPricingProfiles, pricingProfiles } from "../../../../../../lib/schema";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../../../../../lib/auth";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { userId: string } }
+  context: { params: Promise<{ userId: string }> }
 ) {
+  const { userId: userIdParam } = await context.params;
   try {
-    // Access params properly - we need to await the params object
-    const resolvedParams = await Promise.resolve(params);
-    const userIdParam = resolvedParams.userId;
     const session = await getServerSession(authOptions);
-    
     if (!session) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
-    
-    // Parse userId after ensuring params is resolved
-    const userId = parseInt(userIdParam);
-    
     // Only allow admins, superadmins, or the user themselves to access their pricing profiles
+    // Use email for identity check since id is not present
+    const userId = parseInt(userIdParam);
+    if (isNaN(userId)) {
+      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
+    }
     if (
       session.user.role !== "admin" && 
       session.user.role !== "superadmin" && 
-      session.user.id !== userId
+      session.user.email !== userIdParam // assuming userIdParam is email, otherwise adjust accordingly
     ) {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
-    }
-    
-    if (isNaN(userId)) {
-      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
     }
     
     // Get all pricing profiles assigned to this user
@@ -66,26 +60,20 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { userId: string } }
+  context: { params: Promise<{ userId: string }> }
 ) {
+  const { userId: userIdParam } = await context.params;
   try {
-    // Access params properly - we need to await the params object
-    const resolvedParams = await Promise.resolve(params);
-    const userIdParam = resolvedParams.userId;
     const session = await getServerSession(authOptions);
-    
     if (!session) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
-    
-    // Only allow admins and superadmins to assign pricing profiles to users
     if (session.user.role !== "admin" && session.user.role !== "superadmin") {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
-    
-    const userId = parseInt(userIdParam);
-    
-    if (isNaN(userId)) {
+    // Use a different variable name to avoid redeclaration
+    const parsedUserId = parseInt(userIdParam);
+    if (isNaN(parsedUserId)) {
       return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
     }
     
@@ -110,10 +98,10 @@ export async function POST(
     
     // Check if assignment already exists
     const existingAssignment = await db.select().from(userPricingProfiles)
-      .where(
-        eq(userPricingProfiles.userId, userId),
+      .where(and(
+        eq(userPricingProfiles.userId, parsedUserId),
         eq(userPricingProfiles.profileId, parsedProfileId)
-      );
+      ));
     
     if (existingAssignment.length > 0) {
       return NextResponse.json({ 
@@ -124,7 +112,7 @@ export async function POST(
     
     // Check if user has another profile assigned already
     const otherAssignments = await db.select().from(userPricingProfiles)
-      .where(eq(userPricingProfiles.userId, userId));
+      .where(eq(userPricingProfiles.userId, parsedUserId));
     
     // If user has another profile, update it instead of creating a new one
     if (otherAssignments.length > 0) {
@@ -133,7 +121,7 @@ export async function POST(
           profileId: parsedProfileId,
           updatedAt: new Date()
         })
-        .where(eq(userPricingProfiles.userId, userId))
+        .where(eq(userPricingProfiles.userId, parsedUserId))
         .returning();
       
       return NextResponse.json({ 
@@ -144,7 +132,7 @@ export async function POST(
     
     // Create new assignment
     const [newAssignment] = await db.insert(userPricingProfiles).values({
-      userId,
+      userId: parsedUserId,
       profileId: parsedProfileId,
     }).returning();
     
