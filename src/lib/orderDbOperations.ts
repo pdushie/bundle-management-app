@@ -215,28 +215,23 @@ export const updateOrder = async (orderId: string, updates: Partial<Order>): Pro
       if (drizzleUpdates.estimatedCost !== undefined) drizzleUpdates.estimatedCost = drizzleUpdates.estimatedCost !== null ? drizzleUpdates.estimatedCost.toString() : null;
       await db.update(orders).set(drizzleUpdates).where(eq(orders.id, orderId));
     } else {
-      // Only allow updating known fields and interpolate directly
+      // Only allow updating one field at a time for Neon
       const allowedFields = [
         'timestamp', 'date', 'time', 'userName', 'userEmail', 'totalData', 'totalCount', 'status',
         'cost', 'estimatedCost', 'pricingProfileId', 'pricingProfileName', 'userId'
       ];
-      const setParts: string[] = [];
-      const values: any[] = [];
+      let updated = false;
       for (const key of allowedFields) {
         if (updates[key as keyof Order] !== undefined) {
-          setParts.push(`${key} = ?`);
           let v = updates[key as keyof Order];
           if (v === null) v = null;
           else if (typeof v === 'number') v = v.toString();
           else if (typeof v === 'boolean') v = v ? 'true' : 'false';
-          values.push(v);
+          await neonClient`UPDATE orders SET ${key} = ${v} WHERE id = ${orderId}`;
+          updated = true;
         }
       }
-      if (setParts.length === 0) return; // Nothing to update
-      // Build the SQL string
-      const sql = `UPDATE orders SET ${setParts.join(', ')} WHERE id = ?`;
-      // Use the tagged template literal
-      await neonClient(sql, ...values, orderId);
+      if (!updated) return; // Nothing to update
     }
   } catch (error) {
     console.error('Failed to update order:', error);
