@@ -113,26 +113,7 @@ export const saveOrder = async (order: Order): Promise<void> => {
 
 // ...existing code...
 
-// Save multiple orders to database (used for bulk operations)
-export const saveOrders = async (ordersToSave: Order[]): Promise<void> => {
-  try {
-    const sortedOrders = [...ordersToSave].sort((a, b) => b.timestamp - a.timestamp);
-    if (db) {
-      await db.delete(orders);
-      for (const order of sortedOrders) {
-        await saveOrder(order);
-      }
-    } else {
-      await neonClient`DELETE FROM orders`;
-      for (const order of sortedOrders) {
-        await saveOrder(order);
-      }
-    }
-  } catch (error) {
-    console.error('Failed to save orders to database:', error);
-    throw error;
-  }
-};
+// ...existing code...
 
 // Load all orders from database
 export const loadOrders = async (): Promise<Order[]> => {
