@@ -11,6 +11,14 @@ export async function GET(
   context: { params: Promise<{ profileId: string }> }
 ) {
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      return NextResponse.json({ 
+        error: 'Database connection unavailable'
+      }, { status: 500 });
+    }
+
     const { profileId: profileIdRaw } = await context.params;
     const session = await getServerSession(authOptions);
     
@@ -96,6 +104,14 @@ export async function PUT(
   context: { params: Promise<{ profileId: string }> }
 ) {
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      return NextResponse.json({ 
+        error: 'Database connection unavailable'
+      }, { status: 500 });
+    }
+
     const { profileId: profileIdRaw } = await context.params;
     const session = await getServerSession(authOptions);
     
@@ -207,6 +223,14 @@ export async function DELETE(
   context: { params: Promise<{ profileId: string }> }
 ) {
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      return NextResponse.json({ 
+        error: 'Database connection unavailable'
+      }, { status: 500 });
+    }
+
     const { profileId: profileIdRaw } = await context.params;
     const session = await getServerSession(authOptions);
     
