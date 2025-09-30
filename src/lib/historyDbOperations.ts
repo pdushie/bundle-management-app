@@ -14,6 +14,12 @@ export type PhoneEntry = typeof phoneEntries.$inferSelect;
  */
 export const createHistoryEntryFromOrder = async (order: Order, userId?: string): Promise<string> => {
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      throw new Error('Database connection unavailable');
+    }
+
     console.log('Creating history entry for order:', order.id);
     console.log('User ID provided:', userId);
     
@@ -66,7 +72,7 @@ export const createHistoryEntryFromOrder = async (order: Order, userId?: string)
     // Define phone entry insertion functions with proper error handling
     const insertValidEntry = async (entry: any) => {
       try {
-        return await db.insert(phoneEntries).values({
+        return await db!.insert(phoneEntries).values({
           historyEntryId: historyId,
           number: entry.number,
           allocationGB: entry.allocationGB.toString(),
@@ -81,7 +87,7 @@ export const createHistoryEntryFromOrder = async (order: Order, userId?: string)
     
     const insertInvalidEntry = async (entry: any) => {
       try {
-        return await db.insert(phoneEntries).values({
+        return await db!.insert(phoneEntries).values({
           historyEntryId: historyId,
           number: entry.number,
           allocationGB: entry.allocationGB.toString(),
@@ -96,7 +102,7 @@ export const createHistoryEntryFromOrder = async (order: Order, userId?: string)
     
     const insertDuplicateEntry = async (entry: any) => {
       try {
-        return await db.insert(phoneEntries).values({
+        return await db!.insert(phoneEntries).values({
           historyEntryId: historyId,
           number: entry.number,
           allocationGB: entry.allocationGB.toString(),
@@ -138,6 +144,12 @@ export const createHistoryEntryFromOrder = async (order: Order, userId?: string)
  */
 export const createHistoryEntriesFromOrders = async (orders: Order[], userId?: string): Promise<string[]> => {
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      throw new Error('Database connection unavailable');
+    }
+
     const historyIds: string[] = [];
     
     for (const order of orders) {
@@ -157,6 +169,12 @@ export const createHistoryEntriesFromOrders = async (orders: Order[], userId?: s
  */
 export const getHistoryEntries = async () => {
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      throw new Error('Database connection unavailable');
+    }
+
     const entries = await db
       .select()
       .from(historyEntries)
@@ -175,6 +193,12 @@ export const getHistoryEntries = async () => {
  */
 export const getPhoneEntriesForHistory = async (historyEntryId: string) => {
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      throw new Error('Database connection unavailable');
+    }
+
     const entries = await db
       .select()
       .from(phoneEntries)
