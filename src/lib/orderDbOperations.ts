@@ -216,20 +216,16 @@ export const updateOrder = async (orderId: string, updates: Partial<Order>): Pro
       await db.update(orders).set(drizzleUpdates).where(eq(orders.id, orderId));
     } else {
       // Build dynamic SQL for updates with proper type handling
-      const fields = Object.keys(updates).map((key, i) => `${key} = $${i + 1}`).join(', ');
-      const values = Object.values(updates).map(v => {
-        if (v === null || v === undefined) return null;
-        if (typeof v === 'number') return v.toString();
-        if (typeof v === 'boolean') return v ? 'true' : 'false';
-        if (Array.isArray(v)) return JSON.stringify(v); // Convert arrays to JSON strings
-        return typeof v === 'string' ? v : String(v); // Ensure everything else is a string
-      });
-      
-      // Create the query with all parameters
-      const queryParts = [`UPDATE orders SET ${fields} WHERE id = $${values.length + 1}`];
-      const allParams = [...values, orderId];
-      
-      await neonClient(queryParts, ...allParams);
+        const keys = Object.keys(updates);
+        const fields = keys.map((key, i) => `${key} = $${i + 1}`).join(', ');
+        const values = Object.values(updates).map(v => {
+          if (v === null || v === undefined) return '';
+          if (typeof v === 'number') return v.toString();
+          if (typeof v === 'boolean') return v ? 'true' : 'false';
+          return v;
+        });
+        const sqlString = `UPDATE orders SET ${fields} WHERE id = $${values.length + 1}`;
+        await neonClient(sqlString, ...values, orderId);
     }
   } catch (error) {
     console.error('Failed to update order:', error);
