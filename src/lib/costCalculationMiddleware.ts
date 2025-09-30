@@ -43,6 +43,13 @@ export async function ensureOrderCosts(order: Order, userId?: number | null): Pr
   try {
     console.log(`Ensuring costs for order ${order.id} (userId: ${userId || 'none'})`);
     
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      // Return original order if database is not available
+      return order;
+    }
+    
     // Use order's userId as a fallback if not provided
     const effectiveUserId = userId || order.userId || 0;
     
