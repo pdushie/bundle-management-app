@@ -9,28 +9,8 @@ import { useOrderCount } from "../lib/orderContext";
 import { ORDER_UPDATED_EVENT, notifyOrderProcessed, notifyCountUpdated } from "../lib/orderNotifications";
 
   // Define the Order type to represent an order in the queue
-type OrderEntryStatus = "pending" | "sent" | "error";
-
-type Order = {
-  id: string;
-  timestamp: number;
-  date: string;
-  time: string;
-  userName: string;
-  userEmail: string;
-  totalData: number;
-  totalCount: number;
-  orderCost?: number;
-  estimatedCost?: number | null;
-  status: "pending" | "processed";
-  entries: Array<{
-    number: string;
-    allocationGB: number;
-    status?: OrderEntryStatus;
-    cost?: number | null;
-  }>;
-  isSelected?: boolean;
-};export default function OrdersApp() {
+import type { Order } from "../lib/orderClient";
+export default function OrdersApp() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>("");
