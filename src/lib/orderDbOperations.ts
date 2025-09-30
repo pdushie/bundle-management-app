@@ -111,54 +111,7 @@ export const saveOrder = async (order: Order): Promise<void> => {
   }
 };
 
-// Save a new order with cost information to the database
-export const saveOrderWithCost = async (order: Order): Promise<void> => {
-  try {
-    // Insert the order first - no transaction
-    await db.insert(orders).values({
-      id: order.id,
-      timestamp: order.timestamp,
-      date: order.date,
-      time: order.time,
-      userName: order.userName,
-      userEmail: order.userEmail,
-      totalData: order.totalData.toString(),
-      totalCount: order.totalCount,
-      status: order.status,
-      userId: order.userId || null, // Get userId from the order
-      cost: order.cost ? order.cost.toString() : null, // Include cost if present
-      estimatedCost: order.estimatedCost ? order.estimatedCost.toString() : order.cost ? order.cost.toString() : null, // Include estimatedCost
-      pricingProfileId: order.pricingProfileId || null,
-      pricingProfileName: order.pricingProfileName || null
-    });
-    
-    // Insert all entries for this order in a single batch operation
-    if (order.entries && order.entries.length > 0) {
-      // Get entries with costs from the order directly
-      // The costs should have been calculated in the API layer using the entryCostCalculator
-      // If entries already have costs, use them as is
-      let entriesWithCost = order.entries;
-      
-      // Create an array of entry objects for batch insertion
-      const entriesForBatch = entriesWithCost.map(entry => ({
-        orderId: order.id,
-        number: entry.number,
-        allocationGB: entry.allocationGB.toString(),
-        status: entry.status || "pending",
-        cost: entry.cost !== undefined && entry.cost !== null ? entry.cost.toString() : null
-      }));
-      
-      // Batch insert all entries at once
-      await db.insert(orderEntries).values(entriesForBatch);
-    }
-    
-    // Server-side operations don't directly notify client
-    // Client notification happens via API responses
-  } catch (error) {
-    console.error('Failed to save order with cost to database:', error);
-    throw error;
-  }
-};
+// ...existing code...
 
 // Update an existing order in the database
 export const updateOrder = async (order: Order): Promise<void> => {
