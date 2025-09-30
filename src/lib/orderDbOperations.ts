@@ -2,10 +2,6 @@ import { db, neonClient } from './db';
 import { orders, orderEntries } from './schema';
 import { eq, desc, asc, and } from 'drizzle-orm';
 
-import { db, neonClient } from './db';
-import { orders, orderEntries } from './schema';
-import { eq, desc, asc, and } from 'drizzle-orm';
-
 export type OrderEntryStatus = "pending" | "sent" | "error";
 
 export type Order = {
