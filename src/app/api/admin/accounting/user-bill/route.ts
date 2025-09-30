@@ -52,17 +52,17 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Parse date as UTC
-    const startUTC = new Date(date + 'T00:00:00.000Z');
-    const endUTC = new Date(date + 'T23:59:59.999Z');
-    
+    // Parse date as UTC and get UNIX timestamps
+    const startTimestamp = new Date(date + 'T00:00:00.000Z').getTime();
+    const endTimestamp = new Date(date + 'T23:59:59.999Z').getTime();
+
     // Query to get all orders for the specified user and date
     const userOrders = await db
       .select()
       .from(ordersTable)
       .where(
         and(
-          sql`timestamp >= ${startUTC.toISOString()} AND timestamp <= ${endUTC.toISOString()}`,
+          sql`timestamp >= ${startTimestamp} AND timestamp <= ${endTimestamp}`,
           eq(ordersTable.date, date)
         )
       )
