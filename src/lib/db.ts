@@ -36,7 +36,11 @@ const createNeonClient = () => {
     
     // In development, use a mock client instead of crashing
     if (process.env.NODE_ENV === 'development') {
-      console.warn('Using mock database client for development due to error:', error.message);
+      if (error instanceof Error) {
+        console.warn('Using mock database client for development due to error:', error.message);
+      } else {
+        console.warn('Using mock database client for development due to error:', String(error));
+      }
       return createMockNeonClient();
     }
     
@@ -62,11 +66,22 @@ export const neonClient = createNeonClient();
 // as the wrapping was causing issues with the tagged template function
 
 // Initialize Drizzle with the Neon client and schema
-export const db = drizzle(neonClient, { 
-  schema,
-  // Add additional options if needed
-  logger: process.env.NODE_ENV === 'development',
-});
+// Only initialize Drizzle if neonClient is a real NeonQueryFunction (not mock)
+import type { NeonQueryFunction } from "@neondatabase/serverless";
+let db: ReturnType<typeof drizzle> | undefined;
+if (
+  typeof neonClient === "function" &&
+  // Check for NeonQueryFunction properties
+  "query" in neonClient &&
+  "unsafe" in neonClient &&
+  "transaction" in neonClient
+) {
+  db = drizzle(neonClient as NeonQueryFunction<any, any>, {
+    schema,
+    logger: process.env.NODE_ENV === "development",
+  });
+}
+export { db };
 
 // Export a function to test the database connection with retries
 export const testConnection = async (retries = 2) => {

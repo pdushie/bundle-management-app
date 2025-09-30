@@ -36,7 +36,9 @@ export type OrderWithoutEntries = Omit<Order, 'entries'>;
 // Helper function to convert database order to application order
 const mapDbOrderToOrder = async (dbOrder: any): Promise<Order> => {
   // Fetch entries for this order
-  const dbEntries = await db.select().from(orderEntries).where(eq(orderEntries.orderId, dbOrder.id));
+  const dbEntries = db
+    ? await db.select().from(orderEntries).where(eq(orderEntries.orderId, dbOrder.id))
+    : await neonClient`SELECT * FROM order_entries WHERE order_id = ${dbOrder.id}`;
   
   // Map database entries to application entries
   const entries = dbEntries.map(entry => ({
@@ -73,7 +75,8 @@ const mapDbOrderToOrder = async (dbOrder: any): Promise<Order> => {
 export const saveOrder = async (order: Order): Promise<void> => {
   try {
     // Insert the order first - no transaction
-    await db.insert(orders).values({
+    if (db) {
+      await db.insert(orders).values({
       id: order.id,
       timestamp: order.timestamp,
       date: order.date,
@@ -160,35 +163,34 @@ export const saveOrderWithCost = async (order: Order): Promise<void> => {
 // Update an existing order in the database
 export const updateOrder = async (order: Order): Promise<void> => {
   try {
-    // Update the order - no transaction
-    await db.update(orders)
-      .set({
-        timestamp: order.timestamp,
-        date: order.date,
-        time: order.time,
-        status: order.status,
-        totalData: order.totalData.toString(),
-        totalCount: order.totalCount
-      })
-      .where(eq(orders.id, order.id));
-    
-    // Handle entries updates - this is more complex
-    // For simplicity, we'll delete all entries and re-insert them
-    // In a real app, you might want to update existing entries instead
-    await db.delete(orderEntries).where(eq(orderEntries.orderId, order.id));
-    
-    // Re-insert all entries
-    for (const entry of order.entries) {
-      await db.insert(orderEntries).values({
-        orderId: order.id,
-        number: entry.number,
-        allocationGB: entry.allocationGB.toString(),
-        status: entry.status || "pending"
-      });
+    if (db) {
+      await db.update(orders)
+        .set({
+          timestamp: order.timestamp,
+          date: order.date,
+          time: order.time,
+          status: order.status,
+          totalData: order.totalData.toString(),
+          totalCount: order.totalCount
+        })
+        .where(eq(orders.id, order.id));
+      await db.delete(orderEntries).where(eq(orderEntries.orderId, order.id));
+      for (const entry of order.entries) {
+        await db.insert(orderEntries).values({
+          orderId: order.id,
+          number: entry.number,
+          allocationGB: entry.allocationGB.toString(),
+          status: entry.status || "pending"
+        });
+      }
+    } else {
+      // Fallback for mock mode: use neonClient
+      await neonClient`UPDATE orders SET timestamp = ${order.timestamp}, date = ${order.date}, time = ${order.time}, status = ${order.status}, total_data = ${order.totalData.toString()}, total_count = ${order.totalCount} WHERE id = ${order.id}`;
+      await neonClient`DELETE FROM order_entries WHERE order_id = ${order.id}`;
+      for (const entry of order.entries) {
+        await neonClient`INSERT INTO order_entries (order_id, number, allocation_gb, status) VALUES (${order.id}, ${entry.number}, ${entry.allocationGB.toString()}, ${entry.status || "pending"})`;
+      }
     }
-    
-    // Server-side operations don't directly notify client
-    // Client notification happens via API responses
   } catch (error) {
     console.error('Failed to update order in database:', error);
     throw error;
@@ -198,21 +200,18 @@ export const updateOrder = async (order: Order): Promise<void> => {
 // Save multiple orders to database (used for bulk operations)
 export const saveOrders = async (ordersToSave: Order[]): Promise<void> => {
   try {
-    // Sort orders by timestamp descending (newest first) before saving
     const sortedOrders = [...ordersToSave].sort((a, b) => b.timestamp - a.timestamp);
-    
-    // We'll delete all existing orders and their entries
-    // This will cascade delete the entries due to foreign key constraints
-    // In a real app, you might want to be more selective
-    await db.delete(orders);
-    
-    // Insert all orders one by one
-    for (const order of sortedOrders) {
-      await saveOrder(order);
+    if (db) {
+      await db.delete(orders);
+      for (const order of sortedOrders) {
+        await saveOrder(order);
+      }
+    } else {
+      await neonClient`DELETE FROM orders`;
+      for (const order of sortedOrders) {
+        await saveOrder(order);
+      }
     }
-    
-    // Server-side operations don't directly notify client
-    // Client notification happens via API responses
   } catch (error) {
     console.error('Failed to save orders to database:', error);
     throw error;
@@ -224,22 +223,23 @@ export const loadOrders = async (): Promise<Order[]> => {
   try {
     // Get all orders sorted by timestamp descending (newest first)
     const dbOrders = await db.select().from(orders).orderBy(desc(orders.timestamp));
-    
-    // Map to application orders with entries
-    const allOrders: Order[] = [];
-    for (const dbOrder of dbOrders) {
-      const order = await mapDbOrderToOrder(dbOrder);
-      allOrders.push(order);
+    try {
+      let dbOrders;
+      if (db) {
+        dbOrders = await db.select().from(orders).orderBy(desc(orders.timestamp));
+      } else {
+        dbOrders = await neonClient`SELECT * FROM orders ORDER BY timestamp DESC`;
+      }
+      const allOrders: Order[] = [];
+      for (const dbOrder of dbOrders) {
+        const order = await mapDbOrderToOrder(dbOrder);
+        allOrders.push(order);
+      }
+      return allOrders;
+    } catch (error) {
+      console.error('Failed to load orders from database:', error);
+      throw error;
     }
-    
-    return allOrders;
-  } catch (error) {
-    console.error('Failed to load orders from database:', error);
-    return [];
-  }
-};
-
-// Add a new order to the database
 export const addOrder = async (order: Order): Promise<void> => {
   try {
     await saveOrder(order);
