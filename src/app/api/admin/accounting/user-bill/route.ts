@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
       const entries = await db
         .select()
         .from(sql`order_entries`)
-        .where(sql`order_id = ${order.id}`);
+        .where(sql`order_id = ${order.id}`) as Array<{ id: number; number: number; allocationGB: string; cost?: string | null }>;
       
       // Calculate costs
       const orderCost = order.cost ? parseFloat(order.cost) : null;
