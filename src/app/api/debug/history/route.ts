@@ -5,6 +5,14 @@ import { desc, sql } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      return NextResponse.json({ 
+        error: 'Database connection unavailable'
+      }, { status: 500 });
+    }
+
     console.log('Testing history table access...');
 
     // Test connection first

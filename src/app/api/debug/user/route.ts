@@ -7,6 +7,14 @@ import { eq } from 'drizzle-orm';
 
 export async function GET() {
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      return NextResponse.json({ 
+        error: 'Database connection unavailable'
+      }, { status: 500 });
+    }
+
     const session = await getServerSession(authOptions);
     
     if (!session || !session.user) {
@@ -17,6 +25,7 @@ export async function GET() {
     if (!email) {
       return NextResponse.json({ error: 'No email found in session' }, { status: 400 });
     }
+    
     // Get user from database directly to see what role is stored there
     const dbUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
     
