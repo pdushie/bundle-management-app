@@ -56,7 +56,7 @@ export async function GET(
     const profileData = userProfile[0].profile;
     
     // If tiered pricing, get the tiers
-    let tiers = [];
+    let tiers: Array<{ id: number; profileId: number; dataGB: string; price: string; createdAt: Date | null; updatedAt: Date | null }> = [];
     if (profileData.isTiered) {
       tiers = await db.select().from(pricingTiers)
         .where(eq(pricingTiers.profileId, profileData.id))
