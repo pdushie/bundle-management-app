@@ -65,7 +65,7 @@ export default function PricingSummary({
   
   return (
     <div className={`text-sm ${className}`}>
-      <div className="font-medium">{profile.name}</div>
+      <div className="font-medium">{profile?.name ?? ''}</div>
       
       {calculatedPrice !== null && dataSizeGB !== undefined ? (
         <div className="mt-1">
