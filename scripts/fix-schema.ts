@@ -14,8 +14,8 @@ async function fixSchema() {
         WHERE table_name = 'user_pricing_profiles' AND column_name = 'updated_at'
       );
     `);
-    
-    const columnExists = checkResult[0].exists;
+    // Safely extract the result for Neon/Drizzle
+    const columnExists = (checkResult.rows?.[0]?.exists ?? false);
     
     if (columnExists) {
       console.log('Column updated_at already exists in user_pricing_profiles table. No changes needed.');
