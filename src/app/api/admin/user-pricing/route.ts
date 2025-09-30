@@ -3,7 +3,7 @@ import { db } from "../../../../lib/db";
 import { userPricingProfiles, pricingProfiles, users } from "../../../../lib/schema";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../../../lib/auth";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
   try {
@@ -53,8 +53,10 @@ export async function POST(req: NextRequest) {
     // Check if user already has this profile
     const existingAssignment = await db.select().from(userPricingProfiles)
       .where(
-        eq(userPricingProfiles.userId, parsedUserId),
-        eq(userPricingProfiles.profileId, parsedProfileId)
+        and(
+          eq(userPricingProfiles.userId, parsedUserId),
+          eq(userPricingProfiles.profileId, parsedProfileId)
+        )
       );
     
     if (existingAssignment.length > 0) {
