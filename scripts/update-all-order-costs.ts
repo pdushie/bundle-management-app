@@ -9,6 +9,11 @@ import { ensureOrderCosts, Order } from '../src/lib/costCalculationMiddleware';
 
 // Get all orders from the database
 async function getAllOrders() {
+  // Check if db is available
+  if (!db) {
+    throw new Error('Database connection is not available');
+  }
+
   try {
     // Define the Order type to match the structure from the database
     interface DbOrderEntry {
@@ -90,6 +95,11 @@ async function getAllOrders() {
 
 // Update an order in the database with costs
 async function updateOrderWithCosts(order: any) {
+  // Check if db is available
+  if (!db) {
+    throw new Error('Database connection is not available');
+  }
+
   try {
     // Update the order with cost information
     await db.update(orders)
@@ -121,6 +131,23 @@ async function updateOrderWithCosts(order: any) {
 async function migrateOrderCosts() {
   try {
     console.log('Starting order cost migration...');
+
+    // Check if db is available first
+    if (!db) {
+      console.warn('Database connection is not available. This might be expected during build time.');
+      console.log('Migration will be skipped.');
+      return;
+    }
+
+    // Test the connection
+    try {
+      await db.select().from(orders).limit(1);
+      console.log('Database connection confirmed.');
+    } catch (connectionError) {
+      console.warn('Could not connect to database. Migration will be skipped.');
+      console.error('Connection error:', connectionError);
+      return;
+    }
     
     // Get all orders
     const allOrders = await getAllOrders();
@@ -150,17 +177,27 @@ async function migrateOrderCosts() {
     console.log(`Migration complete. Successfully updated ${successCount} orders. Failed: ${errorCount}`);
   } catch (error) {
     console.error('Migration failed:', error);
+    // Don't exit with error code during build
+    if (process.env.NODE_ENV === 'production') {
+      console.log('Skipping migration failure during production build.');
+      return;
+    }
     process.exit(1);
   }
 }
 
-// Run the migration
-migrateOrderCosts()
-  .then(() => {
-    console.log('Order cost migration completed successfully');
-    process.exit(0);
-  })
-  .catch(error => {
-    console.error('Migration failed:', error);
-    process.exit(1);
-  });
+// Only run if not in build environment
+if (process.env.VERCEL_ENV !== 'preview' && process.env.VERCEL_ENV !== 'production') {
+  // Run the migration
+  migrateOrderCosts()
+    .then(() => {
+      console.log('Order cost migration completed successfully');
+      process.exit(0);
+    })
+    .catch(error => {
+      console.error('Migration failed:', error);
+      process.exit(1);
+    });
+} else {
+  console.log('Skipping order cost migration during Vercel build process.');
+}
