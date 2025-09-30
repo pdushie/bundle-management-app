@@ -11,6 +11,14 @@ export async function GET(
 ) {
   const { userId } = await context.params;
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      return NextResponse.json({ 
+        error: 'Database connection unavailable'
+      }, { status: 500 });
+    }
+
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
@@ -29,9 +37,11 @@ export async function GET(
     const userIdParam = parseInt(userId);
     if (
       isNaN(userIdParam) || 
-      (sessionUserId !== userIdParam && 
-       session.user.role !== "admin" && 
-       session.user.role !== "superadmin")
+      (
+        sessionUserId !== userIdParam && 
+        session.user.role !== "admin" && 
+        session.user.role !== "superadmin"
+      )
     ) {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
