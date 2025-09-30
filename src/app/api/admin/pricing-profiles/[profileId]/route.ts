@@ -8,9 +8,10 @@ import { and, eq, sql } from "drizzle-orm";
 // Use the standard Next.js App Router pattern for route handlers
 export async function GET(
   req: NextRequest,
-  { params }: { params: { profileId: string } }
+  context: { params: Promise<{ profileId: string }> }
 ) {
   try {
+    const { profileId: profileIdRaw } = await context.params;
     const session = await getServerSession(authOptions);
     
     if (!session) {
@@ -22,7 +23,7 @@ export async function GET(
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
     
-    const profileId = parseInt(params.profileId);
+    const profileId = parseInt(profileIdRaw);
     
     if (isNaN(profileId)) {
       return NextResponse.json({ error: "Invalid profile ID" }, { status: 400 });
@@ -84,16 +85,18 @@ export async function GET(
       assignedUsers: usersWithProfile
     });
   } catch (error) {
-    console.error(`Error fetching pricing profile ${params.profileId || ''}:`, error);
+    const { profileId: profileIdRaw } = await context.params;
+    console.error(`Error fetching pricing profile ${profileIdRaw || ''}:`, error);
     return NextResponse.json({ error: "Failed to fetch pricing profile" }, { status: 500 });
   }
 }
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { profileId: string } }
+  context: { params: Promise<{ profileId: string }> }
 ) {
   try {
+    const { profileId: profileIdRaw } = await context.params;
     const session = await getServerSession(authOptions);
     
     if (!session) {
@@ -105,7 +108,7 @@ export async function PUT(
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
     
-    const profileId = parseInt(params.profileId);
+    const profileId = parseInt(profileIdRaw);
     
     if (isNaN(profileId)) {
       return NextResponse.json({ error: "Invalid profile ID" }, { status: 400 });
@@ -193,16 +196,18 @@ export async function PUT(
       } 
     });
   } catch (error) {
-    console.error(`Error updating pricing profile ${params.profileId}:`, error);
+    const { profileId: profileIdRaw } = await context.params;
+    console.error(`Error updating pricing profile ${profileIdRaw}:`, error);
     return NextResponse.json({ error: "Failed to update pricing profile" }, { status: 500 });
   }
 }
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { profileId: string } }
+  context: { params: Promise<{ profileId: string }> }
 ) {
   try {
+    const { profileId: profileIdRaw } = await context.params;
     const session = await getServerSession(authOptions);
     
     if (!session) {
@@ -214,7 +219,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
     
-    const profileId = parseInt(params.profileId);
+    const profileId = parseInt(profileIdRaw);
     
     if (isNaN(profileId)) {
       return NextResponse.json({ error: "Invalid profile ID" }, { status: 400 });
@@ -250,7 +255,8 @@ export async function DELETE(
       deletedProfile: deletedProfile[0]
     });
   } catch (error) {
-    console.error(`Error deleting pricing profile ${params.profileId}:`, error);
+    const { profileId: profileIdRaw } = await context.params;
+    console.error(`Error deleting pricing profile ${profileIdRaw}:`, error);
     return NextResponse.json({ error: "Failed to delete pricing profile" }, { status: 500 });
   }
 }
