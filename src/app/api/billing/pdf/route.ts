@@ -50,9 +50,8 @@ export async function GET(request: NextRequest) {
 
     // Generate PDF
     const doc = new PDFDocument({ margin: 30 });
-    let buffers: Buffer[] = [];
-    doc.on('data', buffers.push.bind(buffers));
-    doc.on('end', () => {});
+    let buffers: Uint8Array[] = [];
+    doc.on('data', (chunk: Uint8Array) => buffers.push(chunk));
 
     doc.fontSize(18).text(`Billing Report - ${formattedDate}`, { align: 'center' });
     doc.moveDown();
@@ -81,9 +80,12 @@ export async function GET(request: NextRequest) {
     doc.text(`Total Amount: GHS ${totalAmount.toFixed(2)}`);
 
     doc.end();
-    const pdfBuffer = await new Promise<Buffer>(resolve => {
+
+    // Wait for PDF generation to complete and create proper buffer
+    const pdfBuffer = await new Promise<Uint8Array>((resolve) => {
       doc.on('end', () => {
-        resolve(Buffer.concat(buffers));
+        const buffer = Buffer.concat(buffers);
+        resolve(new Uint8Array(buffer));
       });
     });
 
