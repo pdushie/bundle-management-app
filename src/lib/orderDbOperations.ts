@@ -113,43 +113,6 @@ export const saveOrder = async (order: Order): Promise<void> => {
 
 // ...existing code...
 
-// Update an existing order in the database
-export const updateOrder = async (order: Order): Promise<void> => {
-  try {
-    if (db) {
-      await db.update(orders)
-        .set({
-          timestamp: order.timestamp,
-          date: order.date,
-          time: order.time,
-          status: order.status,
-          totalData: order.totalData.toString(),
-          totalCount: order.totalCount
-        })
-        .where(eq(orders.id, order.id));
-      await db.delete(orderEntries).where(eq(orderEntries.orderId, order.id));
-      for (const entry of order.entries) {
-        await db.insert(orderEntries).values({
-          orderId: order.id,
-          number: entry.number,
-          allocationGB: entry.allocationGB.toString(),
-          status: entry.status || "pending"
-        });
-      }
-    } else {
-      // Fallback for mock mode: use neonClient
-      await neonClient`UPDATE orders SET timestamp = ${order.timestamp}, date = ${order.date}, time = ${order.time}, status = ${order.status}, total_data = ${order.totalData.toString()}, total_count = ${order.totalCount} WHERE id = ${order.id}`;
-      await neonClient`DELETE FROM order_entries WHERE order_id = ${order.id}`;
-      for (const entry of order.entries) {
-        await neonClient`INSERT INTO order_entries (order_id, number, allocation_gb, status) VALUES (${order.id}, ${entry.number}, ${entry.allocationGB.toString()}, ${entry.status || "pending"})`;
-      }
-    }
-  } catch (error) {
-    console.error('Failed to update order in database:', error);
-    throw error;
-  }
-};
-
 // Save multiple orders to database (used for bulk operations)
 export const saveOrders = async (ordersToSave: Order[]): Promise<void> => {
   try {
