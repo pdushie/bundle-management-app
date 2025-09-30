@@ -1303,7 +1303,7 @@ export default function OrdersApp() {
                           </span>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          {(order.orderCost !== undefined || order.estimatedCost !== undefined) ? (
+                          {order.estimatedCost !== undefined ? (
                             <div className="flex items-center text-amber-600">
                               <DollarSign className="h-4 w-4 mr-1" />
                               <span className="text-sm font-medium">
@@ -1312,7 +1312,7 @@ export default function OrdersApp() {
                                   currency: 'GHS',
                                   minimumFractionDigits: 2,
                                   maximumFractionDigits: 2 
-                                }).format(order.estimatedCost || order.orderCost || 0)}
+                                }).format(order.estimatedCost || 0)}
                               </span>
                               {order.status === 'pending' && order.estimatedCost && (
                                 <span className="ml-1 text-xs text-amber-500">(Est.)</span>
