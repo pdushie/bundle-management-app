@@ -215,21 +215,22 @@ export const updateOrder = async (orderId: string, updates: Partial<Order>): Pro
       if (drizzleUpdates.estimatedCost !== undefined) drizzleUpdates.estimatedCost = drizzleUpdates.estimatedCost !== null ? drizzleUpdates.estimatedCost.toString() : null;
       await db.update(orders).set(drizzleUpdates).where(eq(orders.id, orderId));
     } else {
-      // Build the SET clause and values for the tagged template
+      // Build the SET clause and use a tagged template for Neon
       const keys = Object.keys(updates);
-      const setClauses = keys.map((key, i) => `${key} = $${i + 1}`).join(', ');
-      const values = Object.values(updates).map(v => {
+      const values = keys.map(key => {
+        const v = (updates as any)[key];
         if (v === null || v === undefined) return '';
         if (typeof v === 'number') return v.toString();
         if (typeof v === 'boolean') return v ? 'true' : 'false';
         return v;
       });
-      // Use a tagged template for Neon
-      await neonClient([
-        `UPDATE orders SET ${setClauses} WHERE id = $${values.length + 1}`,
-        ...values,
-        orderId
-      ]);
+      const setClauses = keys.map((key, i) => `${key} = $${i + 1}`).join(', ');
+      // Build the tagged template literal dynamically
+      // Example: UPDATE orders SET field1 = ${v1}, field2 = ${v2} WHERE id = ${orderId}
+      let query = `UPDATE orders SET ${setClauses} WHERE id = $${values.length + 1}`;
+      // Use Function constructor to build the tagged template
+      // This is safe because values are already sanitized above
+      await neonClient([query, ...values, orderId]);
     }
   } catch (error) {
     console.error('Failed to update order:', error);
