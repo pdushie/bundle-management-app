@@ -21,7 +21,7 @@ type Order = {
   totalData: number;
   totalCount: number;
   orderCost?: number;
-  estimatedCost?: number;
+  estimatedCost?: number | null;
   status: "pending" | "processed";
   entries: Array<{
     number: string;
