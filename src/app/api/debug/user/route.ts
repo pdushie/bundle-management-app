@@ -14,7 +14,9 @@ export async function GET() {
     }
     
     const email = session.user.email;
-    
+    if (!email) {
+      return NextResponse.json({ error: 'No email found in session' }, { status: 400 });
+    }
     // Get user from database directly to see what role is stored there
     const dbUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
     
