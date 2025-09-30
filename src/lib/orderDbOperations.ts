@@ -2,7 +2,10 @@ import { db, neonClient } from './db';
 import { orders, orderEntries } from './schema';
 import { eq, desc, asc, and } from 'drizzle-orm';
 
-// Define Order type to match the one in orderStorage.ts
+import { db, neonClient } from './db';
+import { orders, orderEntries } from './schema';
+import { eq, desc, asc, and } from 'drizzle-orm';
+
 export type OrderEntryStatus = "pending" | "sent" | "error";
 
 export type Order = {
@@ -16,40 +19,31 @@ export type Order = {
   totalCount: number;
   status: "pending" | "processed";
   entries: Array<{
-    id?: number; // Optional ID for database entries
+    id?: number;
     number: string;
     allocationGB: number;
     status?: OrderEntryStatus;
-    cost?: number | null; // Individual cost for this entry
+    cost?: number | null;
   }>;
   isSelected?: boolean;
-  // Optional fields for the pricing system
   cost?: number;
-  estimatedCost?: number | null; // Total estimated cost of the order for frontend display
-  pricingProfileId?: number; // ID of the pricing profile used
-  pricingProfileName?: string; // Name of the pricing profile used
+  estimatedCost?: number | null;
+  pricingProfileId?: number;
+  pricingProfileName?: string;
   userId?: number;
 };
 
 export type OrderWithoutEntries = Omit<Order, 'entries'>;
 
-// Helper function to convert database order to application order
 const mapDbOrderToOrder = async (dbOrder: any): Promise<Order> => {
-  // Fetch entries for this order
-  const dbEntries = db
-    ? await db.select().from(orderEntries).where(eq(orderEntries.orderId, dbOrder.id))
-    : await neonClient`SELECT * FROM order_entries WHERE order_id = ${dbOrder.id}`;
-  
   // Map database entries to application entries
-  const entries = dbEntries.map(entry => ({
+  const entries = dbOrder.entries ? dbOrder.entries.map((entry: any) => ({
     id: entry.id,
     number: entry.number,
     allocationGB: parseFloat(entry.allocationGB as string),
     status: entry.status as OrderEntryStatus,
-    cost: entry.cost ? parseFloat(entry.cost as string) : null // Include individual entry cost
-  }));
-  
-  // Return complete order with entries
+    cost: entry.cost ? parseFloat(entry.cost as string) : null
+  })) : [];
   return {
     id: dbOrder.id,
     timestamp: Number(dbOrder.timestamp),
@@ -61,82 +55,73 @@ const mapDbOrderToOrder = async (dbOrder: any): Promise<Order> => {
     totalCount: dbOrder.totalCount,
     status: dbOrder.status as "pending" | "processed",
     entries,
-    isSelected: false, // Always initialize as not selected
-    cost: dbOrder.cost ? parseFloat(dbOrder.cost as string) : null, // Include cost from database
-    // Make sure estimatedCost is always set, even for pending orders
-    estimatedCost: dbOrder.estimatedCost ? parseFloat(dbOrder.estimatedCost as string) : 
-                  (dbOrder.cost ? parseFloat(dbOrder.cost as string) : null),
+    isSelected: false,
+    cost: dbOrder.cost ? parseFloat(dbOrder.cost as string) : null,
+    estimatedCost: dbOrder.estimatedCost ? parseFloat(dbOrder.estimatedCost as string) : (dbOrder.cost ? parseFloat(dbOrder.cost as string) : null),
     pricingProfileId: dbOrder.pricingProfileId || undefined,
-    pricingProfileName: dbOrder.pricingProfileName || undefined
+    pricingProfileName: dbOrder.pricingProfileName || undefined,
+    userId: dbOrder.userId || undefined
   };
 };
 
-// Save a new order to the database
 export const saveOrder = async (order: Order): Promise<void> => {
   try {
-    // Insert the order first - no transaction
     if (db) {
       await db.insert(orders).values({
-      id: order.id,
-      timestamp: order.timestamp,
-      date: order.date,
-      time: order.time,
-      userName: order.userName,
-      userEmail: order.userEmail,
-      totalData: order.totalData.toString(),
-      totalCount: order.totalCount,
-      status: order.status,
-      userId: order.userId || null // Get userId from the order
-    });
-    
-    // Insert all entries for this order in a single batch operation
-    if (order.entries && order.entries.length > 0) {
-      // Create an array of entry objects for batch insertion
-      const entriesForBatch = order.entries.map(entry => ({
-        orderId: order.id,
-        number: entry.number,
-        allocationGB: entry.allocationGB.toString(),
-        status: entry.status || "pending"
-      }));
-      
-      // Batch insert all entries at once
-      await db.insert(orderEntries).values(entriesForBatch);
+        id: order.id,
+        timestamp: order.timestamp,
+        date: order.date,
+        time: order.time,
+        userName: order.userName,
+        userEmail: order.userEmail,
+        totalData: order.totalData.toString(),
+        totalCount: order.totalCount,
+        status: order.status,
+        userId: order.userId || null
+      });
+      if (order.entries && order.entries.length > 0) {
+        const entriesForBatch = order.entries.map(entry => ({
+          orderId: order.id,
+          number: entry.number,
+          allocationGB: entry.allocationGB.toString(),
+          status: entry.status || "pending"
+        }));
+        await db.insert(orderEntries).values(entriesForBatch);
+      }
+    } else {
+      await neonClient`INSERT INTO orders (id, timestamp, date, time, user_name, user_email, total_data, total_count, status, user_id) VALUES (${order.id}, ${order.timestamp}, ${order.date}, ${order.time}, ${order.userName}, ${order.userEmail}, ${order.totalData.toString()}, ${order.totalCount}, ${order.status}, ${order.userId || null})`;
+      if (order.entries && order.entries.length > 0) {
+        for (const entry of order.entries) {
+          await neonClient`INSERT INTO order_entries (order_id, number, allocation_gb, status) VALUES (${order.id}, ${entry.number}, ${entry.allocationGB.toString()}, ${entry.status || "pending"})`;
+        }
+      }
     }
-    
-    // Server-side operations don't directly notify client
-    // Client notification happens via API responses
   } catch (error) {
     console.error('Failed to save order to database:', error);
     throw error;
   }
 };
 
-// ...existing code...
-
-// ...existing code...
-
-// Load all orders from database
 export const loadOrders = async (): Promise<Order[]> => {
   try {
-    // Get all orders sorted by timestamp descending (newest first)
-    const dbOrders = await db.select().from(orders).orderBy(desc(orders.timestamp));
-    try {
-      let dbOrders;
-      if (db) {
-        dbOrders = await db.select().from(orders).orderBy(desc(orders.timestamp));
-      } else {
-        dbOrders = await neonClient`SELECT * FROM orders ORDER BY timestamp DESC`;
-      }
-      const allOrders: Order[] = [];
-      for (const dbOrder of dbOrders) {
-        const order = await mapDbOrderToOrder(dbOrder);
-        allOrders.push(order);
-      }
-      return allOrders;
-    } catch (error) {
-      console.error('Failed to load orders from database:', error);
-      throw error;
+    let dbOrders;
+    if (db) {
+      dbOrders = await db.select().from(orders).orderBy(desc(orders.timestamp));
+    } else {
+      dbOrders = await neonClient`SELECT * FROM orders ORDER BY timestamp DESC`;
     }
+    const allOrders: Order[] = [];
+    for (const dbOrder of dbOrders) {
+      const order = await mapDbOrderToOrder(dbOrder);
+      allOrders.push(order);
+    }
+    return allOrders;
+  } catch (error) {
+    console.error('Failed to load orders from database:', error);
+    throw error;
+  }
+};
+
 export const addOrder = async (order: Order): Promise<void> => {
   try {
     await saveOrder(order);
@@ -145,17 +130,6 @@ export const addOrder = async (order: Order): Promise<void> => {
     throw error;
   }
 };
-
-// Get orders sorted by timestamp with oldest first (for queue display)
-export const getOrdersOldestFirst = async (): Promise<Order[]> => {
-  try {
-    // Get all orders sorted by timestamp ascending (oldest first)
-    const dbOrders = await db.select().from(orders).orderBy(asc(orders.timestamp));
-    
-    // Map to application orders with entries
-    const allOrders: Order[] = [];
-    for (const dbOrder of dbOrders) {
-      const order = await mapDbOrderToOrder(dbOrder);
       allOrders.push(order);
     }
     
