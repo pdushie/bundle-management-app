@@ -17,6 +17,14 @@ function isAdminUser(session: any) {
 
 export async function GET(request: NextRequest) {
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      return NextResponse.json({ 
+        error: 'Database connection unavailable'
+      }, { status: 500 });
+    }
+
     // Get session to check if user is admin
     const session = await getServerSession(authOptions);
     
@@ -74,7 +82,7 @@ export async function GET(request: NextRequest) {
     // Format the orders for the response
     const formattedOrders = await Promise.all(userOrders.map(async order => {
       // Get order entries to calculate total data
-      const entries = await db
+      const entries = await db!
         .select()
         .from(sql`order_entries`)
         .where(sql`order_id = ${order.id}`) as Array<{ id: number; number: number; allocationGB: string; cost?: string | null }>;
