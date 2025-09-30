@@ -52,22 +52,31 @@ export async function GET(
     
     // Get all users assigned to this profile
     let assignedUsers;
-    try {
-      assignedUsers = await db.query.userPricingProfiles.findMany({
-        where: eq(userPricingProfiles.profileId, profileId),
-        with: {
-          user: {
-            columns: {
-              id: true,
-              name: true,
-              email: true,
-              role: true,
+    if (
+      db &&
+      db.query &&
+      'userPricingProfiles' in db.query &&
+      typeof (db.query as any).userPricingProfiles?.findMany === 'function'
+    ) {
+      try {
+        assignedUsers = await (db.query as any).userPricingProfiles.findMany({
+          where: eq(userPricingProfiles.profileId, profileId),
+          with: {
+            user: {
+              columns: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+              }
             }
           }
-        }
-      });
-    } catch (error) {
-      console.warn('Error using ORM query, falling back to direct SQL query:', error);
+        });
+      } catch (error) {
+        console.warn('Error using ORM query, falling back to direct SQL query:', error);
+      }
+    }
+    if (!assignedUsers) {
       // Fallback to direct SQL query
       const rawAssignedUsers = await db.execute(sql`
         SELECT upp.id, upp.user_id, upp.profile_id, upp.created_at,
@@ -83,7 +92,7 @@ export async function GET(
     }
     
     // Modify the response to include user information directly
-    const usersWithProfile = assignedUsers.map(up => up.user);
+  const usersWithProfile = assignedUsers.map((up: any) => up.user);
     
     return NextResponse.json({ 
       profile: {
