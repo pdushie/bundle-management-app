@@ -33,7 +33,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   // Check if user has admin privileges
-  const isAdmin = session?.user?.isAdmin || session?.user?.role === 'admin' || session?.user?.role === 'superadmin';
+  const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'superadmin';
 
   // Reset data and refresh when tab becomes active
   useEffect(() => {
