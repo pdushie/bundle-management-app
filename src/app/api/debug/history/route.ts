@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { 
           error: 'Database connection test failed', 
-          details: error.message
+          details: error instanceof Error ? error.message : String(error)
         },
         { status: 500 }
       );
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { 
           error: 'Failed to count history entries', 
-          details: error.message
+          details: error instanceof Error ? error.message : String(error)
         },
         { status: 500 }
       );
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { 
           error: 'Failed to fetch history entries', 
-          details: error.message,
+          details: error instanceof Error ? error.message : String(error),
           connectionTest: 'passed',
           countTest: 'passed' 
         },
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error in debug history route:', error);
     return NextResponse.json(
-      { error: 'Failed to debug history connection', details: error.message },
+      { error: 'Failed to debug history connection', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
