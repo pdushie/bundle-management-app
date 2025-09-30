@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Query order entries using direct queries to avoid relational issues
-    let orderEntriesData;
+    let orderEntriesData: any[] = [];
     try {
       let orderEntriesResult;
       if (orderConditions.length > 0) {
@@ -192,8 +192,8 @@ export async function POST(req: NextRequest) {
       phoneConditions.push(phoneDateCondition);
     }
     
-    // Query phone entries using direct queries
-    let phoneEntriesData;
+    // Query phone entries using direct queries - explicitly type the variable
+    let phoneEntriesData: any[] = [];
     try {
       if (phoneConditions.length > 0) {
         phoneEntriesData = await db
