@@ -26,27 +26,27 @@ export async function GET(request: NextRequest) {
     
     // Get query parameters
     const searchParams = request.nextUrl.searchParams;
-  const dateStr = searchParams.get('date'); // Format: YYYY-MM-DD
+    const userId = searchParams.get('userId');
     const date = searchParams.get('date'); // Format: YYYY-MM-DD
-    
-  if (!userId || !dateStr) {
+
     if (!userId || !date) {
       return NextResponse.json({ 
         error: 'Missing required parameters: userId and date'
       }, { status: 400 });
     }
-    
+
     // Parse userId to integer for database query
     const userIdInt = parseInt(userId);
-    
+
     if (isNaN(userIdInt)) {
       return NextResponse.json({ 
         error: 'Invalid userId: must be a number'
       }, { status: 400 });
-  // Parse date as UTC
-  const startUTC = new Date(dateStr + 'T00:00:00.000Z');
-  const endUTC = new Date(dateStr + 'T23:59:59.999Z');
     }
+
+    // Parse date as UTC
+    const startUTC = new Date(date + 'T00:00:00.000Z');
+    const endUTC = new Date(date + 'T23:59:59.999Z');
     
     // Query to get all orders for the specified user and date
     const userOrders = await db
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       .from(ordersTable)
       .where(
         and(
-      sql`timestamp >= ${startUTC.toISOString()} AND timestamp <= ${endUTC.toISOString()}`
+          sql`timestamp >= ${startUTC.toISOString()} AND timestamp <= ${endUTC.toISOString()}`,
           eq(ordersTable.date, date)
         )
       )
