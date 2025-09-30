@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { orderEntries, phoneEntries } from "@/lib/schema";
+import { orderEntries, phoneEntries, orders } from "@/lib/schema";
 import { and, desc, like, gte, lte, eq } from "drizzle-orm";
 
 // Helper function to transform phone entries to match order entry format
@@ -24,6 +24,14 @@ function transformPhoneEntriesToOrderEntries(phoneEntries: any[]) {
 
 export async function POST(req: NextRequest) {
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      return NextResponse.json({ 
+        error: 'Database connection unavailable'
+      }, { status: 500 });
+    }
+
     const session = await getServerSession(authOptions);
     
     // Check if user is authenticated
@@ -85,6 +93,53 @@ export async function POST(req: NextRequest) {
       orderConditions.push(orderDateCondition);
     }
     
+    // Query order entries using direct queries to avoid relational issues
+    let orderEntriesData;
+    try {
+      let orderEntriesResult;
+      if (orderConditions.length > 0) {
+        orderEntriesResult = await db
+          .select()
+          .from(orderEntries)
+          .where(and(...orderConditions))
+          .orderBy(desc(orderEntries.createdAt))
+          .limit(500);
+      } else {
+        orderEntriesResult = await db
+          .select()
+          .from(orderEntries)
+          .orderBy(desc(orderEntries.createdAt))
+          .limit(500);
+      }
+      
+      // Get associated order data for each entry
+      orderEntriesData = [];
+      for (const entry of orderEntriesResult) {
+        const orderResult = await db
+          .select()
+          .from(orders)
+          .where(eq(orders.id, entry.orderId))
+          .limit(1);
+        
+        orderEntriesData.push({
+          ...entry,
+          order: orderResult.length > 0 ? orderResult[0] : null
+        });
+      }
+    } catch (orderError) {
+      console.error('Error fetching order entries:', orderError);
+      return NextResponse.json(
+        { error: 'Failed to fetch order entries', details: orderError instanceof Error ? orderError.message : String(orderError) },
+        { status: 500 }
+      );
+    }
+    
+    // Add source field to identify these as order entries
+    const formattedOrderEntries = orderEntriesData.map(entry => ({
+      ...entry,
+      source: 'order_entries'
+    }));
+    
     // Build filter conditions for phone entries
     let phoneConditions = [];
     
@@ -137,52 +192,26 @@ export async function POST(req: NextRequest) {
       phoneConditions.push(phoneDateCondition);
     }
     
-    // Query order entries
-    let orderEntriesData;
-    if (orderConditions.length > 0) {
-      orderEntriesData = await db.query.orderEntries.findMany({
-        where: and(...orderConditions),
-        orderBy: [desc(orderEntries.createdAt)],
-        limit: 500, // Reduced limit to accommodate phone entries
-        with: {
-          order: true,
-        },
-      });
-    } else {
-      orderEntriesData = await db.query.orderEntries.findMany({
-        orderBy: [desc(orderEntries.createdAt)],
-        limit: 500, // Reduced limit to accommodate phone entries
-        with: {
-          order: true,
-        },
-      });
-    }
-    
-    // Add source field to identify these as order entries
-    const formattedOrderEntries = orderEntriesData.map(entry => ({
-      ...entry,
-      source: 'order_entries'
-    }));
-    
-    // Query phone entries
+    // Query phone entries using direct queries
     let phoneEntriesData;
-    if (phoneConditions.length > 0) {
-      phoneEntriesData = await db.query.phoneEntries.findMany({
-        where: and(...phoneConditions),
-        orderBy: [desc(phoneEntries.createdAt)],
-        limit: 500,
-        with: {
-          historyEntry: true,
-        },
-      });
-    } else {
-      phoneEntriesData = await db.query.phoneEntries.findMany({
-        orderBy: [desc(phoneEntries.createdAt)],
-        limit: 500,
-        with: {
-          historyEntry: true,
-        },
-      });
+    try {
+      if (phoneConditions.length > 0) {
+        phoneEntriesData = await db
+          .select()
+          .from(phoneEntries)
+          .where(and(...phoneConditions))
+          .orderBy(desc(phoneEntries.createdAt))
+          .limit(500);
+      } else {
+        phoneEntriesData = await db
+          .select()
+          .from(phoneEntries)
+          .orderBy(desc(phoneEntries.createdAt))
+          .limit(500);
+      }
+    } catch (phoneError) {
+      console.warn('Error fetching phone entries, continuing without them:', phoneError);
+      phoneEntriesData = [];
     }
     
     // Transform phone entries to match order entries format
