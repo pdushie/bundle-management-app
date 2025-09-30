@@ -3,8 +3,18 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db, neonClient } from '@/lib/db';
 import { getDateBounds } from '@/lib/dateUtils';
+import { orders as ordersTable, orderEntries } from '@/lib/schema';
+import { eq, and, gte, lte, desc } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
+  // Check if database is available
+  if (!db) {
+    console.error('Database connection is not available');
+    return NextResponse.json({ 
+      error: 'Database connection unavailable'
+    }, { status: 500 });
+  }
+
   // Check authentication
   const session = await getServerSession(authOptions);
   if (!session || !session.user) {
@@ -28,21 +38,36 @@ export async function GET(request: NextRequest) {
 
     const { start, end } = getDateBounds(date);
 
-    // Skip debugging direct database results to avoid errors
-    
-    // Find all orders for the user on the specified date
-    const orders = await db.query.orders.findMany({
-      where: (orders, { eq, and, gte, lte }) => 
-        and(
-          eq(orders.userEmail, session.user.email as string),
-          gte(orders.timestamp, start.getTime()),
-          lte(orders.timestamp, end.getTime())
-        ),
-      orderBy: (orders, { desc }) => [desc(orders.timestamp)],
-      with: {
-        entries: true,
-      },
-    });
+    // Find all orders for the user on the specified date using direct query instead of relational
+    let orders;
+    try {
+      // Use direct queries to avoid relational query issues
+      const ordersResult = await db.select().from(ordersTable)
+        .where(and(
+          eq(ordersTable.userEmail, session.user.email as string),
+          gte(ordersTable.timestamp, start.getTime()),
+          lte(ordersTable.timestamp, end.getTime())
+        ))
+        .orderBy(desc(ordersTable.timestamp));
+
+      // Get entries for each order
+      orders = [];
+      for (const order of ordersResult) {
+        const entriesResult = await db.select().from(orderEntries)
+          .where(eq(orderEntries.orderId, order.id));
+        
+        orders.push({
+          ...order,
+          entries: entriesResult
+        });
+      }
+    } catch (dbError) {
+      console.error('Database error while fetching orders:', dbError);
+      return NextResponse.json({ 
+        error: 'Failed to fetch orders from database', 
+        details: dbError instanceof Error ? dbError.message : String(dbError)
+      }, { status: 500 });
+    }
 
     // Calculate totals
     let totalData = 0;
@@ -65,7 +90,7 @@ export async function GET(request: NextRequest) {
       if (order.status === 'pending' && !order.estimatedCost && !order.cost) {
         // Get user's pricing profile from direct DB query
         try {
-          if (order.userId) {
+          if (order.userId && neonClient) {
             const userProfileQuery = await neonClient`
               SELECT pp.* FROM user_pricing_profiles upp
               JOIN pricing_profiles pp ON upp.profile_id = pp.id
@@ -122,13 +147,15 @@ export async function GET(request: NextRequest) {
               console.log(`Set estimated cost for order ${order.id} to ${order.estimatedCost}`);
               
               // Also update in database for future queries
-              await neonClient`
-                UPDATE orders 
-                SET estimated_cost = ${order.estimatedCost}, 
-                    pricing_profile_name = ${profile.name}
-                WHERE id = ${order.id}
-              `;
-              console.log(`Updated database with estimated cost for order ${order.id}`);
+              if (neonClient) {
+                await neonClient`
+                  UPDATE orders 
+                  SET estimated_cost = ${order.estimatedCost}, 
+                      pricing_profile_name = ${profile.name}
+                  WHERE id = ${order.id}
+                `;
+                console.log(`Updated database with estimated cost for order ${order.id}`);
+              }
             }
           }
         } catch (error) {
