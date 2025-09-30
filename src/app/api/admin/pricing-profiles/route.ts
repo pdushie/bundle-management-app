@@ -7,6 +7,14 @@ import { eq } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      return NextResponse.json({ 
+        error: 'Database connection unavailable'
+      }, { status: 500 });
+    }
+
     const session = await getServerSession(authOptions);
     
     if (!session) {
@@ -49,6 +57,14 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      return NextResponse.json({ 
+        error: 'Database connection unavailable'
+      }, { status: 500 });
+    }
+
     const session = await getServerSession(authOptions);
     
     if (!session) {
