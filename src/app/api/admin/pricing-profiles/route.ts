@@ -71,71 +71,182 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
     
-    // Only allow admins and superadmins to create pricing profiles
+    // Only allow admins and superadmins to assign users to profiles
     if (session.user.role !== "admin" && session.user.role !== "superadmin") {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
     
     const body = await req.json();
-    const { name, description, basePrice, dataPricePerGB, minimumCharge, isActive, isTiered, tiers } = body;
+    const { userId, profileId } = body;
     
     // Basic validation
-    if (!name || basePrice === undefined) {
+    if (!userId || !profileId) {
       return NextResponse.json({ 
-        error: "Name and base price are required" 
+        error: "User ID and Profile ID are required" 
       }, { status: 400 });
     }
     
-    // Validate that dataPricePerGB is provided for non-tiered pricing
-    if (!isTiered && dataPricePerGB === undefined) {
+    const parsedUserId = parseInt(userId);
+    const parsedProfileId = parseInt(profileId);
+    
+    if (isNaN(parsedUserId) || isNaN(parsedProfileId)) {
       return NextResponse.json({ 
-        error: "Data price per GB is required for formula-based pricing" 
+        error: "Invalid User ID or Profile ID" 
       }, { status: 400 });
     }
     
-    // Validate that at least one tier is provided for tiered pricing
-    if (isTiered && (!tiers || tiers.length === 0)) {
+    // Check if user has any profile assigned already
+    const existingAssignments = await db.select().from(userPricingProfiles)
+      .where(eq(userPricingProfiles.userId, parsedUserId));
+    
+    // If user already has a profile, update it
+    if (existingAssignments.length > 0) {
+      const [updatedAssignment] = await db.update(userPricingProfiles)
+        .set({
+          profileId: parsedProfileId,
+          updatedAt: new Date()
+        })
+        .where(eq(userPricingProfiles.userId, parsedUserId))
+        .returning();
+      
       return NextResponse.json({ 
-        error: "At least one pricing tier is required for tiered pricing" 
-      }, { status: 400 });
+        message: "User's pricing profile updated successfully",
+        assignment: updatedAssignment
+      });
     }
     
-    // Create pricing profile without using a transaction since Neon HTTP driver doesn't support them
-    // Create pricing profile
-    const [profile] = await db.insert(pricingProfiles).values({
-      name,
-      description,
-      basePrice: basePrice.toString(),
-      dataPricePerGB: isTiered ? null : dataPricePerGB.toString(),
-      minimumCharge: minimumCharge ? minimumCharge.toString() : "0",
-      isActive: isActive !== undefined ? isActive : true,
-      isTiered: isTiered || false
+    // Create new assignment if no existing one
+    const [newAssignment] = await db.insert(userPricingProfiles).values({
+      userId: parsedUserId,
+      profileId: parsedProfileId,
     }).returning();
     
-    // If tiered pricing, insert tiers
-    if (isTiered && tiers && tiers.length > 0) {
-      const tierValues = tiers.map((tier: any) => ({
-        profileId: profile.id,
-        dataGB: tier.dataGB.toString(),
-        price: tier.price.toString()
-      }));
-      
-      await db.insert(pricingTiers).values(tierValues);
-    }
-    
-    // Get the tiers for the newly created profile
-    const profileTiers = isTiered ? 
-      await db.select().from(pricingTiers).where(eq(pricingTiers.profileId, profile.id)) :
-      [];
-    
     return NextResponse.json({ 
-      profile: {
-        ...profile,
-        tiers: profileTiers
-      } 
+      message: "User assigned to pricing profile successfully",
+      assignment: newAssignment
     });
   } catch (error) {
-    console.error("Error creating pricing profile:", error);
-    return NextResponse.json({ error: "Failed to create pricing profile" }, { status: 500 });
+    console.error("Error assigning user to pricing profile:", error);
+    return NextResponse.json({ error: "Failed to assign user to pricing profile" }, { status: 500 });
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      return NextResponse.json({ 
+        error: 'Database connection unavailable'
+      }, { status: 500 });
+    }
+
+    const session = await getServerSession(authOptions);
+    
+    if (!session) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+    
+    // Only allow admins and superadmins to update user assignments
+    if (session.user.role !== "admin" && session.user.role !== "superadmin") {
+      return NextResponse.json({ error: "Not authorized" }, { status: 403 });
+    }
+    
+    const body = await req.json();
+    const { userId, profileId } = body;
+    
+    // Basic validation
+    if (!userId || !profileId) {
+      return NextResponse.json({ 
+        error: "User ID and Profile ID are required" 
+      }, { status: 400 });
+    }
+    
+    const parsedUserId = parseInt(userId);
+    const parsedProfileId = parseInt(profileId);
+    
+    if (isNaN(parsedUserId) || isNaN(parsedProfileId)) {
+      return NextResponse.json({ 
+        error: "Invalid User ID or Profile ID" 
+      }, { status: 400 });
+    }
+    
+    // Update the user's profile assignment
+    const [updatedAssignment] = await db.update(userPricingProfiles)
+      .set({
+        profileId: parsedProfileId,
+        updatedAt: new Date()
+      })
+      .where(eq(userPricingProfiles.userId, parsedUserId))
+      .returning();
+    
+    if (!updatedAssignment) {
+      return NextResponse.json({ error: "User assignment not found" }, { status: 404 });
+    }
+    
+    return NextResponse.json({ 
+      message: "User's pricing profile updated successfully",
+      assignment: updatedAssignment
+    });
+  } catch (error) {
+    console.error("Error updating user profile assignment:", error);
+    return NextResponse.json({ error: "Failed to update user profile assignment" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      return NextResponse.json({ 
+        error: 'Database connection unavailable'
+      }, { status: 500 });
+    }
+
+    const session = await getServerSession(authOptions);
+    
+    if (!session) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+    
+    // Only allow admins and superadmins to remove user assignments
+    if (session.user.role !== "admin" && session.user.role !== "superadmin") {
+      return NextResponse.json({ error: "Not authorized" }, { status: 403 });
+    }
+    
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get('userId');
+    
+    if (!userId) {
+      return NextResponse.json({ 
+        error: "User ID is required" 
+      }, { status: 400 });
+    }
+    
+    const parsedUserId = parseInt(userId);
+    
+    if (isNaN(parsedUserId)) {
+      return NextResponse.json({ 
+        error: "Invalid User ID" 
+      }, { status: 400 });
+    }
+    
+    // Delete the user's profile assignment
+    const deletedAssignment = await db.delete(userPricingProfiles)
+      .where(eq(userPricingProfiles.userId, parsedUserId))
+      .returning();
+    
+    if (deletedAssignment.length === 0) {
+      return NextResponse.json({ error: "User assignment not found" }, { status: 404 });
+    }
+    
+    return NextResponse.json({ 
+      message: "User removed from pricing profile successfully",
+      deletedAssignment: deletedAssignment[0]
+    });
+  } catch (error) {
+    console.error("Error removing user profile assignment:", error);
+    return NextResponse.json({ error: "Failed to remove user profile assignment" }, { status: 500 });
   }
 }
