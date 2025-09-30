@@ -86,6 +86,7 @@ export default function PricingProfiles() {
   const [pricingTiers, setPricingTiers] = useState<PricingTier[]>([{ dataGB: '1', price: '10.00' }]);
   const [excelFile, setExcelFile] = useState<File | null>(null);
   const [importError, setImportError] = useState('');
+  const [userId, setUserId] = useState('');
   const [profileUsers, setProfileUsers] = useState<User[]>([]);
   const [userDialogOpen, setUserDialogOpen] = useState(false);
   const [allUsers, setAllUsers] = useState<User[]>([]);
@@ -219,6 +220,14 @@ export default function PricingProfiles() {
       });
       return false;
     }
+    if (!userId.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'User ID is required',
+        variant: 'destructive'
+      });
+      return false;
+    }
 
     const parsedBasePrice = parseFloat(basePrice);
     const parsedMinCharge = parseFloat(minimumCharge);
@@ -316,11 +325,10 @@ export default function PricingProfiles() {
         tiers: isTiered ? pricingTiers.map(tier => ({
           dataGB: parseFloat(tier.dataGB),
           price: parseFloat(tier.price)
-        })) : []
+        })) : [],
+        userId: userId.trim()
       };
-      
       let res;
-      
       if (isEditing && currentProfile) {
         res = await fetch(`/api/admin/pricing-profiles/${currentProfile.id}`, {
           method: 'PUT',
@@ -334,15 +342,12 @@ export default function PricingProfiles() {
           body: JSON.stringify(profileData)
         });
       }
-      
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || 'Failed to save pricing profile');
       }
-      
       setDialogOpen(false);
       fetchProfiles();
-      
       toast({
         title: 'Success',
         description: isEditing 
@@ -706,6 +711,18 @@ export default function PricingProfiles() {
                 onChange={(e) => setName(e.target.value)}
                 className="col-span-5"
                 placeholder="Standard, Premium, etc."
+              />
+            </div>
+            <div className="grid grid-cols-6 items-center gap-4">
+              <Label htmlFor="userId" className="text-right col-span-1">
+                User ID <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="userId"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
+                className="col-span-5"
+                placeholder="Enter user ID"
               />
             </div>
             <div className="grid grid-cols-6 items-center gap-4">
