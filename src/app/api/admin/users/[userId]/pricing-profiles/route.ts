@@ -3,7 +3,7 @@ import { db } from "../../../../../../lib/db";
 import { userPricingProfiles, pricingProfiles } from "../../../../../../lib/schema";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../../../../../lib/auth";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 
 export async function GET(
   req: NextRequest,
@@ -11,6 +11,14 @@ export async function GET(
 ) {
   const { userId: userIdParam } = await context.params;
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      return NextResponse.json({ 
+        error: 'Database connection unavailable'
+      }, { status: 500 });
+    }
+
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
@@ -29,26 +37,62 @@ export async function GET(
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
     
-    // Get all pricing profiles assigned to this user
-    const assignedProfiles = await db.query.userPricingProfiles.findMany({
-      where: eq(userPricingProfiles.userId, userId),
-      with: {
-        profile: true
+    // Get all pricing profiles assigned to this user using direct SQL to avoid relational issues
+    let assignedProfiles;
+    try {
+      // Try direct SQL approach first
+      const rawAssignedProfiles = await db.execute(sql`
+        SELECT upp.id as assignment_id, upp.created_at as assigned_at,
+               pp.id, pp.name, pp.description, pp.base_price, pp.data_price_per_gb, 
+               pp.minimum_charge, pp.is_active, pp.is_tiered
+        FROM user_pricing_profiles upp
+        JOIN pricing_profiles pp ON upp.profile_id = pp.id
+        WHERE upp.user_id = ${userId}
+      `);
+      
+      assignedProfiles = rawAssignedProfiles.rows;
+    } catch (sqlError) {
+      console.warn('SQL query failed, falling back to separate queries:', sqlError);
+      
+      // Fallback to separate queries
+      const userAssignments = await db.select().from(userPricingProfiles)
+        .where(eq(userPricingProfiles.userId, userId));
+      
+      assignedProfiles = [];
+      for (const assignment of userAssignments) {
+        const profile = await db.select().from(pricingProfiles)
+          .where(eq(pricingProfiles.id, assignment.profileId))
+          .limit(1);
+        
+        if (profile.length > 0) {
+          assignedProfiles.push({
+            assignment_id: assignment.id,
+            assigned_at: assignment.createdAt,
+            id: profile[0].id,
+            name: profile[0].name,
+            description: profile[0].description,
+            base_price: profile[0].basePrice,
+            data_price_per_gb: profile[0].dataPricePerGB,
+            minimum_charge: profile[0].minimumCharge,
+            is_active: profile[0].isActive,
+            is_tiered: profile[0].isTiered
+          });
+        }
       }
-    });
+    }
     
     // Map to a cleaner response format
     const profiles = assignedProfiles.map(assignment => ({
-      id: assignment.profile.id,
-      name: assignment.profile.name,
-      description: assignment.profile.description,
-      basePrice: assignment.profile.basePrice,
-      dataPricePerGB: assignment.profile.dataPricePerGB,
-      minimumCharge: assignment.profile.minimumCharge,
-      isActive: assignment.profile.isActive,
-      isTiered: assignment.profile.isTiered,
-      assignmentId: assignment.id,
-      assignedAt: assignment.createdAt
+      id: assignment.id,
+      name: assignment.name,
+      description: assignment.description,
+      basePrice: assignment.base_price,
+      dataPricePerGB: assignment.data_price_per_gb,
+      minimumCharge: assignment.minimum_charge,
+      isActive: assignment.is_active,
+      isTiered: assignment.is_tiered,
+      assignmentId: assignment.assignment_id,
+      assignedAt: assignment.assigned_at
     }));
     
     return NextResponse.json({ profiles });
@@ -64,6 +108,14 @@ export async function POST(
 ) {
   const { userId: userIdParam } = await context.params;
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      return NextResponse.json({ 
+        error: 'Database connection unavailable'
+      }, { status: 500 });
+    }
+
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
