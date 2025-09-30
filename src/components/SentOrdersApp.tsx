@@ -108,7 +108,7 @@ export default function SentOrdersApp() {
       order.id.toLowerCase().includes(searchTerm) ||
       order.status.toLowerCase().includes(searchTerm) ||
       (order.pricingProfileName && order.pricingProfileName.toLowerCase().includes(searchTerm)) ||
-      (order.estimatedCost !== null && order.estimatedCost.toString().includes(searchTerm)) ||
+  (order.estimatedCost !== null && order.estimatedCost !== undefined && order.estimatedCost.toString().includes(searchTerm)) ||
       new Date(order.timestamp).toLocaleDateString().includes(searchTerm)
     );
   });
