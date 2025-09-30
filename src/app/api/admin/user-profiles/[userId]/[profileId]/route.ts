@@ -10,10 +10,9 @@ import { and, eq } from "drizzle-orm";
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { userId: string, profileId: string } }
+  context: { params: Promise<{ userId: string, profileId: string }> }
 ) {
-  // Ensure params is fully resolved before accessing its properties
-  const { profileId: profileIdParam, userId: userIdParam } = params;
+  const { userId: userIdParam, profileId: profileIdParam } = await context.params;
   try {
     const session = await getServerSession(authOptions);
     
@@ -85,10 +84,9 @@ export async function POST(
  */
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { userId: string, profileId: string } }
+  context: { params: Promise<{ userId: string, profileId: string }> }
 ) {
-  // Ensure params is fully resolved before accessing its properties
-  const { profileId: profileIdParam, userId: userIdParam } = params;
+  const { userId: userIdParam, profileId: profileIdParam } = await context.params;
   try {
     const session = await getServerSession(authOptions);
     
