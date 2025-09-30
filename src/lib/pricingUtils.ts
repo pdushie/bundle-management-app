@@ -57,22 +57,32 @@ export async function getUserPricingProfile(userId: number): Promise<PricingProf
     return DEFAULT_PRICING;
   }
 
-  try {
-    // Get the user's pricing profile assignment
-    const userProfile = await db.query.userPricingProfiles.findFirst({
-      where: eq(userPricingProfiles.userId, userId),
-      with: {
-        profile: true
-      }
-    });
+  // Check if database is available
+  if (!db) {
+    console.error('Database connection is not available');
+    return DEFAULT_PRICING;
+  }
 
-    // If user has a profile assigned and it's active, use it
-    if (userProfile?.profile && userProfile.profile.isActive) {
-      // Force the profile to be tiered
-      return {
-        ...userProfile.profile,
-        isTiered: true
-      };
+  try {
+    // Use direct queries instead of relational queries to avoid potential issues
+    const userProfileAssignments = await db.select().from(userPricingProfiles)
+      .where(eq(userPricingProfiles.userId, userId))
+      .limit(1);
+
+    // If user has a profile assigned, get the profile details
+    if (userProfileAssignments.length > 0) {
+      const profileId = userProfileAssignments[0].profileId;
+      const profiles = await db.select().from(pricingProfiles)
+        .where(eq(pricingProfiles.id, profileId))
+        .limit(1);
+
+      if (profiles.length > 0 && profiles[0].isActive) {
+        // Force the profile to be tiered
+        return {
+          ...profiles[0],
+          isTiered: true
+        };
+      }
     }
 
     // Try to get the standard pricing profile
@@ -117,6 +127,14 @@ export async function getUserPricingProfile(userId: number): Promise<PricingProf
  */
 export async function calculateOrderCost(userId: number, totalData: number): Promise<number> {
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      // Use default calculation
+      const defaultCost = 10 + (totalData * 5);
+      return Math.round(defaultCost * 100) / 100;
+    }
+
     // Get the user's pricing profile
     const pricingProfile = await getUserPricingProfile(userId);
 
@@ -190,6 +208,12 @@ export async function calculateOrderCost(userId: number, totalData: number): Pro
  */
 export async function getAllPricingProfiles(): Promise<PricingProfile[]> {
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      return [DEFAULT_PRICING];
+    }
+
     const profiles = await db.select().from(pricingProfiles)
       .orderBy(pricingProfiles.name);
     
