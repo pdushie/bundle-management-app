@@ -399,14 +399,14 @@ export default function SentOrdersApp() {
             )}
             
             <div className="p-4 overflow-auto flex-grow">
-              <h3 className="font-medium mb-3">Order Entries ({selectedOrder.totalCount})</h3>
+              <h3 className="font-medium mb-3">Order Entries ({selectedOrder?.totalCount ?? 0})</h3>
               <div className="grid grid-cols-1 gap-2 max-h-[50vh] overflow-y-auto">
                 <div className="bg-gray-100 px-4 py-2 grid grid-cols-3 rounded-md text-sm font-medium text-gray-700">
                   <div>Phone Number</div>
                   <div>Data Allocation</div>
                   <div>Cost</div>
                 </div>
-                {selectedOrder.entries.map((entry, index) => (
+                {selectedOrder?.entries?.map((entry, index) => (
                   <div key={index} className="border border-gray-200 px-4 py-3 grid grid-cols-3 rounded-md hover:bg-gray-50">
                     <div className="flex items-center gap-2">
                       <Phone className="w-4 h-4 text-gray-400" />

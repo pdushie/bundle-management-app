@@ -276,7 +276,7 @@ export default function SendOrderApp() {
               const entry = {
                 number: validation.correctedNumber,
                 allocationGB: allocGB,
-                status: "pending",
+                status: "pending" as "pending",
                 isValid: finalValid, // Use the combined check for strictest validation
                 wasFixed: validation.wasFixed,
                 isDuplicate: false // No entries are marked as duplicate since we remove them
@@ -510,7 +510,7 @@ export default function SendOrderApp() {
               const newEntry = {
                 number: entry.phoneNumber,
                 allocationGB: entry.dataAllocation,
-                status: "pending",
+                status: "pending" as "pending",
                 isValid: finalValid, // Use the combined check for strictest validation
                 wasFixed: entry.validation.wasFixed,
                 isDuplicate: false // No entries are marked as duplicate since we remove them
@@ -1287,7 +1287,7 @@ export default function SendOrderApp() {
                     <div className="text-right">
                       <p className="text-sm font-bold">{entry.allocationGB.toFixed(2)} GB</p>
                       <p className="text-xs text-gray-500">{(entry.allocationGB * 1024).toFixed(0)} MB</p>
-                      {pricingData?.hasProfile && (
+                      {pricingData?.hasProfile && pricingData?.profile && (
                         <p className="text-xs text-green-600 font-medium mt-1">
                           GHS {calculatePrice(pricingData.profile, entry.allocationGB)?.toFixed(2)}
                         </p>
