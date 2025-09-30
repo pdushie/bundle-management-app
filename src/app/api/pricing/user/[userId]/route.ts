@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "../../../../../lib/db";
-import { userPricingProfiles, pricingProfiles, pricingTiers } from "../../../../../lib/schema";
+import { userPricingProfiles, pricingProfiles, pricingTiers, users } from "../../../../../lib/schema";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../../../../lib/auth";
 import { eq } from "drizzle-orm";
@@ -12,16 +12,24 @@ export async function GET(
   const { userId } = await context.params;
   try {
     const session = await getServerSession(authOptions);
-    
     if (!session) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
-    
+    // Fetch user's numeric ID from the database using their email
+    const userEmail = session.user.email;
+    if (!userEmail) {
+      return NextResponse.json({ error: "No email found in session" }, { status: 400 });
+    }
+    const userRecord = await db.select().from(users).where(eq(users.email, userEmail)).limit(1);
+    if (userRecord.length === 0) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+    const sessionUserId = userRecord[0].id;
     // Allow users to see their own pricing, and admins to see any user's pricing
     const userIdParam = parseInt(userId);
     if (
       isNaN(userIdParam) || 
-      (session.user.id !== userIdParam && 
+      (sessionUserId !== userIdParam && 
        session.user.role !== "admin" && 
        session.user.role !== "superadmin")
     ) {
