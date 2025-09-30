@@ -52,16 +52,33 @@ async function processUpdate() {
   try {
     console.log('Starting manual update-entry-costs process');
     
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      return NextResponse.json({ 
+        error: 'Database connection unavailable'
+      }, { status: 500 });
+    }
+    
     // Get all orders from the database
     let orders;
     try {
-      orders = await db.query.orders.findMany({
-        with: {
-          entries: true
-        }
-      });
+      // Use direct query instead of relational query to avoid schema issues
+      const ordersResult = await db.select().from(ordersTable);
+      console.log(`Found ${ordersResult.length} orders to process`);
       
-      console.log(`Found ${orders.length} orders to process`);
+      // Get entries for each order
+      orders = [];
+      for (const order of ordersResult) {
+        const entriesResult = await db.select().from(orderEntries)
+          .where(eq(orderEntries.orderId, order.id));
+        
+        orders.push({
+          ...order,
+          entries: entriesResult
+        });
+      }
+      
     } catch (dbError) {
       console.error('Database error while fetching orders:', dbError);
       return NextResponse.json({ 
