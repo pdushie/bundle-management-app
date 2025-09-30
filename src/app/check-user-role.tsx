@@ -7,7 +7,7 @@ export default function CheckUserRole() {
   const { data: session, status } = useSession();
   const [serverSession, setServerSession] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchServerSession = async () => {
@@ -20,7 +20,11 @@ export default function CheckUserRole() {
         const data = await res.json();
         setServerSession(data);
       } catch (err) {
-        setError(err.message);
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError(String(err));
+        }
       } finally {
         setLoading(false);
       }
