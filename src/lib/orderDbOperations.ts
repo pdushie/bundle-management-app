@@ -31,7 +31,7 @@ export type Order = {
   pricingProfileId?: number;
   pricingProfileName?: string;
   userId?: number;
-};
+// ...existing code...
 
 export type OrderWithoutEntries = Omit<Order, 'entries'>;
 
