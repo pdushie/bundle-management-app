@@ -42,8 +42,8 @@ export async function GET(req: NextRequest) {
       );
     }
     
-    // Query order entries with direct queries to avoid relational issues
-    let orderEntriesData;
+    // Query order entries with direct queries to avoid relational issues - explicitly type the variable
+    let orderEntriesData: any[] = [];
     try {
       // Use direct query instead of relational query
       const orderEntriesResult = await db
@@ -80,8 +80,8 @@ export async function GET(req: NextRequest) {
       source: 'order_entries'
     }));
     
-    // Query phone entries with direct query
-    let phoneEntriesData;
+    // Query phone entries with direct query - explicitly type the variable
+    let phoneEntriesData: any[] = [];
     try {
       // Use direct query for phone entries
       phoneEntriesData = await db
