@@ -5,6 +5,12 @@ import { sql } from 'drizzle-orm';
 async function fixSchema() {
   console.log('Fixing database schema...');
   
+  // Check if db is available
+  if (!db) {
+    console.error('Database connection is not available. Skipping schema fix.');
+    return;
+  }
+  
   try {
     // Check if the column exists
     const checkResult = await db.execute(sql`
@@ -14,6 +20,7 @@ async function fixSchema() {
         WHERE table_name = 'user_pricing_profiles' AND column_name = 'updated_at'
       );
     `);
+    
     // Safely extract the result for Neon/Drizzle
     const columnExists = (checkResult.rows?.[0]?.exists ?? false);
     
