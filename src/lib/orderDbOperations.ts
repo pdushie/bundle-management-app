@@ -130,14 +130,6 @@ export const addOrder = async (order: Order): Promise<void> => {
     throw error;
   }
 };
-      allOrders.push(order);
-    }
-    
-    return allOrders;
-  } catch (error) {
-    console.error('Failed to get orders from database:', error);
-    return [];
-  }
 };
 
 // Get pending orders (not yet processed) sorted by timestamp with oldest first
