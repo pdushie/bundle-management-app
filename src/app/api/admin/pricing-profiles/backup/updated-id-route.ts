@@ -3,7 +3,7 @@ import { db } from "../../../../../lib/db";
 import { pricingProfiles, userPricingProfiles } from "../../../../../lib/schema";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../../../../lib/auth";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 // Use the standard Next.js App Router pattern for route handlers
 export async function GET(
@@ -45,20 +45,33 @@ export async function GET(
       return NextResponse.json({ error: "Pricing profile not found" }, { status: 404 });
     }
     
-    // Get all users assigned to this profile
-    const assignedUsers = await db.query.userPricingProfiles.findMany({
-      where: eq(userPricingProfiles.profileId, profileId),
-      with: {
-        user: {
-          columns: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-          }
-        }
-      }
-    });
+    // Get all users assigned to this profile using direct SQL join
+    let assignedUsers;
+    try {
+      // Use direct SQL query to avoid relational query issues
+      const rawAssignedUsers = await db.execute(sql`
+        SELECT upp.id, upp.user_id, upp.profile_id, upp.created_at,
+               json_build_object('id', u.id, 'name', u.name, 'email', u.email, 'role', u.role) as user
+        FROM user_pricing_profiles upp
+        JOIN users u ON upp.user_id = u.id
+        WHERE upp.profile_id = ${profileId}
+      `);
+      
+      assignedUsers = rawAssignedUsers.rows.map(row => ({
+        ...row,
+        user: row.user
+      }));
+    } catch (error) {
+      console.warn('Error with SQL query, falling back to simple query:', error);
+      // Fallback to simple query without relations
+      const simpleAssignments = await db.select().from(userPricingProfiles)
+        .where(eq(userPricingProfiles.profileId, profileId));
+      
+      assignedUsers = simpleAssignments.map(assignment => ({
+        ...assignment,
+        user: { id: assignment.userId, name: 'Unknown', email: 'Unknown', role: 'user' }
+      }));
+    }
     
     // Modify the response to include user information directly
     const usersWithProfile = assignedUsers.map(up => up.user);
