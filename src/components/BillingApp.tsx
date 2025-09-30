@@ -215,16 +215,29 @@ export default function BillingApp() {
               </button>
               
               {billingData && (
-                <button 
-                  onClick={() => {
-                    const dateString = selectedDate.toISOString().split('T')[0];
-                    window.location.href = `/api/billing/export?date=${dateString}`;
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-md font-medium flex items-center gap-2 hover:bg-gray-50 transition-colors"
-                >
-                  <Download className="w-4 h-4" />
-                  Export CSV
-                </button>
+                <>
+                  <button 
+                    onClick={() => {
+                      const dateString = selectedDate.toISOString().split('T')[0];
+                      window.location.href = `/api/billing/export?date=${dateString}`;
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-md font-medium flex items-center gap-2 hover:bg-gray-50 transition-colors"
+                  >
+                    <Download className="w-4 h-4" />
+                    Export CSV
+                  </button>
+                  <button 
+                    onClick={() => {
+                      const dateString = selectedDate.toISOString().split('T')[0];
+                      window.location.href = `/api/billing/pdf?date=${dateString}`;
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-md font-medium flex items-center gap-2 hover:bg-gray-50 transition-colors"
+                    style={{ marginLeft: '8px' }}
+                  >
+                    <Download className="w-4 h-4" />
+                    Download PDF
+                  </button>
+                </>
               )}
             </div>
           </div>
