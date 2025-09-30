@@ -215,22 +215,28 @@ export const updateOrder = async (orderId: string, updates: Partial<Order>): Pro
       if (drizzleUpdates.estimatedCost !== undefined) drizzleUpdates.estimatedCost = drizzleUpdates.estimatedCost !== null ? drizzleUpdates.estimatedCost.toString() : null;
       await db.update(orders).set(drizzleUpdates).where(eq(orders.id, orderId));
     } else {
-      // Build the SET clause and use a tagged template for Neon
-      const keys = Object.keys(updates);
-      const values = keys.map(key => {
-        const v = (updates as any)[key];
-        if (v === null || v === undefined) return '';
-        if (typeof v === 'number') return v.toString();
-        if (typeof v === 'boolean') return v ? 'true' : 'false';
-        return v;
-      });
-      const setClauses = keys.map((key, i) => `${key} = $${i + 1}`).join(', ');
-      // Build the tagged template literal dynamically
-      // Example: UPDATE orders SET field1 = ${v1}, field2 = ${v2} WHERE id = ${orderId}
-      let query = `UPDATE orders SET ${setClauses} WHERE id = $${values.length + 1}`;
-      // Use Function constructor to build the tagged template
-      // This is safe because values are already sanitized above
-      await neonClient([query, ...values, orderId]);
+      // Only allow updating known fields and interpolate directly
+      const allowedFields = [
+        'timestamp', 'date', 'time', 'userName', 'userEmail', 'totalData', 'totalCount', 'status',
+        'cost', 'estimatedCost', 'pricingProfileId', 'pricingProfileName', 'userId'
+      ];
+      const setParts: string[] = [];
+      const values: any[] = [];
+      for (const key of allowedFields) {
+        if (updates[key as keyof Order] !== undefined) {
+          setParts.push(`${key} = ?`);
+          let v = updates[key as keyof Order];
+          if (v === null) v = null;
+          else if (typeof v === 'number') v = v.toString();
+          else if (typeof v === 'boolean') v = v ? 'true' : 'false';
+          values.push(v);
+        }
+      }
+      if (setParts.length === 0) return; // Nothing to update
+      // Build the SQL string
+      const sql = `UPDATE orders SET ${setParts.join(', ')} WHERE id = ?`;
+      // Use the tagged template literal
+      await neonClient(sql, ...values, orderId);
     }
   } catch (error) {
     console.error('Failed to update order:', error);
