@@ -14,6 +14,14 @@ import { and, eq } from "drizzle-orm";
 // PUT method for assigning a user to a pricing profile
 export async function PUT(request: NextRequest) {
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      return NextResponse.json({ 
+        error: 'Database connection unavailable'
+      }, { status: 500 });
+    }
+
     const session = await getServerSession(authOptions);
     
     if (!session) {
@@ -75,6 +83,14 @@ export async function PUT(request: NextRequest) {
 // DELETE method for removing a user from a pricing profile
 export async function DELETE(request: NextRequest) {
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      return NextResponse.json({ 
+        error: 'Database connection unavailable'
+      }, { status: 500 });
+    }
+
     const session = await getServerSession(authOptions);
     
     if (!session) {
