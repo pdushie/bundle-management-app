@@ -12,6 +12,14 @@ export async function POST(
 ) {
   const { profileId: profileIdParam, userId: userIdParam } = await params;
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      return NextResponse.json({ 
+        error: 'Database connection unavailable'
+      }, { status: 500 });
+    }
+
     const session = await getServerSession(authOptions);
     
     if (!session) {
@@ -73,6 +81,14 @@ export async function PUT(
 ) {
   const { profileId: profileIdParam, userId: userIdParam } = await params;
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      return NextResponse.json({ 
+        error: 'Database connection unavailable'
+      }, { status: 500 });
+    }
+
     const session = await getServerSession(authOptions);
     
     if (!session) {
@@ -133,6 +149,14 @@ export async function DELETE(
 ) {
   const { profileId: profileIdParam, userId: userIdParam } = await params;
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      return NextResponse.json({ 
+        error: 'Database connection unavailable'
+      }, { status: 500 });
+    }
+
     const session = await getServerSession(authOptions);
     
     if (!session) {
