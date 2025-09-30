@@ -268,7 +268,7 @@ export default function BillingApp() {
                   <p className="text-sm text-purple-600 mb-1">Total Amount</p>
                   <p className="text-2xl font-bold">{formatCurrency(billingData.totalAmount || 0)}</p>
                   <p className="text-xs text-purple-500 mt-1">
-                    {billingData.orders.some(order => order.status === "pending") ? 
+                    {billingData.orders.some((order: any) => order.status === "pending") ? 
                       "* Includes pending orders" : ""}
                   </p>
                 </div>
