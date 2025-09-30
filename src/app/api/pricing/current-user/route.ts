@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
     
-    const userId = session.user.id;
+    const userId = session.user.email;
     
     // Get the user's pricing profile assignment
     const userProfile = await db.select({
