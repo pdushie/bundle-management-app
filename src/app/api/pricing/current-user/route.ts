@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
     const profileData = userProfile[0].profile;
     
     // If tiered pricing, get the tiers
-    let tiers = [];
+    let tiers: any[] = [];
     if (profileData.isTiered) {
       tiers = await db.select().from(pricingTiers)
         .where(eq(pricingTiers.profileId, profileData.id))
