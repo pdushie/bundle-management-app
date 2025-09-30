@@ -73,7 +73,7 @@ export default function PricingSummary({
           <span className="font-medium ml-1">GHS {calculatedPrice}</span>
         </div>
       ) : (
-        profile.isTiered ? (
+  profile?.isTiered ? (
           <div className="text-gray-600 mt-1">Tiered pricing based on data size</div>
         ) : (
           <div className="text-gray-600 mt-1">
