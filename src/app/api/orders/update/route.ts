@@ -28,8 +28,8 @@ export async function PUT(request: NextRequest) {
     // Cast to the database order type
     const typedOrderWithCost = orderWithCost as unknown as DbOrder;
     
-    // Update the order with calculated costs in the database
-    await updateOrder(typedOrderWithCost);
+  // Update the order with calculated costs in the database
+  await updateOrder(typedOrderWithCost.id, typedOrderWithCost);
     
     // If the order is being processed (status changed to "processed"),
     // create a history entry for it
