@@ -87,9 +87,23 @@ export async function GET(request: NextRequest) {
       
       const user = userDetails[0];
       
+      // Make sure we have a proper userName by using email as fallback
+      console.log('Empty orders - user data:', { 
+        name: user.name ? `"${user.name}"` : 'null/undefined', 
+        name_type: typeof user.name,
+        email: user.email
+      });
+      
+      // Force use the name if it exists and is not empty, otherwise use email
+      let userName = user.name;
+      if (!userName || userName.trim() === '') {
+        userName = user.email;
+        console.log('Using email as fallback for empty name in empty orders response');
+      }
+      
       return NextResponse.json({ 
         userId: user.id,
-        userName: user.name || user.email || 'Unknown User',
+        userName: userName || 'Unknown User',
         userEmail: user.email || 'unknown@example.com',
         date: date,
         orders: [],
@@ -99,19 +113,37 @@ export async function GET(request: NextRequest) {
     }
     
     // Get user details
-    const userDetails = await db!
-      .select()
-      .from(sql`users`)
-      .where(sql`id = ${userIdInt}`)
-      .limit(1) as Array<{ id: number; name: string; email: string }>;
+    console.log(`Fetching user details for ID: ${userIdInt}`);
+    // Use raw SQL to directly query the database
+    const userDetailsResult = await db!.execute(sql`
+      SELECT id, name, email FROM users WHERE id = ${userIdInt} LIMIT 1
+    `);
+    
+    console.log('Raw SQL result:', userDetailsResult);
+    
+    // Format the result into the expected array structure
+    const userDetails = userDetailsResult.rows.map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      email: row.email
+    }));
+    
+    console.log('User details query result:', JSON.stringify(userDetails));
     
     if (userDetails.length === 0) {
+      console.log(`No user found with ID: ${userIdInt}`);
       return NextResponse.json({ 
         error: 'User not found'
       }, { status: 404 });
     }
     
     const user = userDetails[0];
+    console.log('User data from DB query:', { 
+      id: user.id, 
+      name: user.name ? `"${user.name}"` : 'null/undefined', 
+      name_type: typeof user.name,
+      email: user.email
+    });
     
     // Format the orders for the response
     const formattedOrders = await Promise.all(userOrders.map(async order => {
@@ -157,15 +189,43 @@ export async function GET(request: NextRequest) {
     
     console.log(`Total amount: ${totalAmount}, Total data: ${totalData}`);
     
-    return NextResponse.json({
+    // Make sure we have a proper userName by using email as fallback
+    // Extra debugging to check name type and value
+    console.log('Before userName determination:', { 
+      user_name: user.name,
+      name_type: typeof user.name,
+      name_null: user.name === null,
+      name_undefined: user.name === undefined,
+      name_empty: user.name === '',
+      user_email: user.email
+    });
+    
+    // Force use the name if it exists and is not empty, otherwise use email
+    let userName = user.name;
+    if (!userName || userName.trim() === '') {
+      userName = user.email;
+      console.log('Using email as fallback for empty name');
+    }
+    
+    console.log('Final userName determination:', { 
+      original_name: user.name,
+      fallback_email: user.email,
+      final: userName || 'Unknown User'
+    });
+    
+    const response = {
       userId: user.id,
-      userName: user.name || user.email || 'Unknown User',
+      userName: userName || 'Unknown User', // Ensure userName is never null or empty
       userEmail: user.email || 'unknown@example.com',
       date: date,
       orders: formattedOrders,
       totalAmount: isNaN(totalAmount) ? 0 : totalAmount,
       totalData
-    });
+    };
+    
+    console.log('Sending response with userName:', response.userName);
+    
+    return NextResponse.json(response);
     
   } catch (error) {
     console.error('Error generating user bill:', error);

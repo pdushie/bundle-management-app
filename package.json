@@ -29,6 +29,7 @@
     "dotenv": "^17.2.2",
     "drizzle-orm": "^0.44.5",
     "exceljs": "^4.4.0",
+    "framer-motion": "^12.23.22",
     "jspdf": "^3.0.3",
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.542.0",

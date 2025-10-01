@@ -108,7 +108,7 @@ export default function SendOrderApp() {
 
   // Function to read Excel (.xlsx) files
   // Enhanced validation function that ensures each character is a digit and phone number has exactly 10 digits
-  // With auto-fix capabilities for common issues
+  // With auto-fix capabilities for common issues including removal of dots and hyphens
   const validateNumber = (num: string): { isValid: boolean; correctedNumber: string; wasFixed: boolean } => {
     // Handle empty strings or nulls
     if (!num || typeof num !== 'string' || num.trim() === '') {
@@ -116,14 +116,14 @@ export default function SendOrderApp() {
       return { isValid: false, correctedNumber: num || '', wasFixed: false };
     }
     
-    // Strip any non-digit characters
-    const digitsOnly = num.replace(/\D/g, '');
+    // Strip any non-digit characters (including dots, hyphens, spaces)
+    const digitsOnly = num.replace(/[^\d]/g, '');
     let wasFixed = false;
     
     // Check if there were non-digits that we stripped
     if (digitsOnly.length !== num.length) {
       wasFixed = true;
-      console.log(`Fixed number by removing non-digits: '${num}' -> '${digitsOnly}'`);
+      console.log(`Fixed number by removing non-digits (dots, hyphens, etc): '${num}' -> '${digitsOnly}'`);
     }
     
     // First case: Already valid 10 digits starting with 0
@@ -181,17 +181,20 @@ export default function SendOrderApp() {
       let fixedNumbers = 0;
       
       lines.forEach((line) => {
-        const cleanedLine = line.replace(/\./g, " ").trim();
-        const parts = cleanedLine.split(/[\s-]+/);
+        // Extract data using a more robust approach that handles any characters between phone and data
+        // Regex to find patterns like: number (any chars) number+GB
+        // This will extract the first sequence of digits as the phone number and 
+        // the last sequence of digits (possibly with decimal) as the data allocation
+        const phoneMatch = line.match(/^(\d[\d\.\-]*)/);
+        const dataMatch = line.match(/(\d+(?:\.\d+)?)\s*(?:gig|g|gb)?$/i);
         
-        if (parts.length >= 2) {
-          const phoneRaw = parts[0];
-          let allocRaw = parts[1];
+        if (phoneMatch && dataMatch) {
+          const phoneRaw = phoneMatch[1]; // First digits group - phone number
+          const allocRaw = dataMatch[1]; // Last digits group - allocation
           
-          // Remove GB suffix if present
-          allocRaw = allocRaw.replace(/gb$/i, "").trim();
+          console.log(`Parsed from line "${line}": Phone="${phoneRaw}", Data="${allocRaw}"`);
           
-          // Check if allocation is a valid number format (allow decimals)
+          // Check if allocation is a valid number format
           if (!/^\d+(\.\d+)?$/.test(allocRaw)) {
             console.log(`Manual input: Invalid allocation format '${allocRaw}' - must be a number`);
             return; // Skip this entry entirely by returning from the forEach callback
@@ -227,25 +230,23 @@ export default function SendOrderApp() {
       let totalDuplicates = 0;
       
       lines.forEach((line) => {
-        const cleanedLine = line.replace(/\./g, " ").trim();
-        const parts = cleanedLine.split(/[\s-]+/);
+        // Use the same robust parsing approach as in the first pass
+        const phoneMatch = line.match(/^(\d[\d\.\-]*)/);
+        const dataMatch = line.match(/(\d+(?:\.\d+)?)\s*(?:gig|g|gb)?$/i);
         
-        if (parts.length >= 2) {
-          const phoneRaw = parts[0];
-          let allocRaw = parts[1];
+        if (phoneMatch && dataMatch) {
+          const phoneRaw = phoneMatch[1]; // First digits group - phone number
+          const allocRaw = dataMatch[1]; // Last digits group - allocation
+          
+          // Log for debugging
+          console.log(`Processing line: "${line}", extracted phone: "${phoneRaw}", allocation: "${allocRaw}"`);
           
           // Validation will be done by validateNumber function
           // We'll still log the issue here for debugging purposes
           const containsNonDigits = /[^\d]/.test(phoneRaw);
           if (containsNonDigits) {
-            console.log(`Manual input: Phone number ${phoneRaw} contains non-numeric characters - will be flagged invalid`);
+            console.log(`Manual input: Phone number ${phoneRaw} contains non-numeric characters - will be handled by validation`);
           }
-          if (phoneRaw.length !== 10) {
-            console.log(`Manual input: Phone number ${phoneRaw} is not 10 digits (length: ${phoneRaw.length}) - will be flagged invalid`);
-          }
-          
-          // Remove GB suffix if present
-          allocRaw = allocRaw.replace(/gb$/i, "").trim();
           
           // Check if allocation is a valid number format (allow decimals)
           if (!/^\d+(\.\d+)?$/.test(allocRaw)) {
@@ -304,7 +305,7 @@ export default function SendOrderApp() {
       }
       
       if (fixedNumbers > 0) {
-        alertMessages.push(`✅ Auto-fixed ${fixedNumbers} phone number(s) by adding leading zero.\n\nFixed numbers are marked with a cyan icon.`);
+        alertMessages.push(`✅ Auto-fixed ${fixedNumbers} phone number(s) by:\n• Removing dots, hyphens, and non-digit characters\n• Adding leading zeros where needed\n• Fixing number format\n\nFixed numbers are marked with a cyan icon.`);
       }
       
       if (alertMessages.length > 0) {

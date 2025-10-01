@@ -3,7 +3,11 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SessionProviderClient } from '../components/SessionProviderClient';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth'; // Adjust import path as needed
+import { authOptions } from '@/lib/auth';
+import AnnouncementBanner from '@/components/AnnouncementBanner';
+import NewFeatureNotifier from '@/components/NewFeatureNotifier';
+import AdminDashboardLink from '@/components/AdminDashboardLink';
+import UserChat from '@/components/UserChat';
 
 
 const geistSans = Geist({
@@ -57,7 +61,16 @@ export default async function RootLayout({
             {/* The AppWithProviders will provide the OrderProvider to its children */}
             {/* suppressHydrationWarning is used to avoid hydration mismatch warnings */}
             <div id="app-root">
+              <AnnouncementBanner />
               {children}
+              <NewFeatureNotifier />
+              {/* AdminDashboardLink will only render for admin users */}
+              <div suppressHydrationWarning>
+                {/* AdminDashboardLink is imported as a client component */}
+                <AdminDashboardLink />
+                {/* UserChat will only render for logged in users */}
+                <UserChat />
+              </div>
             </div>
           </div>
         </SessionProviderClient>

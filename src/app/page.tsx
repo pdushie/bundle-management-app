@@ -64,11 +64,17 @@ const createTimestamp = (): string => {
 function HistoryManager({
   history,
   setHistory,
-  isSuperAdmin
+  isSuperAdmin,
+  totalDatabaseEntries,
+  phoneEntriesCount,
+  processedOrderEntriesCount
 }: {
   history: HistoryEntry[];
   setHistory: (history: HistoryEntry[]) => void;
   isSuperAdmin: boolean;
+  totalDatabaseEntries: number;
+  phoneEntriesCount: number;
+  processedOrderEntriesCount: number;
 }) {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [viewMode, setViewMode] = useState<'summary' | 'detailed'>('summary');
@@ -84,7 +90,10 @@ function HistoryManager({
   // Calculate daily summaries
   const dailySummaries = availableDates.map(date => {
     const dayEntries = history.filter(entry => entry.date === date);
-    const totalEntries = dayEntries.reduce((sum, entry) => sum + (entry.entries ? entry.entries.length : 0), 0);
+    // Calculate total entries as sum of valid + invalid + duplicate counts
+    const totalEntries = dayEntries.reduce((sum, entry) => 
+      sum + (entry.validCount || 0) + (entry.invalidCount || 0) + (entry.duplicateCount || 0), 0);
+    
     // Handle totalGB conversion safely
     const totalGB = dayEntries.reduce((sum, entry) => {
       const entryGB = entry.totalGB !== undefined ? 
@@ -225,14 +234,17 @@ function HistoryManager({
         {/* Controls - Mobile Optimized */}
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 p-3 sm:p-6 mb-4 sm:mb-8">
           <div className="flex flex-col gap-4">
-            <div>
-              <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3 mb-2">
-                <History className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-                History & Analytics
-              </h2>
-              <p className="text-xs sm:text-sm text-gray-600">
-                Track and analyze your daily data processing activities
-              </p>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3 mb-2">
+                  <History className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                  History & Analytics
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-600">
+                  Track and analyze your daily data processing activities
+                </p>
+              </div>
+              
             </div>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -329,7 +341,7 @@ function HistoryManager({
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-medium text-gray-600 truncate">Total Entries</p>
                     <p className="text-lg sm:text-xl font-bold text-gray-900">
-                      {dailySummaries.reduce((sum, day) => sum + day.totalEntries, 0)}
+                      {totalDatabaseEntries}
                     </p>
                   </div>
                 </div>
@@ -343,9 +355,19 @@ function HistoryManager({
                   <div className="min-w-0 flex-1 overflow-hidden">
                     <p className="text-xs font-medium text-gray-600 truncate">Total Data</p>
                     <p className="text-xs sm:text-lg font-bold text-gray-900 break-words">
-                      {dailySummaries.reduce((sum, day) => sum + day.totalGB, 0) > 1023 ? 
-                        `${(dailySummaries.reduce((sum, day) => sum + day.totalGB, 0) / 1024).toFixed(2)} TB` : 
-                        `${dailySummaries.reduce((sum, day) => sum + day.totalGB, 0).toFixed(1)} GB`}
+                      {(() => {
+                        // Safely calculate the total GB
+                        const totalGB = dailySummaries.reduce((sum, day) => {
+                          const dayTotalGB = typeof day.totalGB === 'number' 
+                            ? day.totalGB 
+                            : parseFloat(day.totalGB) || 0;
+                          return sum + dayTotalGB;
+                        }, 0);
+                        
+                        return totalGB > 1023 
+                          ? `${(totalGB / 1024).toFixed(2)} TB` 
+                          : `${totalGB.toFixed(1)} GB`;
+                      })()}
                     </p>
                   </div>
                 </div>
@@ -442,9 +464,16 @@ function HistoryManager({
                         <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-red-600 font-medium">{summary.totalInvalid}</td>
                         <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-yellow-600 font-medium">{summary.totalDuplicates}</td>
                         <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-bold text-purple-600">
-                          {summary.totalGB > 1023 ? 
-                            `${(summary.totalGB / 1024).toFixed(2)} TB` : 
-                            `${summary.totalGB.toFixed(2)} GB`}
+                          {(() => {
+                            // Safely convert totalGB to a number
+                            const totalGB = typeof summary.totalGB === 'number' 
+                              ? summary.totalGB 
+                              : parseFloat(summary.totalGB) || 0;
+                            
+                            return totalGB > 1023 
+                              ? `${(totalGB / 1024).toFixed(2)} TB` 
+                              : `${totalGB.toFixed(2)} GB`;
+                          })()}
                         </td>
                       </tr>
                     ))}
@@ -484,11 +513,20 @@ function HistoryManager({
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-xs sm:text-sm font-bold text-gray-900">
-                        {entry.totalGB > 1023 ? 
-                          `${(entry.totalGB / 1024).toFixed(2)} TB` : 
-                          `${entry.totalGB.toFixed(2)} GB`}
+                        {(() => {
+                          // Safely convert totalGB to a number first
+                          const totalGB = typeof entry.totalGB === 'number' 
+                            ? entry.totalGB 
+                            : parseFloat(entry.totalGB) || 0;
+                          
+                          return totalGB > 1023 
+                            ? `${(totalGB / 1024).toFixed(2)} TB` 
+                            : `${totalGB.toFixed(2)} GB`;
+                        })()}
                       </p>
-                      <p className="text-xs text-gray-600">{entry.entries.length} entries</p>
+                      <p className="text-xs text-gray-600">
+                        {entry.validCount + entry.invalidCount + entry.duplicateCount} entries
+                      </p>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm">
@@ -2154,6 +2192,9 @@ function AppContent() {
 
   // History state (maintained for all users, but only shown to admins)
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [totalDatabaseEntries, setTotalDatabaseEntries] = useState<number>(0);
+  const [phoneEntriesCount, setPhoneEntriesCount] = useState<number>(0);
+  const [processedOrderEntriesCount, setProcessedOrderEntriesCount] = useState<number>(0);
 
   const handleSignOut = () => {
     signOut({ callbackUrl: "/auth/signin" });
@@ -2201,6 +2242,15 @@ function AppContent() {
         if (response.ok) {
           const data = await response.json();
           setHistory(data.historyEntries || []);
+          
+          // Set total entries data
+          setTotalDatabaseEntries(data.totalEntries || 0);
+          setPhoneEntriesCount(data.phoneEntriesCount || 0);
+          setProcessedOrderEntriesCount(data.processedOrderEntriesCount || 0);
+          
+          console.log('Total database entries:', data.totalEntries);
+          console.log('Phone entries count:', data.phoneEntriesCount);
+          console.log('Processed order entries count:', data.processedOrderEntriesCount);
         }
       } catch (error) {
         console.error('Failed to load history from database:', error);
@@ -2397,6 +2447,9 @@ function AppContent() {
               history={history}
               setHistory={setHistory}
               isSuperAdmin={true}
+              totalDatabaseEntries={totalDatabaseEntries}
+              phoneEntriesCount={phoneEntriesCount}
+              processedOrderEntriesCount={processedOrderEntriesCount}
             />
           );
         }
@@ -2407,6 +2460,9 @@ function AppContent() {
               history={history}
               setHistory={setHistory}
               isSuperAdmin={false}
+              totalDatabaseEntries={totalDatabaseEntries}
+              phoneEntriesCount={phoneEntriesCount}
+              processedOrderEntriesCount={processedOrderEntriesCount}
             />
           );
         }

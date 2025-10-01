@@ -39,14 +39,24 @@ export default function HistoryViewer() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage] = useState<number>(10);
+  const [totalDatabaseEntries, setTotalDatabaseEntries] = useState<number>(0);
+  const [phoneEntriesCount, setPhoneEntriesCount] = useState<number>(0);
+  const [processedOrderEntriesCount, setProcessedOrderEntriesCount] = useState<number>(0);
 
   // Load history entries on component mount
   useEffect(() => {
     const loadHistory = async () => {
       setIsLoading(true);
       try {
-        const entries = await getHistoryEntries();
-        setHistoryEntries(entries);
+        const historyData = await getHistoryEntries();
+        setHistoryEntries(historyData.historyEntries);
+        setTotalDatabaseEntries(historyData.totalEntries);
+        setPhoneEntriesCount(historyData.phoneEntriesCount);
+        setProcessedOrderEntriesCount(historyData.processedOrderEntriesCount);
+        
+        console.log('Total database entries:', historyData.totalEntries);
+        console.log('Phone entries count:', historyData.phoneEntriesCount);
+        console.log('Processed order entries count:', historyData.processedOrderEntriesCount);
       } catch (error) {
         console.error("Failed to load history:", error);
       } finally {
@@ -126,13 +136,28 @@ export default function HistoryViewer() {
         {/* History Header */}
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-4 sm:mb-6">
           <div className="p-3 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
-            <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3">
-              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-              <span>Order Processing History</span>
-            </h2>
-            <p className="text-xs sm:text-sm text-gray-600 mt-1">
-              View detailed history of processed orders and phone numbers
-            </p>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3">
+                  <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                  <span>Order Processing History</span>
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                  View detailed history of processed orders and phone numbers
+                </p>
+              </div>
+              <div className="mt-3 sm:mt-0 bg-blue-100 rounded-lg p-3">
+                <div className="flex items-center mb-1">
+                  <Database className="h-4 w-4 text-blue-700 mr-2" />
+                  <span className="text-sm font-bold text-blue-800">Total Database Entries: {totalDatabaseEntries}</span>
+                </div>
+                <div className="text-xs text-blue-600">
+                  <span>Phone Entries: {phoneEntriesCount}</span>
+                  <span className="mx-1">•</span>
+                  <span>Processed Orders: {processedOrderEntriesCount}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -198,7 +223,7 @@ export default function HistoryViewer() {
                       Data & Numbers
                     </th>
                     <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Stats
+                      Entries &amp; Stats
                     </th>
                     <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       Actions
@@ -266,7 +291,12 @@ export default function HistoryViewer() {
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
-                            <div className="flex items-center">
+                            {/* Display total entries first */}
+                            <div className="flex items-center font-medium">
+                              <Database className="h-3 w-3 text-blue-500 mr-1" />
+                              <span>Total: {entry.validCount + entry.invalidCount + entry.duplicateCount}</span>
+                            </div>
+                            <div className="flex items-center mt-1">
                               <Check className="h-3 w-3 text-green-500 mr-1" />
                               <span>Valid: {entry.validCount}</span>
                             </div>

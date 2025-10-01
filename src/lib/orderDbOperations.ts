@@ -305,7 +305,20 @@ export const getUserOrdersOldestFirst = async (userEmail: string): Promise<Order
     // Map to application orders with entries
     const allOrders: Order[] = [];
     for (const dbOrder of dbOrders) {
-      const order = await mapDbOrderToOrder(dbOrder);
+      // Fetch the entries for this order
+      const entries = await db
+        .select()
+        .from(orderEntries)
+        .where(eq(orderEntries.orderId, dbOrder.id));
+      
+      // Attach entries to the order object
+      const orderWithEntries = {
+        ...dbOrder,
+        entries: entries
+      };
+      
+      // Map the order with its entries to our application model
+      const order = await mapDbOrderToOrder(orderWithEntries);
       allOrders.push(order);
     }
     

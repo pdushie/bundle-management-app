@@ -140,26 +140,20 @@ export async function PUT(
     }
     
     const body = await req.json();
-    const { name, description, basePrice, dataPricePerGB, minimumCharge, isActive, isTiered, tiers } = body;
+    const { name, description, isActive, tiers } = body;
+    // We only use tiered pricing, so ignore basePrice, dataPricePerGB, minimumCharge, and isTiered
     
     // Basic validation
-    if (!name || basePrice === undefined) {
+    if (!name) {
       return NextResponse.json({ 
-        error: "Name and base price are required" 
+        error: "Profile name is required" 
       }, { status: 400 });
     }
     
-    // Validate that dataPricePerGB is provided for non-tiered pricing
-    if (!isTiered && dataPricePerGB === undefined) {
+    // Validate that at least one tier is provided (always using tiered pricing)
+    if (!tiers || tiers.length === 0) {
       return NextResponse.json({ 
-        error: "Data price per GB is required for formula-based pricing" 
-      }, { status: 400 });
-    }
-    
-    // Validate that at least one tier is provided for tiered pricing
-    if (isTiered && (!tiers || tiers.length === 0)) {
-      return NextResponse.json({ 
-        error: "At least one pricing tier is required for tiered pricing" 
+        error: "At least one pricing tier is required" 
       }, { status: 400 });
     }
     
@@ -172,47 +166,39 @@ export async function PUT(
     }
     
     // Update pricing profile without using a transaction since Neon HTTP driver doesn't support them
-    // Update pricing profile
+    // Update pricing profile - always with tiered pricing
     const [updatedProfile] = await db.update(pricingProfiles)
       .set({
         name,
         description,
-        basePrice: basePrice.toString(),
-        dataPricePerGB: isTiered ? null : dataPricePerGB.toString(),
-        minimumCharge: minimumCharge ? minimumCharge.toString() : "0",
+        basePrice: "0", // Always use 0 for basePrice
+        dataPricePerGB: null, // Always null since we only use tiered pricing
+        minimumCharge: "0", // Always use 0 for minimumCharge
         isActive: isActive !== undefined ? isActive : true,
-        isTiered: isTiered || false,
+        isTiered: true, // Always use tiered pricing
         updatedAt: new Date(),
       })
       .where(eq(pricingProfiles.id, profileId))
       .returning();
     
-    // If tiered pricing, delete old tiers and insert new ones
-    if (isTiered) {
-      // Delete existing tiers
-      await db.delete(pricingTiers)
-        .where(eq(pricingTiers.profileId, profileId));
+    // Update the tiers (always using tiered pricing)
+    // Delete existing tiers
+    await db.delete(pricingTiers)
+      .where(eq(pricingTiers.profileId, profileId));
+    
+    // Insert new tiers
+    if (tiers && tiers.length > 0) {
+      const tierValues = tiers.map((tier: any) => ({
+        profileId,
+        dataGB: tier.dataGB.toString(),
+        price: tier.price.toString()
+      }));
       
-      // Insert new tiers
-      if (tiers && tiers.length > 0) {
-        const tierValues = tiers.map((tier: any) => ({
-          profileId,
-          dataGB: tier.dataGB.toString(),
-          price: tier.price.toString()
-        }));
-        
-        await db.insert(pricingTiers).values(tierValues);
-      }
-    } else {
-      // If switching from tiered to formula-based, delete any existing tiers
-      await db.delete(pricingTiers)
-        .where(eq(pricingTiers.profileId, profileId));
+      await db.insert(pricingTiers).values(tierValues);
     }
     
-    // Get the updated tiers
-    const updatedTiers = isTiered ? 
-      await db.select().from(pricingTiers).where(eq(pricingTiers.profileId, profileId)) :
-      [];
+    // Get the updated tiers (always using tiered pricing)
+    const updatedTiers = await db.select().from(pricingTiers).where(eq(pricingTiers.profileId, profileId));
     
     return NextResponse.json({ 
       profile: {

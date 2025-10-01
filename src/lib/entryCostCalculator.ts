@@ -12,16 +12,10 @@ export function calculateEntryCost(
   pricingProfile: PricingProfile, 
   tiers: PricingTier[]
 ): number {
-  // Base price is shared across all entries
-  const basePrice = 0; // Base price is applied once to the order, not to each entry
-  
-  // Minimum charge is already applied at order level
-  const minimumCharge = 0; // Don't apply minimum charge to individual entries
-  
+  // No base price or minimum charge - only using tier price
   let calculatedCost: number = 0;
 
-  // Always use tiered pricing logic
-  // Handle cases where tiers might not be available yet
+  // Handle cases where tiers might not be available
   if (!tiers || tiers.length === 0) {
     console.error('No pricing tiers found for profile:', pricingProfile.name);
     throw new Error(`No pricing tiers available for profile: ${pricingProfile.name}`);

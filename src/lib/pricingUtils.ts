@@ -34,9 +34,9 @@ const DEFAULT_PRICING: PricingProfile = {
   id: 0,
   name: "Default",
   description: "Default pricing for users without a profile",
-  basePrice: "10.00",
-  dataPricePerGB: null, // No longer used with tier-only pricing
-  minimumCharge: "10.00",
+  basePrice: "0.00",  // Not used, but required by interface
+  dataPricePerGB: null, // Not used with tiered pricing
+  minimumCharge: "0.00", // Not used, but required by interface
   isActive: true,
   isTiered: true, // Always use tiered pricing
   tiers: [
@@ -146,8 +146,7 @@ export async function calculateOrderCost(userId: number, totalData: number): Pro
         .where(eq(pricingTiers.profileId, pricingProfile.id));
     }
 
-    const basePrice = parseFloat(pricingProfile.basePrice);
-    const minimumCharge = parseFloat(pricingProfile.minimumCharge);
+    // No base price or minimum charge - only using tier price
     let calculatedCost: number;
 
     // Handle cases where tiers might not be available yet
@@ -168,7 +167,7 @@ export async function calculateOrderCost(userId: number, totalData: number): Pro
     );
     
     if (exactTier) {
-      calculatedCost = basePrice + parseFloat(exactTier.price);
+      calculatedCost = parseFloat(exactTier.price);
     } else {
       // Find the next higher tier
       let applicableTier = sortedTiers.find(tier => 
@@ -181,15 +180,15 @@ export async function calculateOrderCost(userId: number, totalData: number): Pro
       }
       
       if (applicableTier) {
-        calculatedCost = basePrice + parseFloat(applicableTier.price);
+        calculatedCost = parseFloat(applicableTier.price);
       } else {
         // This should never happen since we check for empty tiers at the beginning
         throw new Error(`Could not determine pricing tier for ${totalData}GB allocation`);
       }
     }
 
-    // Apply minimum charge if needed
-    const finalCost = Math.max(calculatedCost, minimumCharge);
+    // No minimum charge - just use the tier price
+    const finalCost = calculatedCost;
 
     // Round to 2 decimal places
     return Math.round(finalCost * 100) / 100;

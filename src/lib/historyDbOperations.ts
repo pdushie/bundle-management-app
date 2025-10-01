@@ -1,7 +1,7 @@
 import { db } from './db';
-import { historyEntries, phoneEntries } from './schema';
+import { historyEntries, phoneEntries, orderEntries } from './schema';
 import { Order } from './orderDbOperations';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and, count, sql } from 'drizzle-orm';
 
 // Export types for history entries and phone entries
 export type HistoryEntry = typeof historyEntries.$inferSelect;
@@ -207,6 +207,49 @@ export const getPhoneEntriesForHistory = async (historyEntryId: string) => {
     return entries;
   } catch (error) {
     console.error('Failed to get phone entries:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get the total entries count from both phone_entries and processed order_entries
+ * As per requirements: total entries = count of all records in phone_entries + order_entries where status is processed
+ */
+export const getTotalEntries = async () => {
+  try {
+    // Check if database is available
+    if (!db) {
+      console.error('Database connection is not available');
+      throw new Error('Database connection unavailable');
+    }
+
+    // Get count of all phone_entries
+    const phoneEntriesResult = await db
+      .select({ count: count() })
+      .from(phoneEntries);
+    
+    const phoneEntriesCount = phoneEntriesResult[0]?.count || 0;
+    
+    // Get count of all order_entries where status is 'processed'
+    const orderEntriesResult = await db
+      .select({ count: count() })
+      .from(orderEntries)
+      .where(eq(orderEntries.status, 'processed'));
+    
+    const processedOrderEntriesCount = orderEntriesResult[0]?.count || 0;
+    
+    // Calculate total entries
+    const totalEntries = phoneEntriesCount + processedOrderEntriesCount;
+    
+    console.log(`Total entries calculation: phone_entries (${phoneEntriesCount}) + processed order_entries (${processedOrderEntriesCount}) = ${totalEntries}`);
+    
+    return {
+      totalEntries,
+      phoneEntriesCount,
+      processedOrderEntriesCount
+    };
+  } catch (error) {
+    console.error('Failed to get total entries count:', error);
     throw error;
   }
 };

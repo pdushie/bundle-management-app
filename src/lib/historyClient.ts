@@ -1,8 +1,16 @@
 // Client-side wrapper for history operations
 import { HistoryEntry, PhoneEntry } from './historyDbOperations';
 
+// Define the return type for getHistoryEntries
+type HistoryResponse = {
+  historyEntries: HistoryEntry[];
+  totalEntries: number;
+  phoneEntriesCount: number;
+  processedOrderEntriesCount: number;
+};
+
 // Get all history entries
-export const getHistoryEntries = async (): Promise<HistoryEntry[]> => {
+export const getHistoryEntries = async (): Promise<HistoryResponse> => {
   try {
     // Try first with /api/history
     let response = await fetch('/api/history', {
@@ -27,10 +35,20 @@ export const getHistoryEntries = async (): Promise<HistoryEntry[]> => {
     }
 
     const data = await response.json();
-    return data.historyEntries || [];
+    return {
+      historyEntries: data.historyEntries || [],
+      totalEntries: data.totalEntries || 0,
+      phoneEntriesCount: data.phoneEntriesCount || 0,
+      processedOrderEntriesCount: data.processedOrderEntriesCount || 0
+    };
   } catch (error) {
     console.error('Failed to load history entries:', error);
-    return [];
+    return {
+      historyEntries: [],
+      totalEntries: 0,
+      phoneEntriesCount: 0,
+      processedOrderEntriesCount: 0
+    };
   }
 };
 

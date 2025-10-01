@@ -72,8 +72,18 @@ export function generateInvoicePDF(billData: UserBillData): void {
     throw new Error('Invalid bill data: totalAmount must be a valid number');
   }
   
-  if (!billData.userName || typeof billData.userName !== 'string') {
-    throw new Error('Invalid bill data: userName must be a valid string');
+  // Validate and provide fallback for userName
+  if (typeof billData.userName !== 'string') {
+    if (billData.userEmail && typeof billData.userEmail === 'string') {
+      billData.userName = billData.userEmail;
+    } else {
+      throw new Error('Invalid bill data: userName must be a valid string');
+    }
+  } else if (!billData.userName.trim()) {
+    // If userName is an empty string, use email as fallback
+    billData.userName = billData.userEmail && typeof billData.userEmail === 'string' 
+      ? billData.userEmail 
+      : 'Unknown User';
   }
   
   if (!billData.userEmail || typeof billData.userEmail !== 'string') {
@@ -83,9 +93,14 @@ export function generateInvoicePDF(billData: UserBillData): void {
   // Create new PDF document
   const doc = new jsPDF();
   
+  // Ensure userName is valid for document title - never use "Unknown User"
+  const displayName = billData.userName === 'Unknown User'
+    ? (billData.userEmail || 'Customer')
+    : billData.userName;
+  
   // Set document properties
   doc.setProperties({
-    title: `Invoice - ${billData.userName} - ${billData.date}`,
+    title: `Invoice - ${displayName} - ${billData.date}`,
     subject: 'Bundle Management Invoice',
     author: 'Bundle Management System',
     creator: 'Bundle Management System'
@@ -137,27 +152,52 @@ export function generateInvoicePDF(billData: UserBillData): void {
   
   // Add summary section - use a fixed position instead of relying on lastAutoTable.finalY
   const summaryStartY = 200; // Fixed position for summary
+  const labelX = 130;        // X position for labels (moved left to create more space)
+  const valueX = 190;        // X position for values (right-aligned)
   
+  // Summary heading
   doc.setFontSize(10);
-  doc.text("Summary", 140, summaryStartY);
-  doc.line(140, summaryStartY + 2, 170, summaryStartY + 2);
+  doc.setFont('helvetica', 'bold');
+  doc.text("Summary", labelX, summaryStartY);
+  doc.line(labelX, summaryStartY + 2, 170, summaryStartY + 2);
   
-  doc.text("Total Orders:", 140, summaryStartY + 15);
-  doc.text(billData.orders.length.toString(), 175, summaryStartY + 15, { align: 'right' });
+  // Reset to normal font for summary items
+  doc.setFont('helvetica', 'normal');
   
-  doc.text("Total Data:", 140, summaryStartY + 25);
+  // Total Orders
+  doc.text("Total Orders:", labelX, summaryStartY + 15);
+  doc.text(billData.orders.length.toString(), valueX, summaryStartY + 15, { align: 'right' });
+  
+  // Total Data
+  doc.text("Total Data:", labelX, summaryStartY + 25);
   const totalDataValue = (typeof billData.totalData === 'number' && !isNaN(billData.totalData)) ? billData.totalData : 0;
   doc.text(
     totalDataValue > 1024 
       ? `${(totalDataValue / 1024).toFixed(2)} TB` 
       : `${totalDataValue.toFixed(2)} GB`,
-    175, summaryStartY + 25, { align: 'right' }
+    valueX, summaryStartY + 25, { align: 'right' }
   );
   
+  // Add a separator line before total amount
+  doc.setDrawColor(100, 100, 100);  // Darker line for better visibility
+  doc.setLineWidth(0.5);
+  doc.line(labelX, summaryStartY + 40, valueX, summaryStartY + 40);
+  
+  // Add space after the separator line
+  const totalRowY = summaryStartY + 55;
+  
+  // Total Amount (bold and slightly larger)
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text("Total Amount:", 140, summaryStartY + 55);
-  doc.text(formatCurrency(billData.totalAmount), 175, summaryStartY + 55, { align: 'right' });
+  
+  // Create a total amount row with clear spacing
+  doc.text("Total Amount:", labelX, totalRowY);
+  
+  // Format the currency with proper spacing and alignment
+  const formattedAmount = formatCurrency(billData.totalAmount);
+  
+  // Draw the amount further to the right for better separation
+  doc.text(formattedAmount, valueX, totalRowY, { align: 'right' });
   
   // Add footer
   doc.setFontSize(9);

@@ -71,63 +71,125 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
     
-    // Only allow admins and superadmins to assign users to profiles
+    // Only allow admins and superadmins to create profiles or assign users
     if (session.user.role !== "admin" && session.user.role !== "superadmin") {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
     
     const body = await req.json();
-    const { userId, profileId } = body;
     
-    // Basic validation
-    if (!userId || !profileId) {
-      return NextResponse.json({ 
-        error: "User ID and Profile ID are required" 
-      }, { status: 400 });
-    }
-    
-    const parsedUserId = parseInt(userId);
-    const parsedProfileId = parseInt(profileId);
-    
-    if (isNaN(parsedUserId) || isNaN(parsedProfileId)) {
-      return NextResponse.json({ 
-        error: "Invalid User ID or Profile ID" 
-      }, { status: 400 });
-    }
-    
-    // Check if user has any profile assigned already
-    const existingAssignments = await db.select().from(userPricingProfiles)
-      .where(eq(userPricingProfiles.userId, parsedUserId));
-    
-    // If user already has a profile, update it
-    if (existingAssignments.length > 0) {
-      const [updatedAssignment] = await db.update(userPricingProfiles)
-        .set({
-          profileId: parsedProfileId,
-          updatedAt: new Date()
-        })
-        .where(eq(userPricingProfiles.userId, parsedUserId))
-        .returning();
+    // Determine if this is a profile creation or user assignment based on the request body
+    if (body.name) {
+      // This is a profile creation request
+      const { 
+        name, 
+        description, 
+        basePrice, 
+        dataPricePerGB, 
+        minimumCharge, 
+        isActive, 
+        isTiered, 
+        tiers 
+      } = body;
+      
+      // Basic validation
+      if (!name) {
+        return NextResponse.json({ 
+          error: "Profile name is required" 
+        }, { status: 400 });
+      }
+      
+      // Validate that at least one tier is provided (always using tiered pricing)
+      if (!tiers || tiers.length === 0) {
+        return NextResponse.json({ 
+          error: "At least one pricing tier is required" 
+        }, { status: 400 });
+      }
+      
+      // Create pricing profile - always with tiered pricing
+      const [newProfile] = await db.insert(pricingProfiles).values({
+        name,
+        description,
+        basePrice: "0", // Always use 0 for basePrice
+        dataPricePerGB: null, // Always null since we only use tiered pricing
+        minimumCharge: "0", // Always use 0 for minimumCharge
+        isActive: isActive !== undefined ? isActive : true,
+        isTiered: true, // Always use tiered pricing
+      }).returning();
+      
+      // Insert tiers (always using tiered pricing)
+      let newTiers: any[] = [];
+      if (tiers && tiers.length > 0 && newProfile.id) {
+        const tierValues = tiers.map((tier: any) => ({
+          profileId: newProfile.id,
+          dataGB: tier.dataGB.toString(),
+          price: tier.price.toString()
+        }));
+        
+        newTiers = await db.insert(pricingTiers).values(tierValues).returning();
+      }
+      
+      return NextResponse.json({
+        message: "Pricing profile created successfully",
+        profile: {
+          ...newProfile,
+          tiers: newTiers
+        }
+      });
+    } else if (body.userId && body.profileId) {
+      // This is a user assignment request
+      const { userId, profileId } = body;
+      
+      const parsedUserId = parseInt(userId);
+      const parsedProfileId = parseInt(profileId);
+      
+      if (isNaN(parsedUserId) || isNaN(parsedProfileId)) {
+        return NextResponse.json({ 
+          error: "Invalid User ID or Profile ID" 
+        }, { status: 400 });
+      }
+      
+      // Check if user has any profile assigned already
+      const existingAssignments = await db.select().from(userPricingProfiles)
+        .where(eq(userPricingProfiles.userId, parsedUserId));
+      
+      // If user already has a profile, update it
+      if (existingAssignments.length > 0) {
+        const [updatedAssignment] = await db.update(userPricingProfiles)
+          .set({
+            profileId: parsedProfileId,
+            updatedAt: new Date()
+          })
+          .where(eq(userPricingProfiles.userId, parsedUserId))
+          .returning();
+        
+        return NextResponse.json({ 
+          message: "User's pricing profile updated successfully",
+          assignment: updatedAssignment
+        });
+      }
+      
+      // Create new assignment if no existing one
+      const [newAssignment] = await db.insert(userPricingProfiles).values({
+        userId: parsedUserId,
+        profileId: parsedProfileId,
+      }).returning();
       
       return NextResponse.json({ 
-        message: "User's pricing profile updated successfully",
-        assignment: updatedAssignment
+        message: "User assigned to pricing profile successfully",
+        assignment: newAssignment
       });
+    } else {
+      return NextResponse.json({
+        error: "Invalid request. Either provide profile details or user assignment information."
+      }, { status: 400 });
     }
-    
-    // Create new assignment if no existing one
-    const [newAssignment] = await db.insert(userPricingProfiles).values({
-      userId: parsedUserId,
-      profileId: parsedProfileId,
-    }).returning();
-    
-    return NextResponse.json({ 
-      message: "User assigned to pricing profile successfully",
-      assignment: newAssignment
-    });
   } catch (error) {
-    console.error("Error assigning user to pricing profile:", error);
-    return NextResponse.json({ error: "Failed to assign user to pricing profile" }, { status: 500 });
+    console.error("Error in POST pricing profiles:", error);
+    return NextResponse.json({ 
+      error: "Failed to process request", 
+      details: error instanceof Error ? error.message : "Unknown error" 
+    }, { status: 500 });
   }
 }
 

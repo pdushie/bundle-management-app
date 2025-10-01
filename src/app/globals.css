@@ -80,3 +80,19 @@ html {
   min-height: 44px;
   min-width: 44px;
 }
+
+/* Animation for sliding up the new feature notification */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.5s ease-out forwards;
+}

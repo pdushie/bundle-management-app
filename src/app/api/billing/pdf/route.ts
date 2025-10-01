@@ -57,7 +57,11 @@ export async function GET(request: NextRequest) {
     doc.fontSize(18).text(`Billing Report - ${formattedDate}`, { align: 'center' });
     doc.moveDown();
     doc.fontSize(12);
-    doc.text(`User: ${session.user.email}`);
+    // Use the user's name if available, otherwise use their email
+    const userName = session.user.name && session.user.name.trim() !== '' 
+      ? session.user.name 
+      : session.user.email;
+    doc.text(`User: ${userName}`);
     doc.text(`Date: ${formattedDate}`);
     doc.moveDown();
 

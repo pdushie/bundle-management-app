@@ -86,7 +86,6 @@ export default function PricingProfiles() {
   const [pricingTiers, setPricingTiers] = useState<PricingTier[]>([{ dataGB: '1', price: '10.00' }]);
   const [excelFile, setExcelFile] = useState<File | null>(null);
   const [importError, setImportError] = useState('');
-  const [userId, setUserId] = useState('');
   const [profileUsers, setProfileUsers] = useState<User[]>([]);
   const [userDialogOpen, setUserDialogOpen] = useState(false);
   const [allUsers, setAllUsers] = useState<User[]>([]);
@@ -171,11 +170,11 @@ export default function PricingProfiles() {
     setCurrentProfile(null);
     setName('');
     setDescription('');
-    setBasePrice('10.00');
-    setDataPricePerGB('5.00');
-    setMinimumCharge('10.00');
+    setBasePrice('0.00');  // Set to zero as we're not using it
+    setDataPricePerGB('0.00');
+    setMinimumCharge('0.00');  // Set to zero as we're not using it
     setIsActive(true);
-    setIsTiered(false);
+    setIsTiered(true);  // Always use tiered pricing
     setPricingTiers([{ dataGB: '1', price: '10.00' }]);
     setExcelFile(null);
     setImportError('');
@@ -220,44 +219,9 @@ export default function PricingProfiles() {
       });
       return false;
     }
-    if (!userId.trim()) {
-      toast({
-        title: 'Validation Error',
-        description: 'User ID is required',
-        variant: 'destructive'
-      });
-      return false;
-    }
-
-    const parsedBasePrice = parseFloat(basePrice);
-    const parsedMinCharge = parseFloat(minimumCharge);
     
-    if (isNaN(parsedBasePrice) || parsedBasePrice < 0) {
-      toast({
-        title: 'Validation Error',
-        description: 'Base price must be a positive number',
-        variant: 'destructive'
-      });
-      return false;
-    }
-    
-    if (!isTiered && (isNaN(parseFloat(dataPricePerGB || '0')) || parseFloat(dataPricePerGB || '0') < 0)) {
-      toast({
-        title: 'Validation Error',
-        description: 'Data price per GB must be a positive number',
-        variant: 'destructive'
-      });
-      return false;
-    }
-    
-    if (isNaN(parsedMinCharge) || parsedMinCharge < 0) {
-      toast({
-        title: 'Validation Error',
-        description: 'Minimum charge must be a positive number',
-        variant: 'destructive'
-      });
-      return false;
-    }
+    // Since we're only using tiered pricing, we don't need to validate formula-based pricing fields
+    // We'll set default values for basePrice and minimumCharge
     
     // Validate tiers if tiered pricing is enabled
     if (isTiered) {
@@ -317,16 +281,15 @@ export default function PricingProfiles() {
       const profileData = {
         name,
         description: description.trim() || null,
-        basePrice: parseFloat(basePrice),
-        dataPricePerGB: isTiered ? null : parseFloat(dataPricePerGB || '0'),
-        minimumCharge: parseFloat(minimumCharge),
+        basePrice: 0, // Always set to 0 since we're not using it
+        dataPricePerGB: null, // Always null since we only use tiered pricing
+        minimumCharge: 0, // Always set to 0 since we're not using it
         isActive,
-        isTiered,
-        tiers: isTiered ? pricingTiers.map(tier => ({
+        isTiered: true, // Always use tiered pricing
+        tiers: pricingTiers.map(tier => ({
           dataGB: parseFloat(tier.dataGB),
           price: parseFloat(tier.price)
-        })) : [],
-        userId: userId.trim()
+        }))
       };
       let res;
       if (isEditing && currentProfile) {
@@ -545,12 +508,10 @@ export default function PricingProfiles() {
     }
   };
 
-  // Calculate cost for sample data
+  // Calculate cost for sample data - only using tier prices
   const calculateSampleCost = (profile: PricingProfile, dataGB: number) => {
-    const basePrice = parseFloat(profile.basePrice);
-    const minCharge = parseFloat(profile.minimumCharge);
-    
-    if (profile.isTiered && profile.tiers && profile.tiers.length > 0) {
+    // We only use tiered pricing now
+    if (profile.tiers && profile.tiers.length > 0) {
       // Find the closest tier for the data amount
       const tiers = [...profile.tiers].sort((a, b) => 
         parseFloat(a.dataGB) - parseFloat(b.dataGB)
@@ -564,13 +525,11 @@ export default function PricingProfiles() {
         selectedTier = tiers[tiers.length - 1];
       }
       
-      const calculatedCost = basePrice + parseFloat(selectedTier.price);
-      return Math.max(calculatedCost, minCharge).toFixed(2);
+      // Just use the tier price directly - no basePrice or minimumCharge
+      return parseFloat(selectedTier.price).toFixed(2);
     } else {
-      // Use the formula-based pricing
-      const dataPrice = parseFloat(profile.dataPricePerGB || '0');
-      const calculatedCost = basePrice + (dataGB * dataPrice);
-      return Math.max(calculatedCost, minCharge).toFixed(2);
+      // If no tiers (shouldn't happen), return 0
+      return '0.00';
     }
   };
 
@@ -628,29 +587,15 @@ export default function PricingProfiles() {
             <CardContent>
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Base Price:</span>
-                  <span className="font-medium">GHS {profile.basePrice}</span>
-                </div>
-                <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Pricing Type:</span>
-                  <span className="font-medium">{profile.isTiered ? 'Tiered' : 'Formula-based'}</span>
+                  <span className="font-medium">Tiered</span>
                 </div>
-                {!profile.isTiered && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Price per GB:</span>
-                    <span className="font-medium">GHS {profile.dataPricePerGB || '0.00'}</span>
-                  </div>
-                )}
-                {profile.isTiered && profile.tiers && profile.tiers.length > 0 && (
+                {profile.tiers && profile.tiers.length > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Pricing Tiers:</span>
                     <span className="font-medium">{profile.tiers.length} tiers</span>
                   </div>
                 )}
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Minimum Charge:</span>
-                  <span className="font-medium">GHS {profile.minimumCharge}</span>
-                </div>
                 <div className="pt-2 mt-2 border-t border-gray-100">
                   <div className="text-sm font-medium">Sample Calculations:</div>
                   <div className="flex justify-between text-sm mt-1">
@@ -714,18 +659,6 @@ export default function PricingProfiles() {
               />
             </div>
             <div className="grid grid-cols-6 items-center gap-4">
-              <Label htmlFor="userId" className="text-right col-span-1">
-                User ID <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="userId"
-                value={userId}
-                onChange={(e) => setUserId(e.target.value)}
-                className="col-span-5"
-                placeholder="Enter user ID"
-              />
-            </div>
-            <div className="grid grid-cols-6 items-center gap-4">
               <Label htmlFor="description" className="text-right col-span-1">
                 Description
               </Label>
@@ -739,61 +672,13 @@ export default function PricingProfiles() {
               />
             </div>
             <div className="grid grid-cols-6 items-center gap-4">
-              <Label htmlFor="basePrice" className="text-right col-span-1">
-                Base Price <span className="text-red-500">*</span>
-              </Label>
-              <div className="col-span-2 relative">
-                <div className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 flex items-center justify-center text-xs font-medium">
-                  GHS
-                </div>
-                <Input
-                  id="basePrice"
-                  value={basePrice}
-                  onChange={(e) => setBasePrice(e.target.value)}
-                  className="pl-10"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="10.00"
-                />
-              </div>
               <Label htmlFor="pricingType" className="text-right col-span-1">
                 Pricing Type
               </Label>
-              <div className="flex items-center space-x-2 col-span-2">
-                <Switch
-                  id="pricingType"
-                  checked={isTiered}
-                  onCheckedChange={setIsTiered}
-                />
-                <Label htmlFor="pricingType" className="text-sm text-gray-500">
-                  {isTiered ? 'Tiered pricing' : 'Formula-based pricing'}
-                </Label>
+              <div className="flex items-center space-x-2 col-span-5">
+                <span className="text-sm font-medium">Tiered pricing</span>
               </div>
             </div>
-            
-            {!isTiered && (
-              <div className="grid grid-cols-6 items-center gap-4">
-                <Label htmlFor="dataPricePerGB" className="text-right col-span-1">
-                  Price per GB <span className="text-red-500">*</span>
-                </Label>
-                <div className="col-span-5 relative w-1/3">
-                  <div className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 flex items-center justify-center text-xs font-medium">
-                    GHS
-                  </div>
-                  <Input
-                    id="dataPricePerGB"
-                    value={dataPricePerGB}
-                    onChange={(e) => setDataPricePerGB(e.target.value)}
-                    className="pl-10"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="5.00"
-                  />
-                </div>
-              </div>
-            )}
             
             {isTiered && (
               <div className="grid grid-cols-12 gap-4">
@@ -901,28 +786,10 @@ export default function PricingProfiles() {
             )}
             
             <div className="grid grid-cols-6 items-center gap-4">
-              <Label htmlFor="minimumCharge" className="text-right col-span-1">
-                Min Charge
-              </Label>
-              <div className="col-span-2 relative">
-                <div className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 flex items-center justify-center text-xs font-medium">
-                  GHS
-                </div>
-                <Input
-                  id="minimumCharge"
-                  value={minimumCharge}
-                  onChange={(e) => setMinimumCharge(e.target.value)}
-                  className="pl-10"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="10.00"
-                />
-              </div>
               <Label htmlFor="isActive" className="text-right col-span-1">
                 Active
               </Label>
-              <div className="flex items-center space-x-2 col-span-2">
+              <div className="flex items-center space-x-2 col-span-5">
                 <Switch
                   id="isActive"
                   checked={isActive}

@@ -180,10 +180,32 @@ export const userPricingProfilesRelations = relations(userPricingProfiles, ({ on
   }),
 }));
 
-// Add relation to users for pricing profiles
+// Announcements schema
+export const announcements = pgTable("announcements", {
+  id: serial("id").primaryKey(),
+  message: text("message").notNull(),
+  type: varchar("type", { length: 50 }).notNull().default("info"), // info, warning, error, success
+  isActive: boolean("is_active").notNull().default(true),
+  startDate: timestamp("start_date").defaultNow(),
+  endDate: timestamp("end_date"),
+  createdBy: integer("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Define relations for announcements
+export const announcementsRelations = relations(announcements, ({ one }) => ({
+  creator: one(users, {
+    fields: [announcements.createdBy],
+    references: [users.id],
+  }),
+}));
+
+// Add relation to users for pricing profiles and announcements
 export const usersRelations = relations(users, ({ many }) => ({
   sessions: many(sessions),
   orders: many(orders),
   historyEntries: many(historyEntries),
   pricingProfile: many(userPricingProfiles),
+  announcements: many(announcements),
 }));

@@ -89,6 +89,22 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
       
       if (response.ok) {
         const data = await response.json();
+        console.log('Bill data received:', data);
+        console.log('Username from API:', data.userName);
+        console.log('User Email from API:', data.userEmail);
+        
+        // More detailed debugging of the name field
+        if (data.userName === 'Unknown User') {
+          console.log('WARNING: API returned "Unknown User" - checking why...');
+          console.log('Selected User ID:', selectedUserId);
+        }
+        
+        // Ensure userName is never empty or undefined by using email as fallback
+        if (!data.userName || data.userName === 'Unknown User') {
+          console.log('Using email as fallback for userName');
+          data.userName = data.userEmail || 'Customer';
+        }
+        
         setBillData(data);
         
         if (data.orders?.length === 0) {
@@ -155,8 +171,19 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
     if (!billData || !billData.orders || billData.orders.length === 0) return;
     
     try {
-      // Since we've already typed billData as UserBillData, we can pass it directly
-      generateInvoicePDF(billData);
+      // Make sure we always have a valid userName
+      const dataToSend = {
+        ...billData,
+        // Ensure userName is never empty or "Unknown User"
+        userName: billData.userName === 'Unknown User' || !billData.userName
+          ? (billData.userEmail || 'Customer') 
+          : billData.userName
+      };
+      
+      console.log('Generating PDF for:', dataToSend.userName);
+      
+      // Generate the PDF with the updated data
+      generateInvoicePDF(dataToSend);
       setErrorMessage(null);
     } catch (error) {
       console.error('Error generating PDF:', error);
