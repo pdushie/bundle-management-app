@@ -227,9 +227,28 @@ export default function BillingApp() {
                     Export CSV
                   </button>
                   <button 
-                    onClick={() => {
-                      const dateString = selectedDate.toISOString().split('T')[0];
-                      window.location.href = `/api/billing/pdf?date=${dateString}`;
+                    onClick={async () => {
+                      try {
+                        const dateString = selectedDate.toISOString().split('T')[0];
+                        const response = await fetch(`/api/billing/pdf?date=${dateString}`);
+                        
+                        if (!response.ok) {
+                          throw new Error('Failed to generate PDF');
+                        }
+                        
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `Billing_${dateString}.pdf`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        window.URL.revokeObjectURL(url);
+                      } catch (error) {
+                        console.error('Error downloading PDF:', error);
+                        alert('Failed to download PDF. Please try again.');
+                      }
                     }}
                     className="px-4 py-2 border border-gray-300 rounded-md font-medium flex items-center gap-2 hover:bg-gray-50 transition-colors"
                     style={{ marginLeft: '8px' }}

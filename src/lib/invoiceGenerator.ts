@@ -3,13 +3,12 @@
  */
 
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { UserBillData } from '@/types/accounting';
 
 // Extend the jsPDF type to include autoTable
 declare module 'jspdf' {
   interface jsPDF {
-    autoTable: (options: any) => jsPDF;
     lastAutoTable: {
       finalY: number;
     };
@@ -20,11 +19,11 @@ declare module 'jspdf' {
  * Add a table to the PDF document
  */
 function pdfTable(doc: jsPDF, headers: string[], rows: string[][], startX: number, startY: number): void {
-  doc.autoTable({
+  autoTable(doc, {
     head: [headers],
     body: rows,
     startY: startY,
-    startX: startX,
+    margin: { left: startX },
     styles: { fontSize: 9, cellPadding: 3 },
     headStyles: { 
       fillColor: [0, 83, 166], 
@@ -38,8 +37,7 @@ function pdfTable(doc: jsPDF, headers: string[], rows: string[][], startX: numbe
       2: { cellWidth: 30 },  // Data
       3: { cellWidth: 30 },  // Entries
       4: { cellWidth: 'auto' } // Amount
-    },
-    margin: { left: startX }
+    }
   });
 }
 
@@ -47,6 +45,9 @@ function pdfTable(doc: jsPDF, headers: string[], rows: string[][], startX: numbe
  * Format a number to currency string
  */
 function formatCurrency(amount: number): string {
+  if (typeof amount !== 'number' || isNaN(amount)) {
+    return 'GHS 0.00';
+  }
   return `GHS ${amount.toFixed(2)}`;
 }
 
@@ -66,6 +67,19 @@ function formatDate(dateString: string): string {
  * Generate a PDF invoice from bill data
  */
 export function generateInvoicePDF(billData: UserBillData): void {
+  // Validate input data
+  if (!billData || typeof billData.totalAmount !== 'number' || isNaN(billData.totalAmount)) {
+    throw new Error('Invalid bill data: totalAmount must be a valid number');
+  }
+  
+  if (!billData.userName || typeof billData.userName !== 'string') {
+    throw new Error('Invalid bill data: userName must be a valid string');
+  }
+  
+  if (!billData.userEmail || typeof billData.userEmail !== 'string') {
+    throw new Error('Invalid bill data: userEmail must be a valid string');
+  }
+  
   // Create new PDF document
   const doc = new jsPDF();
   
@@ -111,45 +125,48 @@ export function generateInvoicePDF(billData: UserBillData): void {
   // Create table with order details
   const tableColumn = ["Order ID", "Time", "Data (GB)", "Entries", "Amount"];
   const tableRows = billData.orders.map(order => [
-    order.id.substring(0, 8) + "...",
-    order.time,
-    order.totalData.toFixed(2),
-    order.totalCount.toString(),
-    formatCurrency(order.estimatedCost)
+    order.id ? order.id.substring(0, 8) + "..." : "Unknown",
+    order.time || "Unknown",
+    (typeof order.totalData === 'number' && !isNaN(order.totalData)) ? order.totalData.toFixed(2) : "0.00",
+    order.totalCount ? order.totalCount.toString() : "0",
+    formatCurrency(typeof order.estimatedCost === 'number' && !isNaN(order.estimatedCost) ? order.estimatedCost : 0)
   ]);
   
   // Add the table to the PDF
   pdfTable(doc, tableColumn, tableRows, 20, 75);
   
-  // Add summary section
-  const startY = doc.lastAutoTable.finalY + 10;
+  // Add summary section - use a fixed position instead of relying on lastAutoTable.finalY
+  const summaryStartY = 200; // Fixed position for summary
   
   doc.setFontSize(10);
-  doc.text("Summary", 140, startY);
-  doc.line(140, startY + 2, 170, startY + 2);
+  doc.text("Summary", 140, summaryStartY);
+  doc.line(140, summaryStartY + 2, 170, summaryStartY + 2);
   
-  doc.text("Total Orders:", 140, startY + 10);
-  doc.text(billData.orders.length.toString(), 175, startY + 10, { align: 'right' });
+  doc.text("Total Orders:", 140, summaryStartY + 15);
+  doc.text(billData.orders.length.toString(), 175, summaryStartY + 15, { align: 'right' });
   
-  doc.text("Total Data:", 140, startY + 15);
+  doc.text("Total Data:", 140, summaryStartY + 25);
+  const totalDataValue = (typeof billData.totalData === 'number' && !isNaN(billData.totalData)) ? billData.totalData : 0;
   doc.text(
-    billData.totalData > 1024 
-      ? `${(billData.totalData / 1024).toFixed(2)} TB` 
-      : `${billData.totalData.toFixed(2)} GB`,
-    175, startY + 15, { align: 'right' }
+    totalDataValue > 1024 
+      ? `${(totalDataValue / 1024).toFixed(2)} TB` 
+      : `${totalDataValue.toFixed(2)} GB`,
+    175, summaryStartY + 25, { align: 'right' }
   );
   
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text("Total Amount:", 140, startY + 25);
-  doc.text(formatCurrency(billData.totalAmount), 175, startY + 25, { align: 'right' });
+  doc.text("Total Amount:", 140, summaryStartY + 55);
+  doc.text(formatCurrency(billData.totalAmount), 175, summaryStartY + 55, { align: 'right' });
   
   // Add footer
   doc.setFontSize(9);
   doc.setTextColor(100, 100, 100);
   doc.setFont('helvetica', 'normal');
-  doc.text("Thank you for your business!", 105, 280, { align: 'center' });
+  doc.text("Thank you for your business!", 105, summaryStartY + 85, { align: 'center' });
   
   // Save the PDF
-  doc.save(`Invoice-${billData.userName.replace(/\s/g, '_')}-${billData.date}.pdf`);
+  const safeUserName = billData.userName.replace(/[^a-zA-Z0-9]/g, '_');
+  const safeDate = billData.date.replace(/[^a-zA-Z0-9]/g, '_');
+  doc.save(`Invoice-${safeUserName}-${safeDate}.pdf`);
 }

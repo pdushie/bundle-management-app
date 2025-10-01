@@ -65,7 +65,9 @@ export async function GET(request: NextRequest) {
     doc.moveDown(0.5);
     orders.forEach(order => {
       const time = new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-      doc.text(`${order.id} | ${time} | ${order.totalCount} | ${order.totalData} | ${order.pricingProfileName || 'Default'} | ${order.estimatedCost || 0}`);
+      const dataValue = parseFloat(order.totalData?.toString() || '0') || 0;
+      const costValue = parseFloat(order.estimatedCost?.toString() || '0') || 0;
+      doc.text(`${order.id} | ${time} | ${order.totalCount} | ${dataValue.toFixed(2)} | ${order.pricingProfileName || 'Default'} | ${costValue.toFixed(2)}`);
     });
     doc.moveDown();
 
@@ -73,8 +75,10 @@ export async function GET(request: NextRequest) {
     let totalData = 0;
     let totalAmount = 0;
     orders.forEach(order => {
-      totalData += Number(order.totalData || 0);
-      totalAmount += Number(order.estimatedCost || 0);
+      const dataValue = parseFloat(order.totalData?.toString() || '0') || 0;
+      const costValue = parseFloat(order.estimatedCost?.toString() || '0') || 0;
+      totalData += dataValue;
+      totalAmount += costValue;
     });
     doc.text(`Total Orders: ${orders.length}`);
     doc.text(`Total Data: ${totalData.toFixed(2)} GB`);

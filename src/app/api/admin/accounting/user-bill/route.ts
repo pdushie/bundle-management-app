@@ -70,14 +70,48 @@ export async function GET(request: NextRequest) {
       
     console.log(`Found ${userOrders.length} orders for user ${userId} on ${date}`);
     
-    // If no orders found, return empty array
+    // If no orders found, return empty UserBillData structure
     if (userOrders.length === 0) {
+      // Get user details for empty response
+      const userDetails = await db!
+        .select()
+        .from(sql`users`)
+        .where(sql`id = ${userIdInt}`)
+        .limit(1) as Array<{ id: number; name: string; email: string }>;
+      
+      if (userDetails.length === 0) {
+        return NextResponse.json({ 
+          error: 'User not found'
+        }, { status: 404 });
+      }
+      
+      const user = userDetails[0];
+      
       return NextResponse.json({ 
+        userId: user.id,
+        userName: user.name || user.email || 'Unknown User',
+        userEmail: user.email || 'unknown@example.com',
+        date: date,
         orders: [],
         totalAmount: 0,
         totalData: 0
       });
     }
+    
+    // Get user details
+    const userDetails = await db!
+      .select()
+      .from(sql`users`)
+      .where(sql`id = ${userIdInt}`)
+      .limit(1) as Array<{ id: number; name: string; email: string }>;
+    
+    if (userDetails.length === 0) {
+      return NextResponse.json({ 
+        error: 'User not found'
+      }, { status: 404 });
+    }
+    
+    const user = userDetails[0];
     
     // Format the orders for the response
     const formattedOrders = await Promise.all(userOrders.map(async order => {
@@ -124,8 +158,12 @@ export async function GET(request: NextRequest) {
     console.log(`Total amount: ${totalAmount}, Total data: ${totalData}`);
     
     return NextResponse.json({
+      userId: user.id,
+      userName: user.name || user.email || 'Unknown User',
+      userEmail: user.email || 'unknown@example.com',
+      date: date,
       orders: formattedOrders,
-      totalAmount,
+      totalAmount: isNaN(totalAmount) ? 0 : totalAmount,
       totalData
     });
     
