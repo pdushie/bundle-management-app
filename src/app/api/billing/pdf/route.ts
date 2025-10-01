@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Create a response with the correct headers
-    return new Response(pdfBuffer, {
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
