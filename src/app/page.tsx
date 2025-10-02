@@ -108,7 +108,7 @@ function HistoryManager({
     return {
       date,
       totalEntries,
-      totalGB,
+      totalGB: totalGB / 1024, // Convert GB to TB
       totalValid,
       totalInvalid,
       totalDuplicates,
@@ -154,7 +154,7 @@ function HistoryManager({
         "Valid Numbers",
         "Invalid Numbers",
         "Duplicates",
-        "Total Data (GB)"
+        "Total Data (TB)"
       ]);
 
       dailySummaries.forEach(summary => {
@@ -357,16 +357,14 @@ function HistoryManager({
                     <p className="text-xs sm:text-lg font-bold text-gray-900 break-words">
                       {(() => {
                         // Safely calculate the total GB
-                        const totalGB = dailySummaries.reduce((sum, day) => {
-                          const dayTotalGB = typeof day.totalGB === 'number' 
+                        const totalTB = dailySummaries.reduce((sum, day) => {
+                          const dayTotalTB = typeof day.totalGB === 'number' 
                             ? day.totalGB 
                             : parseFloat(day.totalGB) || 0;
-                          return sum + dayTotalGB;
+                          return sum + dayTotalTB;
                         }, 0);
                         
-                        return totalGB > 1023 
-                          ? `${(totalGB / 1024).toFixed(2)} TB` 
-                          : `${totalGB.toFixed(1)} GB`;
+                        return `${totalTB.toFixed(2)} TB`;
                       })()}
                     </p>
                   </div>
@@ -396,16 +394,26 @@ function HistoryManager({
                       <XAxis
                         dataKey="date"
                         tick={{ fontSize: 10 }}
-                        tickFormatter={(value) => new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        tickFormatter={(value) => {
+                          // Parse date string directly to avoid timezone issues
+                          const [year, month, day] = value.split('-').map(Number);
+                          const date = new Date(year, month - 1, day); // month is 0-indexed
+                          return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                        }}
                       />
                       <YAxis tick={{ fontSize: 10 }} />
                       <Tooltip
-                        labelFormatter={(value) => `Date: ${value}`}
+                        labelFormatter={(value) => {
+                          // Parse date string directly to avoid timezone issues
+                          const [year, month, day] = value.split('-').map(Number);
+                          const date = new Date(year, month - 1, day); // month is 0-indexed
+                          return `Date: ${date.toLocaleDateString()}`;
+                        }}
                         formatter={(value, name) => {
-                          if (name === 'Total Data (GB)') {
-                            // Cast value to number before comparison
+                          if (name === 'Total Data (TB)') {
+                            // Data is now in TB, format to 2 decimal places
                             const numValue = Number(value);
-                            return [numValue > 1023 ? `${(numValue / 1024).toFixed(2)} TB` : `${numValue} GB`, name];
+                            return [`${numValue.toFixed(2)} TB`, name];
                           }
                           return [value, name];
                         }}
@@ -448,7 +456,7 @@ function HistoryManager({
                       <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase">Valid</th>
                       <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase">Invalid</th>
                       <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase">Duplicates</th>
-                      <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase">Total Data</th>
+                      <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase">Total Data (TB)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -465,14 +473,12 @@ function HistoryManager({
                         <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-yellow-600 font-medium">{summary.totalDuplicates}</td>
                         <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-bold text-purple-600">
                           {(() => {
-                            // Safely convert totalGB to a number
-                            const totalGB = typeof summary.totalGB === 'number' 
+                            // Data is now already in TB
+                            const totalTB = typeof summary.totalGB === 'number' 
                               ? summary.totalGB 
                               : parseFloat(summary.totalGB) || 0;
                             
-                            return totalGB > 1023 
-                              ? `${(totalGB / 1024).toFixed(2)} TB` 
-                              : `${totalGB.toFixed(2)} GB`;
+                            return `${totalTB.toFixed(2)} TB`;
                           })()}
                         </td>
                       </tr>
