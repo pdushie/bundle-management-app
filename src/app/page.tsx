@@ -18,6 +18,7 @@ import AccountingApp from "@/components/AccountingApp";
 import { OrderProvider, useOrderCount } from "@/lib/orderContext";
 import { ORDER_UPDATED_EVENT } from "@/lib/orderNotifications";
 import { requestNotificationPermission, hasNotificationPermission, sendThrottledNotification, playNotificationSound } from '@/lib/notifications';
+import { initializeTimeService, getCurrentTimeStringSync, getCurrentDateStringSync, getCurrentTimestampSync, getCurrentTimeSync } from '@/lib/timeService';
 
 type PhoneEntry = {
   number: string;
@@ -43,10 +44,10 @@ type HistoryEntry = {
   type: 'bundle-allocator' | 'bundle-categorizer';
 };
 
-// Helper function to create human-friendly timestamp with AM/PM
+// Helper function to create human-friendly timestamp with AM/PM using external time service
 const createTimestamp = (): string => {
-  const now = new Date();
-  const datePart = now.toISOString().split('T')[0]; // YYYY-MM-DD
+  const now = getCurrentTimeSync();
+  const datePart = getCurrentDateStringSync(); // YYYY-MM-DD
   
   let hours = now.getHours();
   const minutes = now.getMinutes().toString().padStart(2, '0');
@@ -217,7 +218,7 @@ function HistoryManager({
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `History_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
+      link.download = `History_Report_${getCurrentDateStringSync()}.xlsx`;
       link.click();
       URL.revokeObjectURL(url);
 
@@ -1728,6 +1729,20 @@ function TabNavigation({
     
     requestPermission();
   }, [notificationPermissionRequested]);
+
+  // Initialize external time service when component mounts
+  useEffect(() => {
+    const initTime = async () => {
+      try {
+        await initializeTimeService();
+        console.log('✅ External time service initialized successfully');
+      } catch (error) {
+        console.warn('⚠️ Time service initialization failed, using local time as fallback:', error);
+      }
+    };
+    
+    initTime();
+  }, []);
   
   // Initialize order tracking when component mounts
   useEffect(() => {
@@ -2208,11 +2223,12 @@ function AppContent() {
 
   // Add to history function - WORKS FOR ALL USERS (both admins and non-admins)
   const addToHistory = async (entries: PhoneEntry[], type: 'bundle-allocator' | 'bundle-categorizer') => {
-    const now = new Date();
+    const now = getCurrentTimeSync();
+    const timestamp = getCurrentTimestampSync();
     const newEntry: HistoryEntry = {
-      id: `${type}-${now.getTime()}`,
-      date: now.toISOString().split('T')[0],
-      timestamp: now.getTime(),
+      id: `${type}-${timestamp}`,
+      date: getCurrentDateStringSync(),
+      timestamp: timestamp,
       entries: entries,
       totalGB: entries.reduce((sum, entry) => sum + entry.allocationGB, 0),
       validCount: entries.filter(entry => entry.isValid && !entry.isDuplicate).length,

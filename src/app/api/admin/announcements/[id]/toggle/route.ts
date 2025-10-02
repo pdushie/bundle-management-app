@@ -4,6 +4,7 @@ import { announcements } from "@/lib/schema";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { eq } from "drizzle-orm";
+import { getCurrentTime } from "@/lib/timeService";
 
 // Toggle the active state of an announcement
 export async function POST(
@@ -51,7 +52,7 @@ export async function POST(
     const [updatedAnnouncement] = await db.update(announcements)
       .set({
         isActive: !current[0].isActive,
-        updatedAt: new Date(),
+        updatedAt: await getCurrentTime(),
       })
       .where(eq(announcements.id, idNum))
       .returning();

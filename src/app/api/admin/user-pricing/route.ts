@@ -4,6 +4,7 @@ import { userPricingProfiles, pricingProfiles, users } from "../../../../lib/sch
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../../../lib/auth";
 import { eq, and } from "drizzle-orm";
+import { getCurrentTime } from "../../../../lib/timeService";
 
 export async function POST(req: NextRequest) {
   try {
@@ -83,7 +84,7 @@ export async function POST(req: NextRequest) {
       const [updatedAssignment] = await db.update(userPricingProfiles)
         .set({
           profileId: parsedProfileId,
-          updatedAt: new Date()
+          updatedAt: await getCurrentTime()
         })
         .where(eq(userPricingProfiles.userId, parsedUserId))
         .returning();

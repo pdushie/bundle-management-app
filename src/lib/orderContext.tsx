@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { getOrderCounts } from './orderClient';
+import { getCurrentTimestampSync } from './timeService';
 import { 
   ORDER_UPDATED_EVENT, 
   ORDER_PROCESSED_EVENT, 
@@ -45,7 +46,7 @@ export const OrderProvider = ({ children }: OrderProviderProps) => {
   const [processedOrderCount, setProcessedOrderCount] = useState<number>(0);
   const [sentOrderCount, setSentOrderCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [lastUpdated, setLastUpdated] = useState<number>(Date.now());
+  const [lastUpdated, setLastUpdated] = useState<number>(getCurrentTimestampSync());
   const [refreshAttempts, setRefreshAttempts] = useState<number>(0);
   const { data: session } = useSession();
 
@@ -55,7 +56,7 @@ export const OrderProvider = ({ children }: OrderProviderProps) => {
   // Function to refresh all order counts - using useCallback to maintain stable reference
   const refreshOrderCount = useCallback(async () => {
     // Throttle refreshes to prevent flooding
-    const now = Date.now();
+    const now = getCurrentTimestampSync();
     const minRefreshInterval = 500; // 500ms minimum between refreshes
     
     if (now - lastRefreshRef.current < minRefreshInterval) {
@@ -84,7 +85,7 @@ export const OrderProvider = ({ children }: OrderProviderProps) => {
         setOrderCount(counts.pendingCount);
         setProcessedOrderCount(counts.processedCount);
         setSentOrderCount(counts.userOrderCount);
-        setLastUpdated(Date.now());
+        setLastUpdated(getCurrentTimestampSync());
         
         // Reset refresh attempts on successful update
         setRefreshAttempts(0);

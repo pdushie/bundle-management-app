@@ -4,6 +4,7 @@ import { announcements } from "@/lib/schema";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { eq } from "drizzle-orm";
+import { getCurrentTime } from "@/lib/timeService";
 
 // Get a specific announcement by ID
 export async function GET(
@@ -127,7 +128,7 @@ export async function PUT(
         startDate: parsedStartDate,
         endDate: parsedEndDate,
         // Don't update createdBy
-        updatedAt: new Date(),
+        updatedAt: await getCurrentTime(),
       })
       .where(eq(announcements.id, announcementId))
       .returning();

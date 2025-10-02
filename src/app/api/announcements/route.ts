@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, neonClient } from "@/lib/db";
 import { announcements } from "@/lib/schema";
 import { sql } from "drizzle-orm";
+import { getCurrentTime } from "@/lib/timeService";
 
 // Get only active announcements (public endpoint)
 export async function GET(req: NextRequest) {
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
     // First try using Drizzle ORM if available
     if (db) {
       try {
-        const currentDate = new Date();
+        const currentDate = await getCurrentTime();
         
         const result = await db.select()
           .from(announcements)
@@ -34,7 +35,7 @@ export async function GET(req: NextRequest) {
     
     // Fallback to direct SQL using neonClient if Drizzle failed or is not available
     try {
-      const currentDate = new Date().toISOString();
+      const currentDate = (await getCurrentTime()).toISOString();
       
       const result = await neonClient`
         SELECT * FROM announcements 

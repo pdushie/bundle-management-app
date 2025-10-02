@@ -8,6 +8,7 @@ import { useOrderCount } from "../lib/orderContext";
 import { useSession } from "next-auth/react";
 import { notifyOrderSent, notifyCountUpdated } from "../lib/orderNotifications";
 import { getCurrentUserPricing, calculatePrice } from "../lib/pricingClient";
+import { getCurrentTimeSync, getCurrentDateStringSync, getCurrentTimeStringSync, getCurrentTimestampSync } from "../lib/timeService";
 
 type OrderStatus = "idle" | "preparing" | "sending" | "success" | "error";
 
@@ -695,7 +696,8 @@ export default function SendOrderApp() {
     setStatus("success");
     
     // Add the completed order to the queue in localStorage
-    const now = new Date();
+    const now = getCurrentTimeSync();
+    const timestamp = getCurrentTimestampSync();
     // All entries are now successful since we removed the failure simulation
     const totalData = updatedEntries.reduce((sum, entry) => sum + entry.allocationGB, 0);
     
@@ -703,10 +705,10 @@ export default function SendOrderApp() {
     if (updatedEntries.length > 0) {
       // Create a new order for the queue
       const newOrder = {
-        id: `order-${Date.now()}`,
-        timestamp: now.getTime(),
-        date: now.toISOString().split('T')[0],
-        time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        id: `order-${timestamp}`,
+        timestamp: timestamp,
+        date: getCurrentDateStringSync(),
+        time: getCurrentTimeStringSync().substring(0, 5), // HH:MM format
         userName: session?.user?.name || "Anonymous User",
         userEmail: session?.user?.email || "anonymous@example.com",
         totalData: Number(totalData.toFixed(2)),

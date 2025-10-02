@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, DollarSign, Download, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
-import { getUserBilling } from '../lib/billingClient';
+import { Calendar, DollarSign, Download, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowLeft, ArrowRight, FileText, User, Package, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { getUserBilling, getUserBillingRange, getMonthlyBilling } from '../lib/billingClient';
+import { getCurrentTimeSync, getCurrentDateStringSync } from '../lib/timeService';
 import { getFormattedDate } from '../lib/dateUtils';
 
 export default function BillingApp() {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(getCurrentTimeSync());
   const [billingData, setBillingData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +71,7 @@ export default function BillingApp() {
 
   // Navigation functions
   const goToToday = () => {
-    setSelectedDate(new Date());
+    setSelectedDate(getCurrentTimeSync());
   };
 
   const goToPreviousDay = () => {

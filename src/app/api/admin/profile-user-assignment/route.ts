@@ -4,6 +4,7 @@ import { userPricingProfiles } from "@/lib/schema";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { and, eq } from "drizzle-orm";
+import { getCurrentTime } from "@/lib/timeService";
 
 /**
  * Route to directly assign users to pricing profiles
@@ -53,7 +54,7 @@ export async function PUT(request: NextRequest) {
       const [updatedAssignment] = await db.update(userPricingProfiles)
         .set({
           profileId: parsedProfileId,
-          updatedAt: new Date()
+          updatedAt: await getCurrentTime()
         })
         .where(eq(userPricingProfiles.userId, parsedUserId))
         .returning();

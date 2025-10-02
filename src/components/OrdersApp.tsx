@@ -7,6 +7,7 @@ import JSZip from "jszip";
 import { getPendingOrdersOldestFirst, getOrdersOldestFirst, saveOrders, updateOrder } from "../lib/orderClient";
 import { useOrderCount } from "../lib/orderContext";
 import { ORDER_UPDATED_EVENT, notifyOrderProcessed, notifyCountUpdated } from "../lib/orderNotifications";
+import { getCurrentTimeSync, getCurrentDateStringSync, getCurrentTimeStringSync, getCurrentTimestampSync } from "../lib/timeService";
 
   // Define the Order type to represent an order in the queue
 import type { Order } from "../lib/orderClient";
@@ -398,8 +399,8 @@ export default function OrdersApp() {
       
       const blob = new Blob([buffer], { type: mimeType });
       
-      // Generate human-friendly date and time format
-      const downloadDate = new Date();
+      // Generate human-friendly date and time format using external time service
+      const downloadDate = getCurrentTimeSync();
       const formattedDate = downloadDate.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
@@ -427,16 +428,17 @@ export default function OrdersApp() {
         alert(`Order data allocation (${order.totalData.toFixed(2)} GB) exceeds 1.5 TB. The data has been split into multiple Excel files and zipped for download.`);
       }
       
-      // Get current date and time for processing timestamp
-      const now = new Date();
-      const processedDate = now.toISOString().split('T')[0];
-      const processedTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      // Get current date and time for processing timestamp using external time service
+      const now = getCurrentTimeSync();
+      const timestamp = getCurrentTimestampSync();
+      const processedDate = getCurrentDateStringSync();
+      const processedTime = getCurrentTimeStringSync().substring(0, 5); // HH:MM format
       
       // Update the order status to "processed" after downloading and update timestamp
       const updatedOrder = { 
         ...order, 
         status: "processed" as const,
-        timestamp: now.getTime(),
+        timestamp: timestamp,
         date: processedDate,
         time: processedTime
       };
@@ -869,10 +871,11 @@ export default function OrdersApp() {
           alert(`Successfully merged and downloaded ${selectedOrders.length} orders into a single file.`);
         }
         
-        // Get current date and time for processing timestamp
-        const now = new Date();
-        const processedDate = now.toISOString().split('T')[0];
-        const processedTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        // Get current date and time for processing timestamp using external time service
+        const now = getCurrentTimeSync();
+        const timestamp = getCurrentTimestampSync();
+        const processedDate = getCurrentDateStringSync();
+        const processedTime = getCurrentTimeStringSync().substring(0, 5); // HH:MM format
         
         // Mark all selected orders as processed with updated timestamps
         const updatedOrders = orders.map(order => 
@@ -880,7 +883,7 @@ export default function OrdersApp() {
             ? { 
                 ...order, 
                 status: "processed" as const,
-                timestamp: now.getTime(),
+                timestamp: timestamp,
                 date: processedDate,
                 time: processedTime
               } 

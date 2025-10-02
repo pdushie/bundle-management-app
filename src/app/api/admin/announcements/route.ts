@@ -4,6 +4,7 @@ import { announcements, users } from "@/lib/schema";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { desc, sql, eq } from "drizzle-orm";
+import { getCurrentTime, getCurrentTimeSync } from "@/lib/timeService";
 
 // Get all announcements (admin only)
 export async function GET(req: NextRequest) {
@@ -36,7 +37,7 @@ export async function GET(req: NextRequest) {
         
         // Filter by active status if requested
         if (activeOnly) {
-          const currentDate = new Date();
+          const currentDate = await getCurrentTime();
           result = await db.select()
             .from(announcements)
             .where(
@@ -60,7 +61,7 @@ export async function GET(req: NextRequest) {
     
     // Fallback to direct SQL using neonClient if Drizzle failed or is not available
     try {
-      const currentDate = new Date().toISOString();
+      const currentDate = (await getCurrentTime()).toISOString();
       
       let result;
       if (activeOnly) {
@@ -155,7 +156,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Parse dates if provided
-    const parsedStartDate = startDate ? new Date(startDate) : new Date();
+    const parsedStartDate = startDate ? new Date(startDate) : await getCurrentTime();
     const parsedEndDate = endDate ? new Date(endDate) : null;
     
     // Check if end date is after start date

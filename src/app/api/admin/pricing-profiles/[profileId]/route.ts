@@ -4,6 +4,7 @@ import { pricingProfiles, userPricingProfiles, pricingTiers } from "../../../../
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../../../../lib/auth";
 import { and, eq, sql } from "drizzle-orm";
+import { getCurrentTime } from "../../../../../lib/timeService";
 
 // Use the standard Next.js App Router pattern for route handlers
 export async function GET(
@@ -176,7 +177,7 @@ export async function PUT(
         minimumCharge: "0", // Always use 0 for minimumCharge
         isActive: isActive !== undefined ? isActive : true,
         isTiered: true, // Always use tiered pricing
-        updatedAt: new Date(),
+        updatedAt: await getCurrentTime(),
       })
       .where(eq(pricingProfiles.id, profileId))
       .returning();

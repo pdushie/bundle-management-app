@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
+import { getCurrentTime } from '@/lib/timeService';
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
       user: session?.user || null,
       status: session ? 'authenticated' : 'unauthenticated',
       debug: {
-        time: new Date().toISOString(),
+        time: (await getCurrentTime()).toISOString(),
         hasSession: !!session,
       }
     });
