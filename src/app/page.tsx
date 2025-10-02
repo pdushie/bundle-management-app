@@ -2572,7 +2572,7 @@ function AppContent() {
                 </div>
                 <div>
                   <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Data Processing Suite V1.0</h1>
-                  <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Data validation and categorization tool with history tracking</p>
+                  <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Order management and processing tool</p>
                 </div>
               </div>
 
@@ -2598,9 +2598,9 @@ function AppContent() {
                   </>
                 )}
 
-                {/* Admin Panel Link - Only visible to super admins */}
+                {/* Superadmin Controls - Keep on same line */}
                 {isSuperAdmin && (
-                  <>
+                  <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                     <a
                       href="/admin"
                       className="flex items-center gap-1 sm:gap-2 bg-purple-100 text-purple-700 px-2 sm:px-3 py-1 rounded-full hover:bg-purple-200 transition-colors"
@@ -2623,33 +2623,48 @@ function AppContent() {
                       <span className="hidden sm:inline">Test Notifications</span>
                       <span className="sm:hidden">Test</span>
                     </a>
-                  </>
+                    {/* User Menu - Integrated with Superadmin controls */}
+                    <div className="flex items-center gap-1 sm:gap-2 bg-gray-100 text-gray-700 px-2 sm:px-3 py-1 rounded-full">
+                      <User className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                      <span className="font-medium text-xs sm:text-sm truncate max-w-20 sm:max-w-none">
+                        {session?.user?.name || session?.user?.email}
+                      </span>
+                      <span className="text-xs bg-red-200 text-red-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">Super Admin</span>
+                      <button
+                        onClick={handleSignOut}
+                        className="ml-1 sm:ml-2 p-1 hover:bg-gray-200 rounded transition-colors flex-shrink-0"
+                        title="Sign out"
+                      >
+                        <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </button>
+                    </div>
+                  </div>
                 )}
 
-                {/* User Menu - Mobile Optimized */}
-                <div className="flex items-center gap-1 sm:gap-2 bg-gray-100 text-gray-700 px-2 sm:px-3 py-1 rounded-full flex-1 sm:flex-initial">
-                  <User className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                  <span className="font-medium text-xs sm:text-sm truncate max-w-24 sm:max-w-none">
-                    {session?.user?.name || session?.user?.email}
-                  </span>
-                  {/* Show role indicator for all users */}
-                  {session?.user?.role === 'superadmin' ? (
-                    <span className="text-xs bg-red-200 text-red-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">Super Admin</span>
-                  ) : session?.user?.role === 'admin' ? (
-                    <span className="text-xs bg-purple-200 text-purple-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">Admin</span>
-                  ) : session?.user?.role === 'user' ? (
-                    <span className="text-xs bg-blue-200 text-blue-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">User</span>
-                  ) : (
-                    <span className="text-xs bg-green-200 text-green-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">Manager</span>
-                  )}
-                  <button
-                    onClick={handleSignOut}
-                    className="ml-1 sm:ml-2 p-1 hover:bg-gray-200 rounded transition-colors flex-shrink-0"
-                    title="Sign out"
-                  >
-                    <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
-                  </button>
-                </div>
+                {/* User Menu - For non-superadmin users */}
+                {!isSuperAdmin && (
+                  <div className="flex items-center gap-1 sm:gap-2 bg-gray-100 text-gray-700 px-2 sm:px-3 py-1 rounded-full flex-1 sm:flex-initial">
+                    <User className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                    <span className="font-medium text-xs sm:text-sm truncate max-w-24 sm:max-w-none">
+                      {session?.user?.name || session?.user?.email}
+                    </span>
+                    {/* Show role indicator for all users */}
+                    {session?.user?.role === 'admin' ? (
+                      <span className="text-xs bg-purple-200 text-purple-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">Admin</span>
+                    ) : session?.user?.role === 'user' ? (
+                      <span className="text-xs bg-blue-200 text-blue-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">User</span>
+                    ) : (
+                      <span className="text-xs bg-green-200 text-green-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">Manager</span>
+                    )}
+                    <button
+                      onClick={handleSignOut}
+                      className="ml-1 sm:ml-2 p-1 hover:bg-gray-200 rounded transition-colors flex-shrink-0"
+                      title="Sign out"
+                    >
+                      <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
