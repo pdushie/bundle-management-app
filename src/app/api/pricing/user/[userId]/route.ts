@@ -7,9 +7,9 @@ import { eq } from "drizzle-orm";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { userId: string } }
+  context: { params: Promise<{ userId: string }> }
 ) {
-  const { userId } = params;
+  const { userId } = await context.params;
   try {
     // Check if database is available
     if (!db) {

@@ -8,8 +8,9 @@ import { eq } from "drizzle-orm";
 // Toggle the active state of an announcement
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params;
   try {
     // Check if database is available
     if (!db) {
@@ -30,16 +31,16 @@ export async function POST(
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
     
-    const id = parseInt(params.id);
+    const idNum = parseInt(id);
     
-    if (isNaN(id)) {
+    if (isNaN(idNum)) {
       return NextResponse.json({ error: "Invalid announcement ID" }, { status: 400 });
     }
     
     // Get the current announcement
     const current = await db.select()
       .from(announcements)
-      .where(eq(announcements.id, id))
+      .where(eq(announcements.id, idNum))
       .limit(1);
     
     if (current.length === 0) {
@@ -52,7 +53,7 @@ export async function POST(
         isActive: !current[0].isActive,
         updatedAt: new Date(),
       })
-      .where(eq(announcements.id, id))
+      .where(eq(announcements.id, idNum))
       .returning();
     
     return NextResponse.json({ 
@@ -60,7 +61,7 @@ export async function POST(
       announcement: updatedAnnouncement
     });
   } catch (error) {
-    console.error(`Error toggling announcement ${params.id}:`, error);
+    console.error(`Error toggling announcement ${id}:`, error);
     return NextResponse.json({ error: "Failed to toggle announcement" }, { status: 500 });
   }
 }

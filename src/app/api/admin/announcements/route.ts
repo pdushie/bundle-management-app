@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, neonClient } from "@/lib/db";
-import { announcements } from "@/lib/schema";
+import { announcements, users } from "@/lib/schema";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { desc, sql } from "drizzle-orm";
+import { desc, sql, eq } from "drizzle-orm";
 
 // Get all announcements (admin only)
 export async function GET(req: NextRequest) {
@@ -32,22 +32,24 @@ export async function GET(req: NextRequest) {
     // First try using Drizzle ORM if available
     if (db) {
       try {
-        let query = db.select().from(announcements);
+        let result;
         
         // Filter by active status if requested
         if (activeOnly) {
           const currentDate = new Date();
-          query = query.where(
-            sql`${announcements.isActive} = true AND 
-            (${announcements.startDate} <= ${currentDate} OR ${announcements.startDate} IS NULL) AND 
-            (${announcements.endDate} >= ${currentDate} OR ${announcements.endDate} IS NULL)`
-          );
+          result = await db.select()
+            .from(announcements)
+            .where(
+              sql`${announcements.isActive} = true AND 
+              (${announcements.startDate} <= ${currentDate} OR ${announcements.startDate} IS NULL) AND 
+              (${announcements.endDate} >= ${currentDate} OR ${announcements.endDate} IS NULL)`
+            )
+            .orderBy(desc(announcements.createdAt));
+        } else {
+          result = await db.select()
+            .from(announcements)
+            .orderBy(desc(announcements.createdAt));
         }
-        
-        // Order by creation date (newest first)
-        query = query.orderBy(desc(announcements.createdAt));
-        
-        const result = await query;
         
         return NextResponse.json({ announcements: result }, { headers });
       } catch (drizzleError) {
@@ -129,6 +131,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
     
+    // Get the user ID from the database using email
+    const userEmail = session.user.email;
+    if (!userEmail) {
+      return NextResponse.json({ error: "No email found in session" }, { status: 400 });
+    }
+    
+    const userRecord = await db.select().from(users).where(eq(users.email, userEmail)).limit(1);
+    if (userRecord.length === 0) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+    
+    const userId = userRecord[0].id;
+    
     const body = await req.json();
     const { message, type, isActive, startDate, endDate } = body;
     
@@ -157,7 +172,7 @@ export async function POST(req: NextRequest) {
       isActive: isActive !== undefined ? isActive : true,
       startDate: parsedStartDate,
       endDate: parsedEndDate,
-      createdBy: session.user.id,
+      createdBy: userId,
     }).returning();
     
     return NextResponse.json({ 
