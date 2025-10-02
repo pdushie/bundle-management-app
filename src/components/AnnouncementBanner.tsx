@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, Info, AlertOctagon } from "lucide-react";
+import { getCurrentTimestampSync } from "../lib/timeService";
 
 type Announcement = {
   id: number;
@@ -30,83 +31,150 @@ const typeStyles = {
 export default function AnnouncementBanner() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  const [isWindowFocused, setIsWindowFocused] = useState<boolean>(true);
   const { data: session } = useSession();
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const rotationIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
-  useEffect(() => {
-    const fetchAnnouncements = async () => {
+  const fetchAnnouncements = useCallback(async () => {
+    try {
+      console.log("Fetching announcements...");
+      
+      // Update last fetch time
+      setLastFetchTime(getCurrentTimestampSync());
+      
+      // Try the admin endpoint first with more robust error handling
       try {
-        console.log("Fetching announcements...");
+        const adminResponse = await fetch("/api/admin/announcements?activeOnly=true", {
+          method: "GET",
+          headers: {
+            "Accept": "application/json"
+          }
+        });
         
-        // Try the admin endpoint first with more robust error handling
-        try {
-          const adminResponse = await fetch("/api/admin/announcements?activeOnly=true", {
-            method: "GET",
-            headers: {
-              "Accept": "application/json"
-            }
-          });
-          
-          if (adminResponse.ok) {
-            const contentType = adminResponse.headers.get("content-type");
-            if (contentType && contentType.includes("application/json")) {
-              const data = await adminResponse.json();
-              if (data.announcements && data.announcements.length > 0) {
-                console.log("Admin announcements data received:", data);
-                setAnnouncements(data.announcements);
-                return; // Successfully got announcements from admin endpoint
-              }
-            } else {
-              console.log("Admin endpoint returned non-JSON response:", contentType);
+        if (adminResponse.ok) {
+          const contentType = adminResponse.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const data = await adminResponse.json();
+            if (data.announcements && data.announcements.length > 0) {
+              console.log("Admin announcements data received:", data);
+              setAnnouncements(data.announcements);
+              return; // Successfully got announcements from admin endpoint
             }
           } else {
-            console.log("Admin endpoint failed:", adminResponse.status, adminResponse.statusText);
+            console.log("Admin endpoint returned non-JSON response:", contentType);
           }
-        } catch (adminError) {
-          console.error("Error with admin announcements endpoint:", adminError);
+        } else {
+          console.log("Admin endpoint failed:", adminResponse.status, adminResponse.statusText);
         }
-        
-        // If admin endpoint fails, try the public endpoint
-        try {
-          const publicResponse = await fetch("/api/announcements", {
-            method: "GET",
-            headers: {
-              "Accept": "application/json"
-            }
-          });
-          
-          if (publicResponse.ok) {
-            const contentType = publicResponse.headers.get("content-type");
-            if (contentType && contentType.includes("application/json")) {
-              const data = await publicResponse.json();
-              if (data.announcements && data.announcements.length > 0) {
-                console.log("Public announcements data received:", data);
-                setAnnouncements(data.announcements);
-              }
-            } else {
-              console.log("Public endpoint returned non-JSON response:", contentType);
-            }
-          } else {
-            console.error("Public endpoint failed:", publicResponse.status, publicResponse.statusText);
-          }
-        } catch (publicError) {
-          console.error("Error with public announcements endpoint:", publicError);
-        }
-        
-      } catch (error) {
-        console.error("Error in announcement fetching process:", error);
+      } catch (adminError) {
+        console.error("Error with admin announcements endpoint:", adminError);
       }
+      
+      // If admin endpoint fails, try the public endpoint
+      try {
+        const publicResponse = await fetch("/api/announcements", {
+          method: "GET",
+          headers: {
+            "Accept": "application/json"
+          }
+        });
+        
+        if (publicResponse.ok) {
+          const contentType = publicResponse.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const data = await publicResponse.json();
+            if (data.announcements && data.announcements.length > 0) {
+              console.log("Public announcements data received:", data);
+              setAnnouncements(data.announcements);
+            }
+          } else {
+            console.log("Public endpoint returned non-JSON response:", contentType);
+          }
+        } else {
+          console.error("Public endpoint failed:", publicResponse.status, publicResponse.statusText);
+        }
+      } catch (publicError) {
+        console.error("Error with public announcements endpoint:", publicError);
+      }
+      
+    } catch (error) {
+      console.error("Error in announcement fetching process:", error);
+    }
+  }, []);
+
+  // Setup window focus/blur detection for dynamic polling
+  useEffect(() => {
+    const handleFocus = () => {
+      setIsWindowFocused(true);
+      // Fetch immediately when window gains focus
+      fetchAnnouncements();
+    };
+    
+    const handleBlur = () => {
+      setIsWindowFocused(false);
     };
 
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('blur', handleBlur);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, [fetchAnnouncements]);
+
+  // Setup polling and rotation effects
+  useEffect(() => {
+    // Initial fetch
     fetchAnnouncements();
     
-    // Rotate through multiple announcements every 8 seconds
-    const intervalId = setInterval(() => {
-      if (announcements.length > 1) {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % announcements.length);
-      }
-    }, 8000);
+    // Setup dynamic polling for new announcements
+    const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'superadmin';
+    
+    // Dynamic polling intervals based on user role and window focus:
+    // - Admins (focused): 5 seconds (very frequent for immediate feedback)
+    // - Admins (unfocused): 15 seconds 
+    // - Users (focused): 20 seconds
+    // - Users (unfocused): 60 seconds (reduced server load when not active)
+    let pollingInterval;
+    if (isAdmin) {
+      pollingInterval = isWindowFocused ? 5000 : 15000;
+    } else {
+      pollingInterval = isWindowFocused ? 20000 : 60000;
+    }
+    
+    pollingIntervalRef.current = setInterval(() => {
+      console.log(`Polling for announcement updates... (${isAdmin ? 'admin' : 'user'} mode, ${isWindowFocused ? 'focused' : 'unfocused'})`);
+      fetchAnnouncements();
+    }, pollingInterval);
 
-    return () => clearInterval(intervalId);
+    // Cleanup polling on unmount
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, [fetchAnnouncements, session?.user?.role, isWindowFocused]);
+
+  // Setup rotation effect for multiple announcements
+  useEffect(() => {
+    if (rotationIntervalRef.current) {
+      clearInterval(rotationIntervalRef.current);
+    }
+    
+    if (announcements.length > 1) {
+      rotationIntervalRef.current = setInterval(() => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % announcements.length);
+      }, 8000);
+    }
+
+    return () => {
+      if (rotationIntervalRef.current) {
+        clearInterval(rotationIntervalRef.current);
+      }
+    };
   }, [announcements.length]);
 
   // Don't show anything if there are no announcements

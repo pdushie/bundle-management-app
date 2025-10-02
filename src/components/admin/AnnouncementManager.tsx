@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { AlertTriangle, Info, AlertOctagon, Plus, Edit, Trash, ToggleLeft, ToggleRight } from "lucide-react";
+import { getCurrentDateStringSync } from "../../lib/timeService";
 
 type Announcement = {
   id: number;
@@ -63,10 +64,26 @@ export default function AnnouncementManager() {
     }
   };
 
-  // Format date for display
+  // Format date for display - avoid timezone conversion issues
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "Not set";
-    return new Date(dateString).toLocaleDateString();
+    // Parse the date string manually to avoid timezone conversion
+    const dateParts = dateString.split('T')[0].split('-');
+    if (dateParts.length === 3) {
+      const [year, month, day] = dateParts;
+      return `${month}/${day}/${year}`;
+    }
+    return dateString;
+  };
+
+  // Convert date string to YYYY-MM-DD format without timezone conversion
+  const toDateInputValue = (dateString: string | null) => {
+    if (!dateString) return "";
+    // If it's already in YYYY-MM-DD format, return as-is
+    if (dateString.includes('T')) {
+      return dateString.split('T')[0];
+    }
+    return dateString;
   };
 
   // Open modal for creating a new announcement
@@ -76,7 +93,7 @@ export default function AnnouncementManager() {
       message: "",
       type: "info",
       isActive: false,
-      startDate: new Date().toISOString().split('T')[0],
+      startDate: getCurrentDateStringSync(), // Use time service to avoid timezone issues
       endDate: "",
     });
     setShowModal(true);
@@ -89,8 +106,8 @@ export default function AnnouncementManager() {
       message: announcement.message,
       type: announcement.type,
       isActive: announcement.isActive,
-      startDate: announcement.startDate ? new Date(announcement.startDate).toISOString().split('T')[0] : "",
-      endDate: announcement.endDate ? new Date(announcement.endDate).toISOString().split('T')[0] : "",
+      startDate: toDateInputValue(announcement.startDate),
+      endDate: toDateInputValue(announcement.endDate),
     });
     setShowModal(true);
   };

@@ -6,6 +6,12 @@ import { authOptions } from "@/lib/auth";
 import { desc, sql, eq } from "drizzle-orm";
 import { getCurrentTime, getCurrentTimeSync } from "@/lib/timeService";
 
+// Helper function to parse date string without timezone conversion
+function parseLocalDate(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day); // month is 0-indexed in Date constructor
+}
+
 // Get all announcements (admin only)
 export async function GET(req: NextRequest) {
   try {
@@ -155,9 +161,9 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
     
-    // Parse dates if provided
-    const parsedStartDate = startDate ? new Date(startDate) : await getCurrentTime();
-    const parsedEndDate = endDate ? new Date(endDate) : null;
+    // Parse dates if provided - avoid timezone conversion issues
+    const parsedStartDate = startDate ? parseLocalDate(startDate) : await getCurrentTime();
+    const parsedEndDate = endDate ? parseLocalDate(endDate) : null;
     
     // Check if end date is after start date
     if (parsedEndDate && parsedStartDate > parsedEndDate) {
