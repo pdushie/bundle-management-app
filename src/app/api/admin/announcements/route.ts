@@ -3,11 +3,13 @@ import { db, neonClient } from "@/lib/db";
 import { announcements } from "@/lib/schema";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { desc, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
-// Get all announcements (admin only)
-export async function GET(req: NextRequest) {
+// Get a specific announcement by ID
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params; // Next.js 15 requires awaiting params
+    
     // Set the content type header first thing to ensure JSON response
     const headers = {
       'Content-Type': 'application/json'
@@ -18,66 +20,63 @@ export async function GET(req: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401, headers });
     }
-    
-    // Check if the request is for active announcements only.
+
+    // Check if the request is for active announcements only
     const { searchParams } = new URL(req.url);
     const activeOnly = searchParams.get('activeOnly') === 'true';
     
-    // If active only and user is not admin/superadmin, show active announcements
-    // Otherwise, only allow admins and superadmins to see all announcements
+    // If not requesting active only, require admin/superadmin role
     if (!activeOnly && session.user.role !== "admin" && session.user.role !== "superadmin") {
       return NextResponse.json({ error: "Not authorized" }, { status: 403, headers });
     }
-    
+
+    const announcementId = parseInt(id);
+    if (isNaN(announcementId)) {
+      return NextResponse.json({ error: "Invalid announcement ID" }, { status: 400, headers });
+    }
+
     // First try using Drizzle ORM if available
     if (db) {
       try {
-        let query = db.select().from(announcements);
+        const result = await db.select().from(announcements).where(eq(announcements.id, announcementId)).limit(1);
         
-        // Filter by active status if requested
+        if (result.length === 0) {
+          return NextResponse.json({ error: "Announcement not found" }, { status: 404, headers });
+        }
+
+        const announcement = result[0];
+
+        // If requesting active only, check if announcement is currently active
         if (activeOnly) {
           const currentDate = new Date();
-          query = query.where(
-            sql`${announcements.isActive} = true AND 
-            (${announcements.startDate} <= ${currentDate} OR ${announcements.startDate} IS NULL) AND 
-            (${announcements.endDate} >= ${currentDate} OR ${announcements.endDate} IS NULL)`
-          );
+          const isActive = announcement.isActive && 
+            (!announcement.startDate || announcement.startDate <= currentDate) &&
+            (!announcement.endDate || announcement.endDate >= currentDate);
+          
+          if (!isActive) {
+            return NextResponse.json({ error: "Announcement not found" }, { status: 404, headers });
+          }
         }
         
-        // Order by creation date (newest first)
-        query = query.orderBy(desc(announcements.createdAt));
-        
-        const result = await query;
-        
-        return NextResponse.json({ announcements: result }, { headers });
+        return NextResponse.json({ announcement }, { headers });
       } catch (drizzleError) {
         console.error("Drizzle query failed:", drizzleError);
         // Continue to fallback method
       }
     }
-    
+
     // Fallback to direct SQL using neonClient if Drizzle failed or is not available
     try {
-      const currentDate = new Date().toISOString();
+      const result = await neonClient`
+        SELECT * FROM announcements WHERE id = ${announcementId} LIMIT 1
+      `;
       
-      let result;
-      if (activeOnly) {
-        result = await neonClient`
-          SELECT * FROM announcements 
-          WHERE is_active = true 
-          AND (start_date <= ${currentDate} OR start_date IS NULL)
-          AND (end_date >= ${currentDate} OR end_date IS NULL)
-          ORDER BY created_at DESC
-        `;
-      } else {
-        result = await neonClient`
-          SELECT * FROM announcements 
-          ORDER BY created_at DESC
-        `;
+      if (result.length === 0) {
+        return NextResponse.json({ error: "Announcement not found" }, { status: 404, headers });
       }
-      
-      // Format the results to match the expected schema
-      const formattedResults = result.map(row => ({
+
+      const row = result[0];
+      const announcement = {
         id: row.id,
         message: row.message,
         type: row.type,
@@ -87,85 +86,45 @@ export async function GET(req: NextRequest) {
         createdBy: row.created_by,
         createdAt: row.created_at,
         updatedAt: row.updated_at
-      }));
+      };
+
+      // If requesting active only, check if announcement is currently active
+      if (activeOnly) {
+        const currentDate = new Date();
+        const isActive = announcement.isActive && 
+          (!announcement.startDate || new Date(announcement.startDate) <= currentDate) &&
+          (!announcement.endDate || new Date(announcement.endDate) >= currentDate);
+        
+        if (!isActive) {
+          return NextResponse.json({ error: "Announcement not found" }, { status: 404, headers });
+        }
+      }
       
-      return NextResponse.json({ announcements: formattedResults }, { headers });
+      return NextResponse.json({ announcement }, { headers });
     } catch (sqlError) {
       console.error("Direct SQL query failed:", sqlError);
       return NextResponse.json({ 
-        announcements: [],
         error: 'Database connection error' 
       }, { status: 500, headers });
     }
-    
+
   } catch (error) {
-    console.error("Error fetching announcements:", error);
+    console.error("Error fetching announcement:", error);
     return NextResponse.json(
-      { error: "Failed to fetch announcements", announcements: [] }, 
+      { error: "Failed to fetch announcement" }, 
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 }
 
-// Create a new announcement (admin only)
-export async function POST(req: NextRequest) {
+// Update a specific announcement by ID
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params; // Next.js 15 requires awaiting params
+    
     // Check if database is available
     if (!db) {
       console.error('Database connection is not available');
       return NextResponse.json({ 
         error: 'Database connection unavailable'
-      }, { status: 500 });
-    }
-
-    const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-    }
-    
-    // Only allow admins and superadmins to create announcements
-    if (session.user.role !== "admin" && session.user.role !== "superadmin") {
-      return NextResponse.json({ error: "Not authorized" }, { status: 403 });
-    }
-    
-    const body = await req.json();
-    const { message, type, isActive, startDate, endDate } = body;
-    
-    // Basic validation
-    if (!message) {
-      return NextResponse.json({ 
-        error: "Message is required" 
-      }, { status: 400 });
-    }
-    
-    // Parse dates if provided
-    const parsedStartDate = startDate ? new Date(startDate) : new Date();
-    const parsedEndDate = endDate ? new Date(endDate) : null;
-    
-    // Check if end date is after start date
-    if (parsedEndDate && parsedStartDate > parsedEndDate) {
-      return NextResponse.json({ 
-        error: "End date must be after start date" 
-      }, { status: 400 });
-    }
-    
-    // Insert the announcement
-    const [newAnnouncement] = await db.insert(announcements).values({
-      message,
-      type: type || 'info',
-      isActive: isActive !== undefined ? isActive : true,
-      startDate: parsedStartDate,
-      endDate: parsedEndDate,
-      createdBy: session.user.id,
-    }).returning();
-    
-    return NextResponse.json({ 
-      message: "Announcement created successfully",
-      announcement: newAnnouncement
-    });
-  } catch (error) {
-    console.error("Error creating announcement:", error);
-    return NextResponse.json({ error: "Failed to create announcement" }, { status: 500 });
-  }
-}
+      }, { status: 500
