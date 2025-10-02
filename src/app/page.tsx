@@ -79,6 +79,8 @@ function HistoryManager({
 }) {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [viewMode, setViewMode] = useState<'summary' | 'detailed'>('summary');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const RECORDS_PER_PAGE = 10;
 
   // Get unique dates from history
   const availableDates = Array.from(new Set(history.map(entry => entry.date))).sort((a, b) => b.localeCompare(a));
@@ -116,6 +118,22 @@ function HistoryManager({
       sessionsCount
     };
   });
+
+  // Calculate pagination for daily summaries
+  const summariesToShow = selectedDate
+    ? dailySummaries.filter(s => s.date === selectedDate)
+    : dailySummaries;
+  
+  const totalPages = Math.ceil(summariesToShow.length / RECORDS_PER_PAGE);
+  const startIndex = (currentPage - 1) * RECORDS_PER_PAGE;
+  const endIndex = Math.min(startIndex + RECORDS_PER_PAGE, summariesToShow.length);
+  const paginatedSummaries = summariesToShow.slice(startIndex, endIndex);
+
+  // Reset pagination when changing date filter
+  const handleDateChange = (date: string) => {
+    setSelectedDate(date);
+    setCurrentPage(1);
+  };
 
   const clearHistory = async () => {
     // Only allow superadmin to clear history
@@ -251,7 +269,7 @@ function HistoryManager({
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <select
                 value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
+                onChange={(e) => handleDateChange(e.target.value)}
                 className="w-full sm:w-auto px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               >
                 <option value="">All Dates</option>
@@ -510,10 +528,7 @@ function HistoryManager({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {(selectedDate
-                      ? dailySummaries.filter(s => s.date === selectedDate)
-                      : dailySummaries
-                    ).map((summary) => (
+                    {paginatedSummaries.map((summary) => (
                       <tr key={summary.date} className="hover:bg-gray-50">
                         <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-gray-900">{summary.date}</td>
                         <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600">{summary.sessionsCount}</td>
@@ -536,6 +551,71 @@ function HistoryManager({
                   </tbody>
                 </table>
               </div>
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 flex items-center justify-between">
+                  <div className="text-sm text-gray-700">
+                    Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
+                    <span className="font-medium">{endIndex}</span> of{' '}
+                    <span className="font-medium">{summariesToShow.length}</span> results
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                      className={`px-3 py-1 rounded-md text-sm font-medium ${
+                        currentPage === 1
+                          ? 'text-gray-400 cursor-not-allowed'
+                          : 'text-blue-600 hover:bg-blue-50'
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`px-3 py-1 rounded-md text-sm font-medium ${
+                              currentPage === pageNum
+                                ? 'bg-blue-600 text-white'
+                                : 'text-blue-600 hover:bg-blue-50'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    
+                    <button
+                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage === totalPages}
+                      className={`px-3 py-1 rounded-md text-sm font-medium ${
+                        currentPage === totalPages
+                          ? 'text-gray-400 cursor-not-allowed'
+                          : 'text-blue-600 hover:bg-blue-50'
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         ) : (
@@ -1198,7 +1278,7 @@ function BundleAllocatorApp({
             <div className="relative">
               <textarea
                 placeholder="Paste phone numbers and data allocations here&#10;0554739033 20GB&#10;0201234567 15GB&#10;0556789012 10GB"
-                className="w-full p-3 sm:p-4 border border-gray-300 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none font-mono text-xs sm:text-sm shadow-sm hover:shadow-md"
+                className="w-full p-3 sm:p-4 border border-gray-300 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none font-mono text-sm sm:text-base text-gray-900 bg-white shadow-sm hover:shadow-md placeholder:text-gray-500"
                 rows={6}
                 value={inputText}
                 onChange={(e) => processInput(e.target.value)}
@@ -1583,7 +1663,7 @@ function BundleCategorizerApp({
               Data Input
             </label>
             <textarea
-              className="w-full h-32 sm:h-48 p-3 sm:p-4 border border-gray-300 rounded-lg sm:rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 font-mono text-xs sm:text-sm bg-white hover:shadow-md"
+              className="w-full h-32 sm:h-48 p-3 sm:p-4 border border-gray-300 rounded-lg sm:rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 font-mono text-sm sm:text-base text-gray-900 bg-white hover:shadow-md placeholder:text-gray-500"
               placeholder="Paste your data here...&#10;Example:&#10;024XXXXXXXX 20GB&#10;059XXXXXXXX 50GB&#10;0249XXXXXXX 10GB"
               value={rawData}
               onChange={(e) => setRawData(e.target.value)}

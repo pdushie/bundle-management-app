@@ -59,7 +59,9 @@ export default function AnnouncementBanner() {
             const data = await adminResponse.json();
             if (data.announcements && data.announcements.length > 0) {
               console.log("Admin announcements data received:", data);
-              setAnnouncements(data.announcements);
+              // Filter out inactive announcements immediately on client side
+              const activeAnnouncements = data.announcements.filter((ann: Announcement) => ann.isActive === true);
+              setAnnouncements(activeAnnouncements);
               return; // Successfully got announcements from admin endpoint
             }
           } else {
@@ -87,7 +89,9 @@ export default function AnnouncementBanner() {
             const data = await publicResponse.json();
             if (data.announcements && data.announcements.length > 0) {
               console.log("Public announcements data received:", data);
-              setAnnouncements(data.announcements);
+              // Filter out inactive announcements immediately on client side
+              const activeAnnouncements = data.announcements.filter((ann: Announcement) => ann.isActive === true);
+              setAnnouncements(activeAnnouncements);
             }
           } else {
             console.log("Public endpoint returned non-JSON response:", contentType);
@@ -134,15 +138,15 @@ export default function AnnouncementBanner() {
     const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'superadmin';
     
     // Dynamic polling intervals based on user role and window focus:
-    // - Admins (focused): 5 seconds (very frequent for immediate feedback)
-    // - Admins (unfocused): 15 seconds 
-    // - Users (focused): 20 seconds
-    // - Users (unfocused): 60 seconds (reduced server load when not active)
+    // - Admins (focused): 3 seconds (very frequent for immediate feedback)
+    // - Admins (unfocused): 10 seconds 
+    // - Users (focused): 15 seconds
+    // - Users (unfocused): 30 seconds (balanced between responsiveness and server load)
     let pollingInterval;
     if (isAdmin) {
-      pollingInterval = isWindowFocused ? 5000 : 15000;
+      pollingInterval = isWindowFocused ? 3000 : 10000;
     } else {
-      pollingInterval = isWindowFocused ? 20000 : 60000;
+      pollingInterval = isWindowFocused ? 15000 : 30000;
     }
     
     pollingIntervalRef.current = setInterval(() => {
@@ -183,6 +187,12 @@ export default function AnnouncementBanner() {
   }
 
   const currentAnnouncement = announcements[currentIndex];
+  
+  // Additional safety check: Don't show if current announcement is inactive
+  if (!currentAnnouncement || !currentAnnouncement.isActive) {
+    return null;
+  }
+  
   const typeStyle = typeStyles[currentAnnouncement.type] || typeStyles.info;
   const icon = typeIcons[currentAnnouncement.type] || typeIcons.info;
 
