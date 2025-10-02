@@ -385,59 +385,108 @@ function HistoryManager({
               </div>
             </div>
 
-            {/* Daily Summary Chart - Mobile Height Adjusted */}
+            {/* Separate Charts for Better Clarity */}
             {dailySummaries.length > 0 && (
-              <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-3 sm:p-6 border border-gray-200">
-                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Daily Data Processing Trends</h3>
-                <div className="h-48 sm:h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={dailySummaries.slice(-30)}>
-                      <XAxis
-                        dataKey="date"
-                        tick={{ fontSize: 10 }}
-                        tickFormatter={(value) => {
-                          // Parse date string directly to avoid timezone issues
-                          const [year, month, day] = value.split('-').map(Number);
-                          const date = new Date(year, month - 1, day); // month is 0-indexed
-                          return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-                        }}
-                      />
-                      <YAxis tick={{ fontSize: 10 }} />
-                      <Tooltip
-                        labelFormatter={(value) => {
-                          // Parse date string directly to avoid timezone issues
-                          const [year, month, day] = value.split('-').map(Number);
-                          const date = new Date(year, month - 1, day); // month is 0-indexed
-                          return `Date: ${date.toLocaleDateString()}`;
-                        }}
-                        formatter={(value, name) => {
-                          if (name === 'Total Data (TB)') {
-                            // Data is now in TB, format to 2 decimal places
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                {/* Daily Entries Trend Chart */}
+                <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-3 sm:p-6 border border-gray-200">
+                  <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                    <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg">
+                      <Database className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-base sm:text-lg font-bold text-gray-900">Daily Entries Trend</h3>
+                      <p className="text-xs text-gray-600">Number of entries processed per day</p>
+                    </div>
+                  </div>
+                  <div className="h-48 sm:h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={dailySummaries.slice(-30)}>
+                        <XAxis
+                          dataKey="date"
+                          tick={{ fontSize: 10 }}
+                          tickFormatter={(value) => {
+                            // Parse date string directly to avoid timezone issues
+                            const [year, month, day] = value.split('-').map(Number);
+                            const date = new Date(year, month - 1, day); // month is 0-indexed
+                            return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                          }}
+                        />
+                        <YAxis tick={{ fontSize: 10 }} />
+                        <Tooltip
+                          labelFormatter={(value) => {
+                            // Parse date string directly to avoid timezone issues
+                            const [year, month, day] = value.split('-').map(Number);
+                            const date = new Date(year, month - 1, day); // month is 0-indexed
+                            return `Date: ${date.toLocaleDateString()}`;
+                          }}
+                          formatter={(value, name) => {
+                            return [value.toLocaleString(), name];
+                          }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="totalEntries"
+                          stroke="#3b82f6"
+                          strokeWidth={3}
+                          name="Total Entries"
+                          dot={{ r: 4, fill: "#3b82f6" }}
+                          activeDot={{ r: 6, fill: "#1d4ed8" }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Daily Data Volume Trend Chart */}
+                <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-3 sm:p-6 border border-gray-200">
+                  <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                    <div className="p-1.5 sm:p-2 bg-green-100 rounded-lg">
+                      <BarChart className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-base sm:text-lg font-bold text-gray-900">Daily Data Volume Trend</h3>
+                      <p className="text-xs text-gray-600">Amount of data processed per day (TB)</p>
+                    </div>
+                  </div>
+                  <div className="h-48 sm:h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={dailySummaries.slice(-30)}>
+                        <XAxis
+                          dataKey="date"
+                          tick={{ fontSize: 10 }}
+                          tickFormatter={(value) => {
+                            // Parse date string directly to avoid timezone issues
+                            const [year, month, day] = value.split('-').map(Number);
+                            const date = new Date(year, month - 1, day); // month is 0-indexed
+                            return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                          }}
+                        />
+                        <YAxis tick={{ fontSize: 10 }} />
+                        <Tooltip
+                          labelFormatter={(value) => {
+                            // Parse date string directly to avoid timezone issues
+                            const [year, month, day] = value.split('-').map(Number);
+                            const date = new Date(year, month - 1, day); // month is 0-indexed
+                            return `Date: ${date.toLocaleDateString()}`;
+                          }}
+                          formatter={(value, name) => {
                             const numValue = Number(value);
                             return [`${numValue.toFixed(2)} TB`, name];
-                          }
-                          return [value, name];
-                        }}
-                      />
-                      <Legend />
-                      <Line
-                        type="monotone"
-                        dataKey="totalEntries"
-                        stroke="#3b82f6"
-                        strokeWidth={2}
-                        name="Total Entries"
-                        dot={{ r: 3 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="totalGB"
-                        stroke="#10b981"
-                        strokeWidth={2}
-                        name="Total Data (TB)"
-                        dot={{ r: 3 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
+                          }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="totalGB"
+                          stroke="#10b981"
+                          strokeWidth={3}
+                          name="Total Data Volume"
+                          dot={{ r: 4, fill: "#10b981" }}
+                          activeDot={{ r: 6, fill: "#047857" }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
               </div>
             )}
