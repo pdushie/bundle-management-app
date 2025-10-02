@@ -128,6 +128,12 @@ export default function AnnouncementManager() {
       setAnnouncements(prev => 
         prev.map(a => a.id === announcement.id ? { ...a, isActive: !a.isActive } : a)
       );
+      
+      // Dispatch custom event to notify other components (like AnnouncementBanner)
+      const event = new CustomEvent('announcementChanged', {
+        detail: { announcementId: announcement.id, isActive: !announcement.isActive }
+      });
+      window.dispatchEvent(event);
     } catch (error) {
       console.error("Error toggling announcement:", error);
     }
@@ -146,6 +152,12 @@ export default function AnnouncementManager() {
       
       // Remove the announcement from the local state
       setAnnouncements(prev => prev.filter(a => a.id !== id));
+      
+      // Dispatch custom event to notify other components
+      const event = new CustomEvent('announcementChanged', {
+        detail: { announcementId: id, action: 'deleted' }
+      });
+      window.dispatchEvent(event);
     } catch (error) {
       console.error("Error deleting announcement:", error);
     }
@@ -183,6 +195,16 @@ export default function AnnouncementManager() {
       } else {
         setAnnouncements(prev => [...prev, data.announcement]);
       }
+      
+      // Dispatch custom event to notify other components
+      const event = new CustomEvent('announcementChanged', {
+        detail: { 
+          announcementId: data.announcement.id, 
+          action: editingAnnouncement ? 'updated' : 'created',
+          isActive: data.announcement.isActive
+        }
+      });
+      window.dispatchEvent(event);
       
       // Close the modal
       setShowModal(false);

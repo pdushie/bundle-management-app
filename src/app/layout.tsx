@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SessionProviderClient } from '../components/SessionProviderClient';
+import { ThemeProvider } from '@/lib/themeProvider';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
@@ -56,24 +57,26 @@ export default async function RootLayout({
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body className={`h-full ${geistSans.variable} ${geistMono.variable}`}>
-        <SessionProviderClient session={session}>
-          <div suppressHydrationWarning>
-            {/* The AppWithProviders will provide the OrderProvider to its children */}
-            {/* suppressHydrationWarning is used to avoid hydration mismatch warnings */}
-            <div id="app-root">
-              <AnnouncementBanner />
-              {children}
-              <NewFeatureNotifier />
-              {/* AdminDashboardLink will only render for admin users */}
-              <div suppressHydrationWarning>
-                {/* AdminDashboardLink is imported as a client component */}
-                <AdminDashboardLink />
-                {/* UserChat will only render for logged in users */}
-                <UserChat />
+        <ThemeProvider>
+          <SessionProviderClient session={session}>
+            <div suppressHydrationWarning>
+              {/* The AppWithProviders will provide the OrderProvider to its children */}
+              {/* suppressHydrationWarning is used to avoid hydration mismatch warnings */}
+              <div id="app-root">
+                <AnnouncementBanner />
+                {children}
+                <NewFeatureNotifier />
+                {/* AdminDashboardLink will only render for admin users */}
+                <div suppressHydrationWarning>
+                  {/* AdminDashboardLink is imported as a client component */}
+                  <AdminDashboardLink />
+                  {/* UserChat will only render for logged in users */}
+                  <UserChat />
+                </div>
               </div>
             </div>
-          </div>
-        </SessionProviderClient>
+          </SessionProviderClient>
+        </ThemeProvider>
       </body>
     </html>
   );

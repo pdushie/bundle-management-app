@@ -9,7 +9,10 @@ export async function GET(req: NextRequest) {
   try {
     // Set the content type header first thing to ensure JSON response
     const headers = {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
     };
 
     // First try using Drizzle ORM if available

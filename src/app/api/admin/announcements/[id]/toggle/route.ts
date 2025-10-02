@@ -60,6 +60,12 @@ export async function POST(
     return NextResponse.json({ 
       message: `Announcement ${updatedAnnouncement.isActive ? 'activated' : 'deactivated'} successfully`,
       announcement: updatedAnnouncement
+    }, {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
   } catch (error) {
     console.error(`Error toggling announcement ${id}:`, error);

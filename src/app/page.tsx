@@ -15,6 +15,7 @@ import SentOrdersApp from "@/components/SentOrdersApp";
 import OrderTrackingApp from "@/components/OrderTrackingApp";
 import BillingApp from "@/components/BillingApp";
 import AccountingApp from "@/components/AccountingApp";
+import DarkModeToggle from "@/components/DarkModeToggle";
 import { OrderProvider, useOrderCount } from "@/lib/orderContext";
 import { ORDER_UPDATED_EVENT } from "@/lib/orderNotifications";
 import { requestNotificationPermission, hasNotificationPermission, sendThrottledNotification, playNotificationSound } from '@/lib/notifications';
@@ -2794,6 +2795,11 @@ function AppContent() {
                     </button>
                   </div>
                 )}
+              </div>
+              
+              {/* Dark Mode Toggle */}
+              <div className="flex justify-center sm:justify-end mt-4 sm:mt-2">
+                <DarkModeToggle />
               </div>
             </div>
 

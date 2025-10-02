@@ -46,10 +46,13 @@ export default function AnnouncementBanner() {
       
       // Try the admin endpoint first with more robust error handling
       try {
-        const adminResponse = await fetch("/api/admin/announcements?activeOnly=true", {
+        const cacheBuster = Date.now();
+        const adminResponse = await fetch(`/api/admin/announcements?activeOnly=true&_=${cacheBuster}`, {
           method: "GET",
           headers: {
-            "Accept": "application/json"
+            "Accept": "application/json",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache"
           }
         });
         
@@ -76,10 +79,13 @@ export default function AnnouncementBanner() {
       
       // If admin endpoint fails, try the public endpoint
       try {
-        const publicResponse = await fetch("/api/announcements", {
+        const cacheBuster = Date.now();
+        const publicResponse = await fetch(`/api/announcements?_=${cacheBuster}`, {
           method: "GET",
           headers: {
-            "Accept": "application/json"
+            "Accept": "application/json",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache"
           }
         });
         
@@ -108,7 +114,7 @@ export default function AnnouncementBanner() {
     }
   }, []);
 
-  // Setup window focus/blur detection for dynamic polling
+  // Setup window focus/blur detection for dynamic polling and announcement change events
   useEffect(() => {
     const handleFocus = () => {
       setIsWindowFocused(true);
@@ -120,12 +126,20 @@ export default function AnnouncementBanner() {
       setIsWindowFocused(false);
     };
 
+    // Listen for custom announcement change events
+    const handleAnnouncementChange = () => {
+      console.log("Announcement change event detected, forcing refresh...");
+      fetchAnnouncements();
+    };
+
     window.addEventListener('focus', handleFocus);
     window.addEventListener('blur', handleBlur);
+    window.addEventListener('announcementChanged', handleAnnouncementChange);
 
     return () => {
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('announcementChanged', handleAnnouncementChange);
     };
   }, [fetchAnnouncements]);
 
@@ -162,7 +176,7 @@ export default function AnnouncementBanner() {
     };
   }, [fetchAnnouncements, session?.user?.role, isWindowFocused]);
 
-  // Additional effect to continuously filter inactive announcements from existing state
+  // Additional effect to continuously filter inactive announcements from existing state and force refresh
   useEffect(() => {
     const filterInterval = setInterval(() => {
       setAnnouncements(currentAnnouncements => {
@@ -170,6 +184,8 @@ export default function AnnouncementBanner() {
         // Only update state if there's a difference to avoid unnecessary re-renders
         if (activeAnnouncements.length !== currentAnnouncements.length) {
           console.log(`Filtered out ${currentAnnouncements.length - activeAnnouncements.length} inactive announcements`);
+          // Reset current index when announcements are filtered
+          setCurrentIndex(0);
           return activeAnnouncements;
         }
         return currentAnnouncements;

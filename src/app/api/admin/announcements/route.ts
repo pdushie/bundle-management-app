@@ -17,7 +17,10 @@ export async function GET(req: NextRequest) {
   try {
     // Set the content type header first thing to ensure JSON response
     const headers = {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
     };
 
     const session = await getServerSession(authOptions);
@@ -170,6 +173,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ 
         error: "End date must be after start date" 
       }, { status: 400 });
+    }
+    
+    // If creating an active announcement, disable all existing active announcements first
+    if (isActive !== false) {
+      await db.update(announcements)
+        .set({
+          isActive: false,
+          updatedAt: await getCurrentTime(),
+        })
+        .where(eq(announcements.isActive, true));
     }
     
     // Insert the announcement
