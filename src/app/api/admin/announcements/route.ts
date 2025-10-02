@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401, headers });
     }
     
-    // Check if the request is for active announcements only
+    // Check if the request is for active announcements only.
     const { searchParams } = new URL(req.url);
     const activeOnly = searchParams.get('activeOnly') === 'true';
     
