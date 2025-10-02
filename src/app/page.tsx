@@ -2565,7 +2565,7 @@ function AppContent() {
         <div className="max-w-7xl mx-auto px-2 sm:px-4">
           <div className="flex flex-col gap-3 py-3 sm:py-4">
             {/* Title and User Info */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 min-h-[60px] sm:min-h-[40px]">
               <div className="flex items-center gap-2 sm:gap-3">
                 <div className="p-1.5 sm:p-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg">
                   <Database className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -2577,7 +2577,7 @@ function AppContent() {
               </div>
 
               {/* User Info & Stats - Mobile Optimized */}
-              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm w-full sm:w-auto">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm w-full sm:w-auto justify-end sm:justify-start">
                 {/* Show history stats for authorized users */}
                 {(isSuperAdmin || isAdmin) && history.length > 0 && activeTab !== "history" && (
                   <>
@@ -2667,7 +2667,7 @@ function AppContent() {
       </div>
 
       {/* Tab Content */}
-      <div className="tab-content">
+      <div className="tab-content pt-4 pb-8">
         {renderActiveComponent()}
 
 

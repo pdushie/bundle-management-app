@@ -267,7 +267,7 @@ export default function OrderTrackingApp() {
   }
 
   return (
-    <div className="flex flex-col p-4 sm:p-6 bg-white rounded-lg shadow-md">
+    <div className="flex flex-col p-4 sm:p-6 pb-8 sm:pb-12 bg-white rounded-lg shadow-md">
       {/* Header and Filters */}
       <div className="mb-6">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Track Order Status</h2>
@@ -483,7 +483,7 @@ export default function OrderTrackingApp() {
 
       {/* Pagination */}
       {filteredEntries.length > entriesPerPage && (
-        <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+        <div className="flex justify-between items-center pt-4 border-t border-gray-200 relative z-10">
           <div className="text-sm text-gray-700">
             Showing <span className="font-medium">{indexOfFirstEntry + 1}</span> to{" "}
             <span className="font-medium">
