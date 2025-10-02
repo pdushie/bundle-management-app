@@ -8,9 +8,11 @@ import { eq } from "drizzle-orm";
 // Get a specific announcement by ID
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params; // Next.js 15 requires awaiting params
+    
     // Check if database is available
     if (!db) {
       console.error('Database connection is not available');
@@ -30,15 +32,15 @@ export async function GET(
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
     
-    const id = parseInt(params.id);
+    const announcementId = parseInt(id);
     
-    if (isNaN(id)) {
+    if (isNaN(announcementId)) {
       return NextResponse.json({ error: "Invalid announcement ID" }, { status: 400 });
     }
     
     const result = await db.select()
       .from(announcements)
-      .where(eq(announcements.id, id))
+      .where(eq(announcements.id, announcementId))
       .limit(1);
     
     if (result.length === 0) {
@@ -47,7 +49,7 @@ export async function GET(
     
     return NextResponse.json({ announcement: result[0] });
   } catch (error) {
-    console.error(`Error fetching announcement ${params.id}:`, error);
+    console.error(`Error fetching announcement:`, error);
     return NextResponse.json({ error: "Failed to fetch announcement" }, { status: 500 });
   }
 }
@@ -55,9 +57,11 @@ export async function GET(
 // Update a specific announcement
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params; // Next.js 15 requires awaiting params
+    
     // Check if database is available
     if (!db) {
       console.error('Database connection is not available');
@@ -77,9 +81,9 @@ export async function PUT(
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
     
-    const id = parseInt(params.id);
+    const announcementId = parseInt(id);
     
-    if (isNaN(id)) {
+    if (isNaN(announcementId)) {
       return NextResponse.json({ error: "Invalid announcement ID" }, { status: 400 });
     }
     
@@ -107,7 +111,7 @@ export async function PUT(
     // Check if announcement exists
     const existing = await db.select()
       .from(announcements)
-      .where(eq(announcements.id, id))
+      .where(eq(announcements.id, announcementId))
       .limit(1);
     
     if (existing.length === 0) {
@@ -125,7 +129,7 @@ export async function PUT(
         // Don't update createdBy
         updatedAt: new Date(),
       })
-      .where(eq(announcements.id, id))
+      .where(eq(announcements.id, announcementId))
       .returning();
     
     return NextResponse.json({ 
@@ -133,7 +137,7 @@ export async function PUT(
       announcement: updatedAnnouncement
     });
   } catch (error) {
-    console.error(`Error updating announcement ${params.id}:`, error);
+    console.error(`Error updating announcement:`, error);
     return NextResponse.json({ error: "Failed to update announcement" }, { status: 500 });
   }
 }
@@ -141,9 +145,11 @@ export async function PUT(
 // Delete a specific announcement
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params; // Next.js 15 requires awaiting params
+    
     // Check if database is available
     if (!db) {
       console.error('Database connection is not available');
@@ -163,16 +169,16 @@ export async function DELETE(
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
     
-    const id = parseInt(params.id);
+    const announcementId = parseInt(id);
     
-    if (isNaN(id)) {
+    if (isNaN(announcementId)) {
       return NextResponse.json({ error: "Invalid announcement ID" }, { status: 400 });
     }
     
     // Check if announcement exists
     const existing = await db.select()
       .from(announcements)
-      .where(eq(announcements.id, id))
+      .where(eq(announcements.id, announcementId))
       .limit(1);
     
     if (existing.length === 0) {
@@ -181,7 +187,7 @@ export async function DELETE(
     
     // Delete the announcement
     const deletedAnnouncement = await db.delete(announcements)
-      .where(eq(announcements.id, id))
+      .where(eq(announcements.id, announcementId))
       .returning();
     
     return NextResponse.json({ 
@@ -189,7 +195,7 @@ export async function DELETE(
       announcement: deletedAnnouncement[0]
     });
   } catch (error) {
-    console.error(`Error deleting announcement ${params.id}:`, error);
+    console.error(`Error deleting announcement:`, error);
     return NextResponse.json({ error: "Failed to delete announcement" }, { status: 500 });
   }
 }
