@@ -138,15 +138,15 @@ export default function AnnouncementBanner() {
     const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'superadmin';
     
     // Dynamic polling intervals based on user role and window focus:
-    // - Admins (focused): 3 seconds (very frequent for immediate feedback)
-    // - Admins (unfocused): 10 seconds 
-    // - Users (focused): 15 seconds
-    // - Users (unfocused): 30 seconds (balanced between responsiveness and server load)
+    // - Admins (focused): 2 seconds (very frequent for immediate feedback)
+    // - Admins (unfocused): 5 seconds 
+    // - Users (focused): 10 seconds
+    // - Users (unfocused): 20 seconds (balanced between responsiveness and server load)
     let pollingInterval;
     if (isAdmin) {
-      pollingInterval = isWindowFocused ? 3000 : 10000;
+      pollingInterval = isWindowFocused ? 2000 : 5000;
     } else {
-      pollingInterval = isWindowFocused ? 15000 : 30000;
+      pollingInterval = isWindowFocused ? 10000 : 20000;
     }
     
     pollingIntervalRef.current = setInterval(() => {
@@ -162,16 +162,38 @@ export default function AnnouncementBanner() {
     };
   }, [fetchAnnouncements, session?.user?.role, isWindowFocused]);
 
-  // Setup rotation effect for multiple announcements
+  // Additional effect to continuously filter inactive announcements from existing state
+  useEffect(() => {
+    const filterInterval = setInterval(() => {
+      setAnnouncements(currentAnnouncements => {
+        const activeAnnouncements = currentAnnouncements.filter(ann => ann.isActive);
+        // Only update state if there's a difference to avoid unnecessary re-renders
+        if (activeAnnouncements.length !== currentAnnouncements.length) {
+          console.log(`Filtered out ${currentAnnouncements.length - activeAnnouncements.length} inactive announcements`);
+          return activeAnnouncements;
+        }
+        return currentAnnouncements;
+      });
+    }, 1000); // Check every second for inactive announcements
+
+    return () => clearInterval(filterInterval);
+  }, []);
+
+  // Setup rotation effect for multiple announcements (using active announcements only)
   useEffect(() => {
     if (rotationIntervalRef.current) {
       clearInterval(rotationIntervalRef.current);
     }
     
-    if (announcements.length > 1) {
+    const activeAnnouncements = announcements.filter(ann => ann.isActive);
+    
+    if (activeAnnouncements.length > 1) {
       rotationIntervalRef.current = setInterval(() => {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % announcements.length);
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % activeAnnouncements.length);
       }, 8000);
+    } else if (activeAnnouncements.length === 1) {
+      // Reset to 0 if only one active announcement
+      setCurrentIndex(0);
     }
 
     return () => {
@@ -179,16 +201,26 @@ export default function AnnouncementBanner() {
         clearInterval(rotationIntervalRef.current);
       }
     };
-  }, [announcements.length]);
+  }, [announcements]);
 
-  // Don't show anything if there are no announcements
-  if (announcements.length === 0) {
+  // Continuously filter out inactive announcements from the current state
+  const activeAnnouncements = announcements.filter(ann => ann.isActive);
+  
+  // Don't show anything if there are no active announcements
+  if (activeAnnouncements.length === 0) {
     return null;
   }
 
-  const currentAnnouncement = announcements[currentIndex];
+  // Adjust currentIndex if it's out of bounds after filtering
+  const adjustedIndex = currentIndex >= activeAnnouncements.length ? 0 : currentIndex;
+  const currentAnnouncement = activeAnnouncements[adjustedIndex];
   
-  // Additional safety check: Don't show if current announcement is inactive
+  // Update currentIndex if it was adjusted
+  if (adjustedIndex !== currentIndex && activeAnnouncements.length > 0) {
+    setCurrentIndex(adjustedIndex);
+  }
+  
+  // Final safety check: Don't show if current announcement is invalid or inactive
   if (!currentAnnouncement || !currentAnnouncement.isActive) {
     return null;
   }
@@ -226,9 +258,9 @@ export default function AnnouncementBanner() {
             >
               {currentAnnouncement.message}
             </motion.div>
-            {announcements.length > 1 && (
+            {activeAnnouncements.length > 1 && (
               <span className="text-sm font-medium ml-4 bg-white bg-opacity-30 px-2 py-1 rounded-full">
-                {currentIndex + 1}/{announcements.length}
+                {adjustedIndex + 1}/{activeAnnouncements.length}
               </span>
             )}
           </div>
