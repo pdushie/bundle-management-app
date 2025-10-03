@@ -2783,8 +2783,8 @@ function AppContent() {
                   <Database className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Data Processing Suite V1.0</h1>
-                  <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Order management and processing tool</p>
+                  <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Clickyfied</h1>
+                  <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Your reliable data plug</p>
                 </div>
               </div>
 
