@@ -36,6 +36,7 @@ export default function AnnouncementBanner() {
   const { data: session } = useSession();
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const rotationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const hasActiveAnnouncementsRef = useRef<boolean>(false);
   
   const fetchAnnouncements = useCallback(async () => {
     try {
@@ -126,9 +127,16 @@ export default function AnnouncementBanner() {
       setIsWindowFocused(false);
     };
 
-    // Listen for custom announcement change events
+    // Listen for custom announcement change events with controlled refresh
     const handleAnnouncementChange = () => {
-      console.log("Announcement change event detected, forcing refresh...");
+      console.log("Announcement change event detected, refreshing announcements...");
+      // Clear rotation intervals
+      if (rotationIntervalRef.current) {
+        clearInterval(rotationIntervalRef.current);
+        rotationIntervalRef.current = null;
+      }
+      // Reset index and fetch new announcements
+      setCurrentIndex(0);
       fetchAnnouncements();
     };
 
@@ -176,38 +184,53 @@ export default function AnnouncementBanner() {
     };
   }, [fetchAnnouncements, session?.user?.role, isWindowFocused]);
 
-  // Additional effect to continuously filter inactive announcements from existing state and force refresh
+  // Controlled filtering effect to remove inactive announcements without causing loops
   useEffect(() => {
     const filterInterval = setInterval(() => {
       setAnnouncements(currentAnnouncements => {
-        const activeAnnouncements = currentAnnouncements.filter(ann => ann.isActive);
-        // Only update state if there's a difference to avoid unnecessary re-renders
+        const activeAnnouncements = currentAnnouncements.filter(ann => ann && ann.isActive === true);
+        
+        // Only update if there's actually a difference
         if (activeAnnouncements.length !== currentAnnouncements.length) {
-          console.log(`Filtered out ${currentAnnouncements.length - activeAnnouncements.length} inactive announcements`);
-          // Reset current index when announcements are filtered
-          setCurrentIndex(0);
+          console.log(`Filtering out ${currentAnnouncements.length - activeAnnouncements.length} inactive announcements`);
           return activeAnnouncements;
         }
         return currentAnnouncements;
       });
-    }, 1000); // Check every second for inactive announcements
+    }, 500); // Use 500ms to avoid excessive updates
 
     return () => clearInterval(filterInterval);
   }, []);
 
-  // Setup rotation effect for multiple announcements (using active announcements only)
+  // Effect to handle announcement state changes with controlled updates
   useEffect(() => {
+    const activeAnnouncements = announcements.filter(ann => ann && ann.isActive === true);
+    const hasActive = activeAnnouncements.length > 0;
+    
+    // Update the ref
+    hasActiveAnnouncementsRef.current = hasActive;
+    
+    // Clear existing rotation interval
     if (rotationIntervalRef.current) {
       clearInterval(rotationIntervalRef.current);
+      rotationIntervalRef.current = null;
     }
     
-    const activeAnnouncements = announcements.filter(ann => ann.isActive);
+    // Handle different cases based on active announcements
+    if (!hasActive) {
+      console.log("No active announcements detected, clearing rotation");
+      if (currentIndex !== 0) {
+        setCurrentIndex(0);
+      }
+      return;
+    }
     
+    // Setup rotation for multiple announcements
     if (activeAnnouncements.length > 1) {
       rotationIntervalRef.current = setInterval(() => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % activeAnnouncements.length);
       }, 8000);
-    } else if (activeAnnouncements.length === 1) {
+    } else if (activeAnnouncements.length === 1 && currentIndex !== 0) {
       // Reset to 0 if only one active announcement
       setCurrentIndex(0);
     }
@@ -217,27 +240,27 @@ export default function AnnouncementBanner() {
         clearInterval(rotationIntervalRef.current);
       }
     };
-  }, [announcements]);
+  }, [announcements, currentIndex]);
 
-  // Continuously filter out inactive announcements from the current state
-  const activeAnnouncements = announcements.filter(ann => ann.isActive);
-  
-  // Don't show anything if there are no active announcements
-  if (activeAnnouncements.length === 0) {
-    return null;
-  }
-
-  // Adjust currentIndex if it's out of bounds after filtering
+  // Handle index adjustment in useEffect to avoid hook order issues with strict filtering
+  const activeAnnouncements = announcements.filter(ann => ann && ann.isActive === true);
   const adjustedIndex = currentIndex >= activeAnnouncements.length ? 0 : currentIndex;
   const currentAnnouncement = activeAnnouncements[adjustedIndex];
   
-  // Update currentIndex if it was adjusted
-  if (adjustedIndex !== currentIndex && activeAnnouncements.length > 0) {
-    setCurrentIndex(adjustedIndex);
-  }
+  // Update currentIndex if it was adjusted (using useEffect to avoid infinite renders)
+  useEffect(() => {
+    if (adjustedIndex !== currentIndex && activeAnnouncements.length > 0) {
+      setCurrentIndex(adjustedIndex);
+    }
+  }, [adjustedIndex, currentIndex, activeAnnouncements.length]);
   
-  // Final safety check: Don't show if current announcement is invalid or inactive
-  if (!currentAnnouncement || !currentAnnouncement.isActive) {
+  // Strict checking: Return null after all hooks have been called
+  // Multiple checks to ensure we never show inactive announcements
+  if (activeAnnouncements.length === 0 || 
+      !currentAnnouncement || 
+      currentAnnouncement.isActive !== true ||
+      !announcements.length ||
+      announcements.every(ann => !ann || ann.isActive !== true)) {
     return null;
   }
   
@@ -248,7 +271,7 @@ export default function AnnouncementBanner() {
     <div className="w-full sticky top-0 z-50">
       <AnimatePresence mode="wait">
         <motion.div
-          key={currentAnnouncement.id}
+          key={`${currentAnnouncement.id}-${currentAnnouncement.isActive}`}
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -50, opacity: 0 }}
@@ -260,16 +283,17 @@ export default function AnnouncementBanner() {
               <span className="h-6 w-6">{icon}</span>
             </span>
             <motion.div 
+              key={`scroll-${currentAnnouncement.id}-${currentAnnouncement.isActive}`}
               initial={{ x: "100%" }}
-              animate={{ x: "-100%" }}
-              transition={{
+              animate={currentAnnouncement.isActive ? { x: "-100%" } : { x: "100%" }}
+              transition={currentAnnouncement.isActive ? {
                 x: {
                   repeat: Infinity,
                   repeatType: "loop",
                   duration: Math.max(15, currentAnnouncement.message.length / 8),
                   ease: "linear",
                 },
-              }}
+              } : { duration: 0.3 }}
               className="font-bold text-lg"
             >
               {currentAnnouncement.message}

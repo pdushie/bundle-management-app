@@ -7,25 +7,53 @@ import Link from "next/link";
 
 export default function NewFeatureNotifier() {
   const [dismissed, setDismissed] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
   const { data: session } = useSession();
   
   // Only show for admin and superadmin users
   const isAdmin = session?.user?.role === "admin" || session?.user?.role === "superadmin";
   
   useEffect(() => {
-    // Check if user has already dismissed this notification
-    const announcementFeatureDismissed = localStorage.getItem("announcementFeatureDismissed");
-    if (!announcementFeatureDismissed && isAdmin) {
-      setDismissed(false);
+    // Only check localStorage once the component is mounted and user session is available
+    if (isAdmin && !isInitialized) {
+      try {
+        const announcementFeatureDismissed = localStorage.getItem("announcementFeatureDismissed");
+        console.log("NewFeatureNotifier: Checking localStorage, dismissed =", announcementFeatureDismissed);
+        
+        if (!announcementFeatureDismissed || announcementFeatureDismissed !== "true") {
+          console.log("NewFeatureNotifier: Showing notification");
+          setDismissed(false);
+        } else {
+          console.log("NewFeatureNotifier: Notification previously dismissed");
+          setDismissed(true);
+        }
+      } catch (error) {
+        console.error("NewFeatureNotifier: Error accessing localStorage:", error);
+        setDismissed(false); // Show by default if localStorage fails
+      }
+      setIsInitialized(true);
+    } else if (!isAdmin && !isInitialized) {
+      setIsInitialized(true);
     }
-  }, [isAdmin]);
+  }, [isAdmin, isInitialized]);
   
-  if (dismissed || !isAdmin) return null;
+  if (dismissed || !isAdmin || !isInitialized) return null;
   
   const handleDismiss = (permanent = false) => {
+    console.log("NewFeatureNotifier: Dismissing notification, permanent =", permanent);
     setDismissed(true);
+    
     if (permanent) {
-      localStorage.setItem("announcementFeatureDismissed", "true");
+      try {
+        localStorage.setItem("announcementFeatureDismissed", "true");
+        console.log("NewFeatureNotifier: Set localStorage announcementFeatureDismissed = true");
+        
+        // Verify it was set correctly
+        const check = localStorage.getItem("announcementFeatureDismissed");
+        console.log("NewFeatureNotifier: Verification check, localStorage value =", check);
+      } catch (error) {
+        console.error("NewFeatureNotifier: Error setting localStorage:", error);
+      }
     }
   };
   
