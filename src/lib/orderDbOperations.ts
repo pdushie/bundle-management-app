@@ -108,7 +108,24 @@ export const loadOrders = async (): Promise<Order[]> => {
     }
     const allOrders: Order[] = [];
     for (const dbOrder of dbOrders) {
-      const order = await mapDbOrderToOrder(dbOrder);
+      // Fetch the entries for this order
+      let entries;
+      if (db) {
+        entries = await db
+          .select()
+          .from(orderEntries)
+          .where(eq(orderEntries.orderId, dbOrder.id));
+      } else {
+        entries = await neonClient`SELECT * FROM order_entries WHERE order_id = ${dbOrder.id}`;
+      }
+      
+      // Attach entries to the order object
+      const orderWithEntries = {
+        ...dbOrder,
+        entries: entries
+      };
+      
+      const order = await mapDbOrderToOrder(orderWithEntries);
       allOrders.push(order);
     }
     return allOrders;
@@ -182,7 +199,24 @@ export const getOrdersOldestFirst = async (): Promise<Order[]> => {
     }
     const allOrders: Order[] = [];
     for (const dbOrder of dbOrders) {
-      const order = await mapDbOrderToOrder(dbOrder);
+      // Fetch the entries for this order
+      let entries;
+      if (db) {
+        entries = await db
+          .select()
+          .from(orderEntries)
+          .where(eq(orderEntries.orderId, dbOrder.id));
+      } else {
+        entries = await neonClient`SELECT * FROM order_entries WHERE order_id = ${dbOrder.id}`;
+      }
+      
+      // Attach entries to the order object
+      const orderWithEntries = {
+        ...dbOrder,
+        entries: entries
+      };
+      
+      const order = await mapDbOrderToOrder(orderWithEntries);
       allOrders.push(order);
     }
     return allOrders;
@@ -253,7 +287,19 @@ export const getPendingOrdersOldestFirst = async (): Promise<Order[]> => {
     // Map to application orders with entries
     const allOrders: Order[] = [];
     for (const dbOrder of dbOrders) {
-      const order = await mapDbOrderToOrder(dbOrder);
+      // Fetch the entries for this order
+      const entries = await db
+        .select()
+        .from(orderEntries)
+        .where(eq(orderEntries.orderId, dbOrder.id));
+      
+      // Attach entries to the order object
+      const orderWithEntries = {
+        ...dbOrder,
+        entries: entries
+      };
+      
+      const order = await mapDbOrderToOrder(orderWithEntries);
       allOrders.push(order);
     }
     
@@ -278,7 +324,19 @@ export const getProcessedOrdersOldestFirst = async (): Promise<Order[]> => {
     // Map to application orders with entries
     const allOrders: Order[] = [];
     for (const dbOrder of dbOrders) {
-      const order = await mapDbOrderToOrder(dbOrder);
+      // Fetch the entries for this order
+      const entries = await db
+        .select()
+        .from(orderEntries)
+        .where(eq(orderEntries.orderId, dbOrder.id));
+      
+      // Attach entries to the order object
+      const orderWithEntries = {
+        ...dbOrder,
+        entries: entries
+      };
+      
+      const order = await mapDbOrderToOrder(orderWithEntries);
       allOrders.push(order);
     }
     

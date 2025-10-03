@@ -726,8 +726,12 @@ function BundleAllocatorApp({
       return { isValid: true, correctedNumber: digitsOnly, wasFixed: wasFixed };
     }
     
-    // Second case: 9 digits - try adding a leading zero
+    // Second case: 9 digits - try adding a leading zero (only if it doesn't already start with 0)
     if (digitsOnly.length === 9) {
+      // Don't add extra 0 if it already starts with 0
+      if (digitsOnly.startsWith('0')) {
+        return { isValid: false, correctedNumber: digitsOnly, wasFixed: wasFixed };
+      }
       const withZero = '0' + digitsOnly;
       return { isValid: true, correctedNumber: withZero, wasFixed: true };
     }
@@ -740,6 +744,36 @@ function BundleAllocatorApp({
     
     // If still invalid, return the original number as invalid
     return { isValid: false, correctedNumber: digitsOnly, wasFixed: wasFixed };
+  };
+
+  // Comprehensive validation function that requires both valid phone number AND valid data allocation
+  const validateEntry = (phoneNumber: string, dataAllocation: number): { 
+    isValid: boolean; 
+    phoneValidation: { isValid: boolean; correctedNumber: string; wasFixed: boolean };
+    allocationValid: boolean;
+    reason?: string;
+  } => {
+    const phoneValidation = validateNumber(phoneNumber);
+    const allocationValid = !isNaN(dataAllocation) && dataAllocation > 0;
+    
+    // Entry is only valid if BOTH phone number AND data allocation are valid
+    const isValid = phoneValidation.isValid && allocationValid;
+    
+    let reason = '';
+    if (!phoneValidation.isValid && !allocationValid) {
+      reason = 'Invalid phone number and data allocation';
+    } else if (!phoneValidation.isValid) {
+      reason = 'Invalid phone number';
+    } else if (!allocationValid) {
+      reason = 'Invalid data allocation (must be greater than 0)';
+    }
+    
+    return {
+      isValid,
+      phoneValidation,
+      allocationValid,
+      reason
+    };
   };
 
   // Function to read Excel (.xlsx) files
@@ -774,12 +808,27 @@ function BundleAllocatorApp({
               // Try to get data allocation from different columns
               // Column 2 first (direct allocation)
               if (row.getCell(2).text) {
-                dataAllocation = row.getCell(2).text;
+                const cellValue = row.getCell(2).text.toString().trim();
+                
+                // Critical bug fix: Check if this looks like a phone number being interpreted as allocation
+                // Phone numbers in Kenya start with 0 and are 10 digits
+                if (cellValue.startsWith('0') && cellValue.length === 10 && /^\d+$/.test(cellValue)) {
+                  console.log(`Excel input: CRITICAL BUG DETECTED - '${cellValue}' looks like a phone number in column 2 (allocation column). Skipping this entry.`);
+                  console.log(`This suggests columns might be swapped in the Excel file. Please check that phone numbers are in column 1 and data allocations are in column 2.`);
+                } else {
+                  dataAllocation = cellValue;
+                }
               }
               // Then try column 4 (Data MB column from template)
               else if (row.getCell(4).text) {
-                const mbValue = parseFloat(row.getCell(4).text);
-                if (!isNaN(mbValue)) {
+                const cellValue = row.getCell(4).text.toString().trim();
+                const mbValue = parseFloat(cellValue);
+                
+                // Critical bug fix: Check if this looks like a phone number being interpreted as MB allocation
+                if (mbValue >= 10000000 && mbValue <= 999999999 && cellValue.startsWith('0') && cellValue.length === 10) {
+                  console.log(`Excel input: CRITICAL BUG DETECTED - '${cellValue}' looks like a phone number in column 4 (MB allocation column). Skipping this entry.`);
+                  console.log(`This suggests columns might be swapped in the Excel file. Please check that phone numbers are in column 1 and MB allocations are in column 4.`);
+                } else if (!isNaN(mbValue) && mbValue > 0) {
                   // Convert MB to GB
                   dataAllocation = (mbValue / 1024).toFixed(2) + 'GB';
                 }
@@ -844,11 +893,11 @@ function BundleAllocatorApp({
 
           const allocGB = parseFloat(allocRaw);
 
-          if (!isNaN(allocGB)) {
-            const validation = validateNumber(phoneRaw);
-            const finalPhoneNumber = validation.correctedNumber;
+          if (!isNaN(allocGB) && allocGB > 0) {
+            const entryValidation = validateEntry(phoneRaw, allocGB);
+            const finalPhoneNumber = entryValidation.phoneValidation.correctedNumber;
             
-            if (validation.wasFixed) {
+            if (entryValidation.phoneValidation.wasFixed) {
               fixedNumbers++;
             }
 
@@ -881,20 +930,20 @@ function BundleAllocatorApp({
 
           const allocGB = parseFloat(allocRaw);
 
-          if (!isNaN(allocGB)) {
-            const validation = validateNumber(phoneRaw);
-            const uniqueKey = `${validation.correctedNumber}-${allocGB}`;
+          if (!isNaN(allocGB) && allocGB > 0) {
+            const entryValidation = validateEntry(phoneRaw, allocGB);
+            const uniqueKey = `${entryValidation.phoneValidation.correctedNumber}-${allocGB}`;
             
             // Only add if this is the first occurrence of this combination
             if (!seenCombinations.has(uniqueKey)) {
               seenCombinations.add(uniqueKey);
               
               parsed.push({
-                number: validation.correctedNumber,
+                number: entryValidation.phoneValidation.correctedNumber,
                 allocationGB: allocGB,
-                isValid: validation.isValid,
+                isValid: entryValidation.isValid, // Requires BOTH valid phone number AND valid data allocation
                 isDuplicate: false, // No entries are marked as duplicate since we remove them
-                wasFixed: validation.wasFixed,
+                wasFixed: entryValidation.phoneValidation.wasFixed,
               });
             }
             // Skip duplicate entries (don't add them to parsed array)
@@ -1559,8 +1608,12 @@ function BundleCategorizerApp({
       return { isValid: true, correctedNumber: digitsOnly, wasFixed: wasFixed };
     }
     
-    // Second case: 9 digits - try adding a leading zero
+    // Second case: 9 digits - try adding a leading zero (only if it doesn't already start with 0)
     if (digitsOnly.length === 9) {
+      // Don't add extra 0 if it already starts with 0
+      if (digitsOnly.startsWith('0')) {
+        return { isValid: false, correctedNumber: digitsOnly, wasFixed: wasFixed };
+      }
       const withZero = '0' + digitsOnly;
       return { isValid: true, correctedNumber: withZero, wasFixed: true };
     }
@@ -1573,6 +1626,36 @@ function BundleCategorizerApp({
     
     // If still invalid, return the original number as invalid
     return { isValid: false, correctedNumber: digitsOnly, wasFixed: wasFixed };
+  };
+
+  // Comprehensive validation function that requires both valid phone number AND valid data allocation
+  const validateEntry = (phoneNumber: string, dataAllocation: number): { 
+    isValid: boolean; 
+    phoneValidation: { isValid: boolean; correctedNumber: string; wasFixed: boolean };
+    allocationValid: boolean;
+    reason?: string;
+  } => {
+    const phoneValidation = validateNumber(phoneNumber);
+    const allocationValid = !isNaN(dataAllocation) && dataAllocation > 0;
+    
+    // Entry is only valid if BOTH phone number AND data allocation are valid
+    const isValid = phoneValidation.isValid && allocationValid;
+    
+    let reason = '';
+    if (!phoneValidation.isValid && !allocationValid) {
+      reason = 'Invalid phone number and data allocation';
+    } else if (!phoneValidation.isValid) {
+      reason = 'Invalid phone number';
+    } else if (!allocationValid) {
+      reason = 'Invalid data allocation (must be greater than 0)';
+    }
+    
+    return {
+      isValid,
+      phoneValidation,
+      allocationValid,
+      reason
+    };
   };
 
   const parseData = () => {
@@ -1600,19 +1683,19 @@ function BundleCategorizerApp({
 
       allocationSummary[allocKey] = (allocationSummary[allocKey] || 0) + 1;
 
-      // Enhanced validation with auto-fix
-      const validation = validateNumber(phoneNumber);
-      if (validation.wasFixed) {
+      // Enhanced validation with auto-fix - now requires both phone number AND data allocation
+      const entryValidation = validateEntry(phoneNumber, allocationGB);
+      if (entryValidation.phoneValidation.wasFixed) {
         fixedNumbers++;
       }
 
       // Create phone entry for history
       processedEntries.push({
-        number: validation.correctedNumber,
+        number: entryValidation.phoneValidation.correctedNumber,
         allocationGB: allocationGB,
-        isValid: validation.isValid,
+        isValid: entryValidation.isValid, // Requires BOTH valid phone number AND valid data allocation
         isDuplicate: false,
-        wasFixed: validation.wasFixed
+        wasFixed: entryValidation.phoneValidation.wasFixed
       });
     });
 

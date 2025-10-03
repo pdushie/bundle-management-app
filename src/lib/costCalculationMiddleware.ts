@@ -126,14 +126,44 @@ export async function ensureOrderCosts(order: Order, userId?: number | null): Pr
       0
     );
     
+    console.log(`Entry costs breakdown for order ${order.id}:`);
+    entriesWithCosts.forEach((entry, index) => {
+      console.log(`  Entry ${index + 1} (${entry.allocationGB}GB): GHS ${entry.cost || 0}`);
+    });
+    console.log(`Sum of all entry costs: GHS ${orderTotalCost}`);
+    
     // Apply minimum charge if needed
     const minCharge = parseFloat(userPricingProfile.minimumCharge || "0");
     const finalCost = Math.max(orderTotalCost, minCharge);
+    
+    console.log(`Minimum charge: GHS ${minCharge}`);
+    console.log(`Final cost (after min charge): GHS ${finalCost}`);
     
     // Round to 2 decimal places
     const roundedCost = Math.round(finalCost * 100) / 100;
     
     console.log(`Calculated total cost for order ${order.id}: GHS ${roundedCost}`);
+    
+    // Safety check - don't allow costs to be zero unless it's genuinely correct
+    if (roundedCost === 0 && order.totalData > 0) {
+      console.warn(`WARNING: Calculated cost is 0 for order ${order.id} with ${order.totalData}GB data. This might be an error.`);
+      console.warn(`Profile: ${userPricingProfile.name}, Entries: ${order.entries.length}, Total data: ${order.totalData}`);
+      
+      // If we have existing costs and the calculated cost is 0, preserve the existing costs
+      if ((order.cost && parseFloat(order.cost.toString()) > 0) || 
+          (order.estimatedCost && parseFloat(order.estimatedCost.toString()) > 0)) {
+        console.warn(`Preserving existing costs instead of zero: cost=${order.cost}, estimatedCost=${order.estimatedCost}`);
+        return {
+          ...order,
+          entries: entriesWithCosts,
+          // Preserve existing costs if calculation resulted in zero
+          cost: order.cost || roundedCost,
+          estimatedCost: order.estimatedCost || roundedCost,
+          pricingProfileId: userPricingProfile.id,
+          pricingProfileName: userPricingProfile.name
+        };
+      }
+    }
     
     // Return a new order object with the calculated costs
     return {

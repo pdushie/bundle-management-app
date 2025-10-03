@@ -132,8 +132,13 @@ export default function SendOrderApp() {
       return { isValid: true, correctedNumber: digitsOnly, wasFixed: wasFixed };
     }
     
-    // Second case: 9 digits - try adding a leading zero
+    // Second case: 9 digits - try adding a leading zero (only if it doesn't already start with 0)
     if (digitsOnly.length === 9) {
+      // Don't add extra 0 if it already starts with 0
+      if (digitsOnly.startsWith('0')) {
+        console.log(`9-digit number already starts with 0, marking as invalid: '${digitsOnly}'`);
+        return { isValid: false, correctedNumber: digitsOnly, wasFixed: wasFixed };
+      }
       const withZero = '0' + digitsOnly;
       console.log(`Fixed number by adding leading zero: '${digitsOnly}' -> '${withZero}'`);
       return { isValid: true, correctedNumber: withZero, wasFixed: true };
@@ -160,6 +165,36 @@ export default function SendOrderApp() {
     return { isValid: false, correctedNumber: digitsOnly, wasFixed: wasFixed };
   };
 
+  // Comprehensive validation function that requires both valid phone number AND valid data allocation
+  const validateEntry = (phoneNumber: string, dataAllocation: number): { 
+    isValid: boolean; 
+    phoneValidation: { isValid: boolean; correctedNumber: string; wasFixed: boolean };
+    allocationValid: boolean;
+    reason?: string;
+  } => {
+    const phoneValidation = validateNumber(phoneNumber);
+    const allocationValid = !isNaN(dataAllocation) && dataAllocation > 0;
+    
+    // Entry is only valid if BOTH phone number AND data allocation are valid
+    const isValid = phoneValidation.isValid && allocationValid;
+    
+    let reason = '';
+    if (!phoneValidation.isValid && !allocationValid) {
+      reason = 'Invalid phone number and data allocation';
+    } else if (!phoneValidation.isValid) {
+      reason = 'Invalid phone number';
+    } else if (!allocationValid) {
+      reason = 'Invalid data allocation (must be greater than 0)';
+    }
+    
+    return {
+      isValid,
+      phoneValidation,
+      allocationValid,
+      reason
+    };
+  };
+
   // Process manual text input with duplicate detection
   const processManualInput = (text: string): OrderEntry[] => {
     setManualInputText(text);
@@ -183,43 +218,53 @@ export default function SendOrderApp() {
       
       lines.forEach((line) => {
         // Extract data using a more robust approach that handles any characters between phone and data
-        // Regex to find patterns like: number (any chars) number+GB
-        // This will extract the first sequence of digits as the phone number and 
-        // the last sequence of digits (possibly with decimal) as the data allocation
-        const phoneMatch = line.match(/^(\d[\d\.\-]*)/);
-        const dataMatch = line.match(/(\d+(?:\.\d+)?)\s*(?:gig|g|gb)?$/i);
+        // Enhanced parsing logic to properly separate phone number from data allocation
+        // Phone number must be exactly 10 digits starting with 0, followed by whitespace and allocation
+        const parts = line.trim().split(/\s+/);
         
-        if (phoneMatch && dataMatch) {
-          const phoneRaw = phoneMatch[1]; // First digits group - phone number
-          const allocRaw = dataMatch[1]; // Last digits group - allocation
+        if (parts.length < 2) {
+          console.log(`Manual input: Skipping line "${line}" - must contain both phone number and data allocation separated by space`);
+          return; // Skip lines that don't have both phone and allocation
+        }
+        
+        const phoneRaw = parts[0]; // First part must be phone number
+        const allocRaw = parts[parts.length - 1].replace(/gb$/i, "").trim(); // Last part is allocation (remove GB suffix)
+        
+        console.log(`Parsed from line "${line}": Phone="${phoneRaw}", Data="${allocRaw}"`);
+        
+        // Check if allocation is a valid number format
+        if (!/^\d+(\.\d+)?$/.test(allocRaw)) {
+          console.log(`Manual input: Invalid allocation format '${allocRaw}' - must be a number`);
+          return; // Skip this entry entirely by returning from the forEach callback
+        }
+        
+        const allocGB = parseFloat(allocRaw);
+        
+        // Critical bug fix: Check if this looks like a phone number being interpreted as allocation
+        // Phone numbers in Kenya start with 0 and are 10 digits, so when parsed as float they become 
+        // very large numbers (e.g., "0249651750" becomes 249651750 GB = 243800.54 TB)
+        if (allocGB >= 10000000 && allocGB <= 999999999 && allocRaw.startsWith('0') && allocRaw.length === 10) {
+          console.log(`Manual input: CRITICAL BUG DETECTED - '${allocRaw}' looks like a phone number (${allocGB} GB = ${(allocGB/1024).toFixed(2)} TB), not data allocation. Skipping this line: "${line}"`);
+          console.log(`This suggests the line format is incorrect. Expected format: "phone_number data_allocation" (e.g., "0777123456 5GB")`);
+          return; // Skip this entry entirely
+        }
+        
+        // Additional check to ensure it's a positive number
+        if (!isNaN(allocGB) && allocGB > 0) {
+          const validation = validateNumber(phoneRaw);
+          const finalPhoneNumber = validation.correctedNumber;
           
-          console.log(`Parsed from line "${line}": Phone="${phoneRaw}", Data="${allocRaw}"`);
-          
-          // Check if allocation is a valid number format
-          if (!/^\d+(\.\d+)?$/.test(allocRaw)) {
-            console.log(`Manual input: Invalid allocation format '${allocRaw}' - must be a number`);
-            return; // Skip this entry entirely by returning from the forEach callback
+          if (validation.wasFixed) {
+            fixedNumbers++;
           }
           
-          const allocGB = parseFloat(allocRaw);
+          // Create unique key combining phone number AND allocation
+          const uniqueKey = `${finalPhoneNumber}-${allocGB}`;
           
-          // Additional check to ensure it's a positive number
-          if (!isNaN(allocGB) && allocGB > 0) {
-            const validation = validateNumber(phoneRaw);
-            const finalPhoneNumber = validation.correctedNumber;
-            
-            if (validation.wasFixed) {
-              fixedNumbers++;
-            }
-            
-            // Create unique key combining phone number AND allocation
-            const uniqueKey = `${finalPhoneNumber}-${allocGB}`;
-            
-            if (phoneAllocCombinations.has(uniqueKey)) {
-              duplicates.add(uniqueKey);
-            } else {
-              phoneAllocCombinations.add(uniqueKey);
-            }
+          if (phoneAllocCombinations.has(uniqueKey)) {
+            duplicates.add(uniqueKey);
+          } else {
+            phoneAllocCombinations.add(uniqueKey);
           }
         }
       });
@@ -231,69 +276,81 @@ export default function SendOrderApp() {
       let totalDuplicates = 0;
       
       lines.forEach((line) => {
-        // Use the same robust parsing approach as in the first pass
-        const phoneMatch = line.match(/^(\d[\d\.\-]*)/);
-        const dataMatch = line.match(/(\d+(?:\.\d+)?)\s*(?:gig|g|gb)?$/i);
+        // Use the same enhanced parsing approach as in the first pass
+        const parts = line.trim().split(/\s+/);
         
-        if (phoneMatch && dataMatch) {
-          const phoneRaw = phoneMatch[1]; // First digits group - phone number
-          const allocRaw = dataMatch[1]; // Last digits group - allocation
+        if (parts.length < 2) {
+          console.log(`Manual input: Skipping line "${line}" - must contain both phone number and data allocation separated by space`);
+          return; // Skip lines that don't have both phone and allocation
+        }
+        
+        const phoneRaw = parts[0]; // First part must be phone number
+        const allocRaw = parts[parts.length - 1].replace(/gb$/i, "").trim(); // Last part is allocation (remove GB suffix)
+        
+        // Log for debugging
+        console.log(`Processing line: "${line}", extracted phone: "${phoneRaw}", allocation: "${allocRaw}"`);
+        
+        // Validation will be done by validateNumber function
+        // We'll still log the issue here for debugging purposes
+        const containsNonDigits = /[^\d]/.test(phoneRaw);
+        if (containsNonDigits) {
+          console.log(`Manual input: Phone number ${phoneRaw} contains non-numeric characters - will be handled by validation`);
+        }
+        
+        // Check if allocation is a valid number format (allow decimals)
+        if (!/^\d+(\.\d+)?$/.test(allocRaw)) {
+          console.log(`Manual input: Invalid allocation format '${allocRaw}' - must be a number`);
+          return; // Skip this entry entirely by returning from the forEach callback
+        }
+        
+        const allocGB = parseFloat(allocRaw);
+        
+        // Critical bug fix: Check if this looks like a phone number being interpreted as allocation
+        // Phone numbers in Kenya start with 0 and are 10 digits, so when parsed as float they become 
+        // very large numbers (e.g., "0249651750" becomes 249651750 GB = 243800.54 TB)
+        if (allocGB >= 10000000 && allocGB <= 999999999 && allocRaw.startsWith('0') && allocRaw.length === 10) {
+          console.log(`Manual input: CRITICAL BUG DETECTED - '${allocRaw}' looks like a phone number (${allocGB} GB = ${(allocGB/1024).toFixed(2)} TB), not data allocation. Skipping this line: "${line}"`);
+          console.log(`This suggests the line format is incorrect. Expected format: "phone_number data_allocation" (e.g., "0777123456 5GB")`);
+          return; // Skip this entry entirely
+        }
+        
+        // Additional check to ensure it's a positive number
+        if (!isNaN(allocGB) && allocGB > 0) {
+          // Use comprehensive validation that checks both phone number AND data allocation
+          const entryValidation = validateEntry(phoneRaw, allocGB);
+          console.log(`Manual input: Entry validation for ${phoneRaw} with ${allocGB}GB:`, entryValidation);
           
-          // Log for debugging
-          console.log(`Processing line: "${line}", extracted phone: "${phoneRaw}", allocation: "${allocRaw}"`);
+          const uniqueKey = `${entryValidation.phoneValidation.correctedNumber}-${allocGB}`;
           
-          // Validation will be done by validateNumber function
-          // We'll still log the issue here for debugging purposes
-          const containsNonDigits = /[^\d]/.test(phoneRaw);
-          if (containsNonDigits) {
-            console.log(`Manual input: Phone number ${phoneRaw} contains non-numeric characters - will be handled by validation`);
-          }
-          
-          // Check if allocation is a valid number format (allow decimals)
-          if (!/^\d+(\.\d+)?$/.test(allocRaw)) {
-            console.log(`Manual input: Invalid allocation format '${allocRaw}' - must be a number`);
-            return; // Skip this entry entirely by returning from the forEach callback
-          }
-          
-          const allocGB = parseFloat(allocRaw);
-          
-          // Additional check to ensure it's a positive number
-          if (!isNaN(allocGB) && allocGB > 0) {
-            const validation = validateNumber(phoneRaw);
-            console.log(`Manual input: Phone number ${phoneRaw} validation:`, validation);
+          // Only add if this is the first occurrence of this combination
+          if (!seenCombinations.has(uniqueKey)) {
+            seenCombinations.add(uniqueKey);
             
-            const uniqueKey = `${validation.correctedNumber}-${allocGB}`;
+            // Double check validity here with regex
+            const isValidNumber = /^0\d{9}$/.test(entryValidation.phoneValidation.correctedNumber);
             
-            // Only add if this is the first occurrence of this combination
-            if (!seenCombinations.has(uniqueKey)) {
-              seenCombinations.add(uniqueKey);
-              
-              // Double check validity here
-              const isValidNumber = /^0\d{9}$/.test(validation.correctedNumber);
-              
-              // Ensure we're consistent in our validation across the app
-              const finalValid = isValidNumber && validation.isValid !== false;
-              console.log(`Double-checking ${validation.correctedNumber}: regex=${isValidNumber}, validation=${validation.isValid}, final=${finalValid}`);
-              
-              const entry = {
-                number: validation.correctedNumber,
-                allocationGB: allocGB,
-                status: "pending" as "pending",
-                isValid: finalValid, // Use the combined check for strictest validation
-                wasFixed: validation.wasFixed,
-                isDuplicate: false // No entries are marked as duplicate since we remove them
-              };
-              
-              parsed.push(entry);
-              
-              // Log if there's a difference between our validation function and this check
-              if (isValidNumber !== validation.isValid) {
-                console.log(`Validation mismatch for ${validation.correctedNumber}: validation function=${validation.isValid}, regex check=${isValidNumber}`);
-              }
-            } else {
-              // Count duplicates that are removed
-              totalDuplicates++;
+            // Final validation combines all checks: phone number format, validation function, AND data allocation
+            const finalValid = isValidNumber && entryValidation.isValid;
+            console.log(`Final validation for ${entryValidation.phoneValidation.correctedNumber}: regex=${isValidNumber}, entry validation=${entryValidation.isValid}, final=${finalValid}`);
+            
+            const entry = {
+              number: entryValidation.phoneValidation.correctedNumber,
+              allocationGB: allocGB,
+              status: "pending" as "pending",
+              isValid: finalValid, // Use comprehensive validation that requires both phone AND allocation
+              wasFixed: entryValidation.phoneValidation.wasFixed,
+              isDuplicate: false // No entries are marked as duplicate since we remove them
+            };
+            
+            parsed.push(entry);
+            
+            // Log validation details
+            if (!finalValid) {
+              console.log(`Entry marked invalid: ${entryValidation.reason}`);
             }
+          } else {
+            // Count duplicates that are removed
+            totalDuplicates++;
           }
         }
       });
@@ -414,7 +471,14 @@ export default function SendOrderApp() {
                   console.log(`Excel input: Invalid GB allocation format '${gbRaw}' - must be a number`);
                 } else {
                   const gbValue = parseFloat(gbRaw);
-                  if (!isNaN(gbValue) && gbValue > 0) {
+                  
+                  // Critical bug fix: Check if this looks like a phone number being interpreted as allocation
+                  // Phone numbers in Kenya start with 0 and are 10 digits, so when parsed as float they become 
+                  // very large numbers (e.g., "0249651753" becomes 249651753 GB = 243800.54 TB)
+                  if (gbValue >= 10000000 && gbValue <= 999999999 && gbRaw.startsWith('0') && gbRaw.length === 10) {
+                    console.log(`Excel input: CRITICAL BUG DETECTED - '${gbRaw}' looks like a phone number (${gbValue} GB = ${(gbValue/1024).toFixed(2)} TB), not data allocation. Skipping this entry.`);
+                    console.log(`This suggests columns might be swapped in the Excel file. Please check that phone numbers are in column 1 and data allocations are in column 2.`);
+                  } else if (!isNaN(gbValue) && gbValue > 0) {
                     dataAllocation = gbValue;
                   } else {
                     console.log(`Excel input: Invalid GB allocation value '${gbRaw}' - must be a positive number`);
@@ -430,7 +494,12 @@ export default function SendOrderApp() {
                   console.log(`Excel input: Invalid MB allocation format '${mbRaw}' - must be a number`);
                 } else {
                   const mbValue = parseFloat(mbRaw);
-                  if (!isNaN(mbValue) && mbValue > 0) {
+                  
+                  // Critical bug fix: Check if this looks like a phone number being interpreted as MB allocation
+                  if (mbValue >= 10000000 && mbValue <= 999999999 && mbRaw.startsWith('0') && mbRaw.length === 10) {
+                    console.log(`Excel input: CRITICAL BUG DETECTED - '${mbRaw}' looks like a phone number (${mbValue} MB = ${(mbValue/1024/1024).toFixed(2)} GB), not MB allocation. Skipping this entry.`);
+                    console.log(`This suggests columns might be swapped in the Excel file. Please check that phone numbers are in column 1 and MB allocations are in column 4.`);
+                  } else if (!isNaN(mbValue) && mbValue > 0) {
                     // Convert MB to GB
                     dataAllocation = mbValue / 1024;
                   } else {
@@ -452,17 +521,21 @@ export default function SendOrderApp() {
                   console.log(`Excel input: Phone number ${phoneNumber} is not 10 digits (length: ${phoneNumber.length}) - will be flagged invalid`);
                 }
                 
-                const validation = validateNumber(phoneNumber);
-                if (validation.wasFixed) {
+                const entryValidation = validateEntry(phoneNumber, dataAllocation);
+                if (entryValidation.phoneValidation.wasFixed) {
                   fixedNumbers++;
                 }
                 
-                console.log(`Phone number ${phoneNumber} validation:`, validation);
+                console.log(`Entry validation for ${phoneNumber} with ${dataAllocation}GB:`, entryValidation);
                 
                 tempEntries.push({
-                  phoneNumber: validation.correctedNumber,
+                  phoneNumber: entryValidation.phoneValidation.correctedNumber,
                   dataAllocation,
-                  validation
+                  validation: {
+                    isValid: entryValidation.isValid,
+                    correctedNumber: entryValidation.phoneValidation.correctedNumber,
+                    wasFixed: entryValidation.phoneValidation.wasFixed
+                  }
                 });
               }
             });
@@ -502,18 +575,18 @@ export default function SendOrderApp() {
             if (!seenCombinations.has(uniqueKey)) {
               seenCombinations.add(uniqueKey);
               
-              // Double check validity here
+              // Double check validity here with regex
               const isValidNumber = /^0\d{9}$/.test(entry.phoneNumber);
               
-              // Ensure we're consistent in our validation across the app
-              const finalValid = isValidNumber && entry.validation.isValid !== false;
-              console.log(`Final validation for ${entry.phoneNumber}: regex=${isValidNumber}, validation=${entry.validation.isValid}, final=${finalValid}`);
+              // Final validation combines phone format, entry validation, AND data allocation
+              const finalValid = isValidNumber && entry.validation.isValid;
+              console.log(`Final validation for ${entry.phoneNumber}: regex=${isValidNumber}, entry validation=${entry.validation.isValid}, final=${finalValid}`);
               
               const newEntry = {
                 number: entry.phoneNumber,
                 allocationGB: entry.dataAllocation,
                 status: "pending" as "pending",
-                isValid: finalValid, // Use the combined check for strictest validation
+                isValid: finalValid, // Requires BOTH valid phone number AND valid data allocation
                 wasFixed: entry.validation.wasFixed,
                 isDuplicate: false // No entries are marked as duplicate since we remove them
               };
@@ -674,7 +747,7 @@ export default function SendOrderApp() {
     if (invalidEntries.length > 0) {
       // Show detailed message with the invalid numbers
       const invalidNumbers = invalidEntries.map(e => e.number).join(", ");
-      window.alert(`Cannot proceed with invalid phone numbers. Please fix these ${invalidEntries.length} invalid entries first:\n\n${invalidNumbers}`);
+      window.alert(`Cannot proceed with invalid entries. Please fix these ${invalidEntries.length} invalid entries first:\n\nEach entry must have BOTH:\n• Valid 10-digit phone number (starting with 0)\n• Valid data allocation (greater than 0)\n\nInvalid entries: ${invalidNumbers}`);
       return;
     }
     
@@ -1100,7 +1173,7 @@ export default function SendOrderApp() {
                 <div className="flex items-center gap-2 bg-red-100 px-3 py-1.5 rounded-full">
                   <AlertCircle className="w-4 h-4 text-red-600" />
                   <span className="text-red-700 text-sm font-medium">
-                    Fix {invalidCount} invalid {invalidCount === 1 ? 'entry' : 'entries'} to continue
+                    Fix {invalidCount} invalid {invalidCount === 1 ? 'entry' : 'entries'} (need valid phone + data allocation)
                   </span>
                 </div>
               )}

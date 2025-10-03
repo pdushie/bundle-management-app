@@ -24,10 +24,20 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const date = new Date(dateParam);
+    // Parse the date string as local time to avoid timezone shift
+    // dateParam format should be "YYYY-MM-DD"
+    const dateParts = dateParam.split('-');
+    if (dateParts.length !== 3) {
+      return NextResponse.json({ error: 'Invalid date format. Use YYYY-MM-DD' }, { status: 400 });
+    }
+    
+    const [year, month, day] = dateParts.map(Number);
+    const date = new Date(year, month - 1, day); // month is 0-indexed
+    
     if (isNaN(date.getTime())) {
       return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });
     }
+    
     const { start, end } = getDateBounds(date);
     const formattedDate = getFormattedDate(date);
 

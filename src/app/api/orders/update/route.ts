@@ -28,8 +28,26 @@ export async function PUT(request: NextRequest) {
     // Cast to the database order type
     const typedOrderWithCost = orderWithCost as unknown as DbOrder;
     
-  // Update the order with calculated costs in the database
-  await updateOrder(typedOrderWithCost.id, typedOrderWithCost);
+    // IMPORTANT: Preserve costs when processing orders
+    // If the order is being processed and already has costs, don't zero them out
+    if (typedOrderWithCost.status === "processed" && 
+        (order.cost !== undefined || order.estimatedCost !== undefined)) {
+      console.log(`Order ${order.id} being processed - preserving existing costs`);
+      console.log(`Original cost: ${order.cost}, estimatedCost: ${order.estimatedCost}`);
+      console.log(`Calculated cost: ${typedOrderWithCost.cost}, estimatedCost: ${typedOrderWithCost.estimatedCost}`);
+      
+      // Use the calculated cost if the original cost is 0 or null, otherwise preserve original
+      if (!order.cost || parseFloat(order.cost.toString()) === 0) {
+        console.log(`Using calculated cost since original is 0 or null`);
+      } else {
+        console.log(`Preserving original cost since it's not zero`);
+        typedOrderWithCost.cost = order.cost;
+        typedOrderWithCost.estimatedCost = order.estimatedCost || order.cost;
+      }
+    }
+    
+    // Update the order with calculated costs in the database
+    await updateOrder(typedOrderWithCost.id, typedOrderWithCost);
     
     // If the order is being processed (status changed to "processed"),
     // create a history entry for it

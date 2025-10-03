@@ -7,7 +7,8 @@ import { getCurrentTimeSync, getCurrentDateStringSync } from '../lib/timeService
 import { getFormattedDate } from '../lib/dateUtils';
 
 export default function BillingApp() {
-  const [selectedDate, setSelectedDate] = useState<Date>(getCurrentTimeSync());
+  // Initialize with local time to avoid timezone display issues
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [billingData, setBillingData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,6 +23,14 @@ export default function BillingApp() {
     }).format(amount);
   };
 
+  // Helper function to format date for HTML input (avoids timezone issues)
+  const formatDateForInput = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Get billing data for the selected date
   useEffect(() => {
     async function fetchBillingData() {
@@ -29,8 +38,8 @@ export default function BillingApp() {
         setIsLoading(true);
         setError(null);
         
-        // Format the date as YYYY-MM-DD for the API
-        const dateString = selectedDate.toISOString().split('T')[0];
+        // Format the date as YYYY-MM-DD for the API using local time
+        const dateString = formatDateForInput(selectedDate);
         const data = await getUserBilling(dateString);
         console.log("Billing data received:", data);
         console.log("Total amount:", data.totalAmount);
@@ -71,7 +80,7 @@ export default function BillingApp() {
 
   // Navigation functions
   const goToToday = () => {
-    setSelectedDate(getCurrentTimeSync());
+    setSelectedDate(new Date());
   };
 
   const goToPreviousDay = () => {
@@ -121,14 +130,19 @@ export default function BillingApp() {
   // Function to handle date picker change
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedDateValue = e.target.value;
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatDateForInput(new Date());
     
     // Don't allow selecting dates in the future
     if (selectedDateValue > today) {
       return;
     }
     
-    setSelectedDate(new Date(selectedDateValue));
+    // Parse the date string as local time to avoid timezone shift
+    // selectedDateValue format is "YYYY-MM-DD"
+    const [year, month, day] = selectedDateValue.split('-').map(Number);
+    const localDate = new Date(year, month - 1, day); // month is 0-indexed
+    
+    setSelectedDate(localDate);
   };
 
   // Check if selected date is today
@@ -181,7 +195,7 @@ export default function BillingApp() {
               <div className="relative">
                 <input 
                   type="date" 
-                  value={selectedDate.toISOString().split('T')[0]} 
+                  value={formatDateForInput(selectedDate)} 
                   onChange={handleDateChange}
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base text-gray-900 bg-white"
                 />
@@ -219,7 +233,7 @@ export default function BillingApp() {
                 <>
                   <button 
                     onClick={() => {
-                      const dateString = selectedDate.toISOString().split('T')[0];
+                      const dateString = formatDateForInput(selectedDate);
                       window.location.href = `/api/billing/export?date=${dateString}`;
                     }}
                     className="px-4 py-2 border border-gray-300 rounded-md font-medium flex items-center gap-2 hover:bg-gray-50 transition-colors"
@@ -230,7 +244,7 @@ export default function BillingApp() {
                   <button 
                     onClick={async () => {
                       try {
-                        const dateString = selectedDate.toISOString().split('T')[0];
+                        const dateString = formatDateForInput(selectedDate);
                         const response = await fetch(`/api/billing/pdf?date=${dateString}`);
                         
                         if (!response.ok) {
@@ -284,25 +298,26 @@ export default function BillingApp() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                 <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
                   <p className="text-sm text-blue-600 mb-1">Total Orders</p>
                   <p className="text-2xl font-bold">{billingData.orders.length}</p>
                 </div>
                 <div className="bg-green-50 border border-green-100 rounded-lg p-4">
-                  <p className="text-sm text-green-600 mb-1">Total Data</p>
-                  <p className="text-2xl font-bold">
-                    {billingData.totalData > 1024 
-                      ? `${(billingData.totalData / 1024).toFixed(2)} TB` 
-                      : `${billingData.totalData.toFixed(2)} GB`}
-                  </p>
+                  <p className="text-sm text-green-600 mb-1">Processed Orders</p>
+                  <p className="text-2xl font-bold">{billingData.orders.filter((order: any) => order.status === 'processed').length}</p>
+                  <p className="text-xs text-green-500 mt-1">Billable orders</p>
+                </div>
+                <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-4">
+                  <p className="text-sm text-yellow-600 mb-1">Pending Orders</p>
+                  <p className="text-2xl font-bold">{billingData.orders.filter((order: any) => order.status === 'pending').length}</p>
+                  <p className="text-xs text-yellow-500 mt-1">Not yet billable</p>
                 </div>
                 <div className="bg-purple-50 border border-purple-100 rounded-lg p-4">
-                  <p className="text-sm text-purple-600 mb-1">Total Amount</p>
+                  <p className="text-sm text-purple-600 mb-1">Billable Amount</p>
                   <p className="text-2xl font-bold">{formatCurrency(billingData.totalAmount || 0)}</p>
                   <p className="text-xs text-purple-500 mt-1">
-                    {billingData.orders.some((order: any) => order.status === "pending") ? 
-                      "* Includes pending orders" : ""}
+                    Processed orders only
                   </p>
                 </div>
               </div>
@@ -315,6 +330,7 @@ export default function BillingApp() {
                     <tr>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Entries</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Data</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pricing Profile</th>
@@ -323,9 +339,23 @@ export default function BillingApp() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {billingData.orders.map((order: any) => (
-                      <tr key={order.id} className="hover:bg-gray-50">
+                      <tr key={order.id} className={`hover:bg-gray-50 ${order.status === 'processed' ? 'bg-green-50' : order.status === 'pending' ? 'bg-yellow-50' : ''}`}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{order.time}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{order.id}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            order.status === 'processed' 
+                              ? 'bg-green-100 text-green-800' 
+                              : order.status === 'pending'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {order.status === 'processed' && <CheckCircle className="w-3 h-3 mr-1" />}
+                            {order.status === 'pending' && <Clock className="w-3 h-3 mr-1" />}
+                            {order.status !== 'processed' && order.status !== 'pending' && <AlertCircle className="w-3 h-3 mr-1" />}
+                            {order.status || 'Unknown'}
+                          </span>
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{order.totalCount}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                           {order.totalData > 1024 
@@ -335,9 +365,12 @@ export default function BillingApp() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                           {order.pricingProfileName || "Default"}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
-                          {formatCurrency(order.estimatedCost || 0)}
-                          {order.status === "pending" && " (Pending)"}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <span className={order.status === 'processed' ? 'text-green-600' : 'text-gray-400'}>
+                            {formatCurrency(order.estimatedCost || 0)}
+                          </span>
+                          {order.status === "pending" && <span className="text-xs text-yellow-600 block">Not billable yet</span>}
+                          {order.status === "processed" && <span className="text-xs text-green-600 block">Billable</span>}
                         </td>
                       </tr>
                     ))}

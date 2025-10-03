@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Download, Clock, FileText, User, Database, CheckCircle, XCircle, Loader, Search, SlidersHorizontal, Check, CheckSquare, Square, Archive, DollarSign } from "lucide-react";
 import ExcelJS from "exceljs";
 import JSZip from "jszip";
-import { getPendingOrdersOldestFirst, getOrdersOldestFirst, saveOrders, updateOrder } from "../lib/orderClient";
+import { getPendingOrdersOldestFirst, getOrdersOldestFirst, saveOrders, updateOrder, updateEntryStatuses } from "../lib/orderClient";
 import { useOrderCount } from "../lib/orderContext";
 import { ORDER_UPDATED_EVENT, notifyOrderProcessed, notifyCountUpdated } from "../lib/orderNotifications";
 import { getCurrentTimeSync, getCurrentDateStringSync, getCurrentTimeStringSync, getCurrentTimestampSync } from "../lib/timeService";
@@ -435,12 +435,16 @@ export default function OrdersApp() {
       const processedTime = getCurrentTimeStringSync().substring(0, 5); // HH:MM format
       
       // Update the order status to "processed" after downloading and update timestamp
+      // IMPORTANT: Preserve cost and estimatedCost when processing orders
       const updatedOrder = { 
         ...order, 
         status: "processed" as const,
         timestamp: timestamp,
         date: processedDate,
-        time: processedTime
+        time: processedTime,
+        // Explicitly preserve cost fields to prevent them from being zeroed out
+        cost: order.cost,
+        estimatedCost: order.estimatedCost
       };
       
       // Update the local state
@@ -449,6 +453,13 @@ export default function OrdersApp() {
       
       // Update in database
       await updateOrder(updatedOrder);
+      
+      // Update all entry statuses to 'sent' when order is processed
+      try {
+        await updateEntryStatuses(order.id, 'sent');
+      } catch (error) {
+        console.warn('Failed to update entry statuses:', error);
+      }
       
       // Notify that the order has been processed
       notifyOrderProcessed(order.id);
@@ -878,6 +889,7 @@ export default function OrdersApp() {
         const processedTime = getCurrentTimeStringSync().substring(0, 5); // HH:MM format
         
         // Mark all selected orders as processed with updated timestamps
+        // IMPORTANT: Preserve cost fields when processing orders
         const updatedOrders = orders.map(order => 
           selectedOrderIds.includes(order.id) 
             ? { 
@@ -885,7 +897,10 @@ export default function OrdersApp() {
                 status: "processed" as const,
                 timestamp: timestamp,
                 date: processedDate,
-                time: processedTime
+                time: processedTime,
+                // Explicitly preserve cost fields to prevent them from being zeroed out
+                cost: order.cost,
+                estimatedCost: order.estimatedCost
               } 
             : order
         );
@@ -898,6 +913,14 @@ export default function OrdersApp() {
           .map(order => updateOrder(order));
         
         await Promise.all(updatePromises);
+        
+        // Update all entry statuses to 'sent' for processed orders
+        const entryUpdatePromises = selectedOrderIds.map(orderId => 
+          updateEntryStatuses(orderId, 'sent').catch(error => 
+            console.warn(`Failed to update entry statuses for order ${orderId}:`, error)
+          )
+        );
+        await Promise.all(entryUpdatePromises);
         
         // Notify that orders have been processed using our notification system
         console.log("OrdersApp: Notifying that orders have been processed");
@@ -973,6 +996,7 @@ export default function OrdersApp() {
         const processedTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         
       // Mark all selected orders as processed with updated timestamps
+      // IMPORTANT: Preserve cost fields when processing orders
       const updatedOrders = orders.map(order => 
         selectedOrderIds.includes(order.id) 
           ? { 
@@ -980,7 +1004,10 @@ export default function OrdersApp() {
               status: "processed" as const,
               timestamp: now.getTime(),
               date: processedDate,
-              time: processedTime
+              time: processedTime,
+              // Explicitly preserve cost fields to prevent them from being zeroed out
+              cost: order.cost,
+              estimatedCost: order.estimatedCost
             } 
           : order
       );
@@ -993,6 +1020,14 @@ export default function OrdersApp() {
         .map(order => updateOrder(order));
       
       await Promise.all(updatePromises);
+      
+      // Update all entry statuses to 'sent' for processed orders
+      const entryUpdatePromises = selectedOrderIds.map(orderId => 
+        updateEntryStatuses(orderId, 'sent').catch(error => 
+          console.warn(`Failed to update entry statuses for order ${orderId}:`, error)
+        )
+      );
+      await Promise.all(entryUpdatePromises);
       
       // Notify that orders have been processed
       for (const orderId of selectedOrderIds) {

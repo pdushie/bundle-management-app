@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { getProcessedOrdersOldestFirst, Order } from '@/lib/orderClient';
 import { useOrderCount } from '@/lib/orderContext';
 import { ORDER_UPDATED_EVENT, ORDER_PROCESSED_EVENT, notifyCountUpdated } from '@/lib/orderNotifications';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Search, Eye } from 'lucide-react';
 
 export default function ProcessedOrdersApp() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -15,6 +15,13 @@ export default function ProcessedOrdersApp() {
   const [itemsPerPage] = useState<number>(25);
   const [filterText, setFilterText] = useState<string>('');
   const { refreshOrderCount } = useOrderCount();
+  
+  // Modal state for order details
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [entriesSearchText, setEntriesSearchText] = useState<string>('');
+  const [entriesCurrentPage, setEntriesCurrentPage] = useState<number>(1);
+  const [entriesPerPage] = useState<number>(20);
 
   const fetchProcessedOrders = async () => {
     try {
@@ -69,6 +76,26 @@ export default function ProcessedOrdersApp() {
     };
   }, []);
 
+  // Handle keyboard events (Escape to close modal)
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && modalVisible) {
+        closeOrderDetails();
+      }
+    };
+
+    if (modalVisible) {
+      document.addEventListener('keydown', handleKeyDown);
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [modalVisible]);
+
   const toggleSort = (field: 'date' | 'userName') => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -115,6 +142,49 @@ export default function ProcessedOrdersApp() {
   // Handle page navigation
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);
+  };
+
+  // Modal functions
+  const openOrderDetails = (order: Order) => {
+    setSelectedOrder(order);
+    setModalVisible(true);
+    setEntriesSearchText('');
+    setEntriesCurrentPage(1);
+  };
+
+  const closeOrderDetails = () => {
+    setModalVisible(false);
+    setSelectedOrder(null);
+    setEntriesSearchText('');
+    setEntriesCurrentPage(1);
+  };
+
+  // Filter entries based on search text
+  const getFilteredEntries = () => {
+    if (!selectedOrder) return [];
+    
+    const entries = selectedOrder.entries || [];
+    if (!entriesSearchText) return entries;
+    
+    const searchTerm = entriesSearchText.toLowerCase();
+    return entries.filter(entry => 
+      entry.number.toLowerCase().includes(searchTerm) ||
+      entry.allocationGB.toString().includes(searchTerm) ||
+      (entry.status?.toLowerCase() || '').includes(searchTerm)
+    );
+  };
+
+  // Get paginated entries
+  const getPaginatedEntries = () => {
+    const filteredEntries = getFilteredEntries();
+    const startIndex = (entriesCurrentPage - 1) * entriesPerPage;
+    const endIndex = startIndex + entriesPerPage;
+    return filteredEntries.slice(startIndex, endIndex);
+  };
+
+  // Handle entries page navigation
+  const handleEntriesPageChange = (pageNumber: number) => {
+    setEntriesCurrentPage(pageNumber);
   };
 
   return (
@@ -214,8 +284,18 @@ export default function ProcessedOrdersApp() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {currentPageOrders.map((order) => (
-                    <tr key={order.id} className="hover:bg-gray-50">
-                      <td className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-900 font-medium">{order.id}</td>
+                    <tr 
+                      key={order.id} 
+                      className="hover:bg-blue-50 cursor-pointer transition-colors"
+                      onClick={() => openOrderDetails(order)}
+                      title="Click to view order entries"
+                    >
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-900 font-medium">
+                        <div className="flex items-center gap-2">
+                          <Eye className="w-4 h-4 text-blue-500" />
+                          {order.id}
+                        </div>
+                      </td>
                       <td className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-900">{order.userName}</td>
                       <td className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-500">
                         {new Date(order.timestamp).toLocaleString()}
@@ -229,9 +309,14 @@ export default function ProcessedOrdersApp() {
                         </span>
                       </td>
                       <td className="px-3 sm:px-6 py-2 sm:py-4">
-                        <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                          Processed
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            Processed
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            ({order.totalCount} entries)
+                          </span>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -280,6 +365,137 @@ export default function ProcessedOrdersApp() {
           </div>
         )}
       </div>
+      
+      {/* Order Details Modal */}
+      {modalVisible && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 border-b">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-xl font-bold mb-2">Order Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div><span className="font-medium">Order ID:</span> {selectedOrder.id}</div>
+                    <div><span className="font-medium">User:</span> {selectedOrder.userName}</div>
+                    <div><span className="font-medium">Date:</span> {new Date(selectedOrder.timestamp).toLocaleString()}</div>
+                    <div><span className="font-medium">Total Data:</span> {selectedOrder.totalData > 1023 
+                      ? `${(selectedOrder.totalData / 1024).toFixed(2)} TB` 
+                      : `${selectedOrder.totalData} GB`}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={closeOrderDetails}
+                  className="text-white hover:text-gray-200 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              {/* Search Bar */}
+              <div className="mb-4">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search entries by phone number, allocation, or status..."
+                    className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={entriesSearchText}
+                    onChange={(e) => {
+                      setEntriesSearchText(e.target.value);
+                      setEntriesCurrentPage(1); // Reset to first page on search
+                    }}
+                  />
+                  <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                </div>
+              </div>
+
+              {/* Entries Table */}
+              <div className="overflow-x-auto max-h-[50vh] border rounded-lg">
+                <table className="w-full min-w-[600px]">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">#</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Phone Number</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Data Allocation</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Cost</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {getPaginatedEntries().length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                          {entriesSearchText ? 'No entries match your search' : 'No entries found'}
+                        </td>
+                      </tr>
+                    ) : (
+                      getPaginatedEntries().map((entry, index) => (
+                        <tr key={`${entry.number}-${index}`} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 text-sm text-gray-500">
+                            {(entriesCurrentPage - 1) * entriesPerPage + index + 1}
+                          </td>
+                          <td className="px-4 py-3 text-sm font-medium text-gray-900">{entry.number}</td>
+                          <td className="px-4 py-3 text-sm text-gray-900">
+                            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                              {entry.allocationGB} GB
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                              entry.status === 'sent' ? 'bg-green-100 text-green-800' :
+                              entry.status === 'error' ? 'bg-red-100 text-red-800' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {entry.status || 'pending'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900">
+                            {entry.cost ? `GHS ${entry.cost.toFixed(2)}` : 'N/A'}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Entries Pagination */}
+              {getFilteredEntries().length > entriesPerPage && (
+                <div className="flex justify-center items-center py-4 mt-4 border-t">
+                  <nav className="flex items-center">
+                    <button
+                      onClick={() => handleEntriesPageChange(entriesCurrentPage - 1)}
+                      disabled={entriesCurrentPage === 1}
+                      className={`px-3 py-1 rounded border ${entriesCurrentPage === 1 ? 'text-gray-300 border-gray-200' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    
+                    <div className="px-4 text-sm text-gray-700">
+                      Page {entriesCurrentPage} of {Math.ceil(getFilteredEntries().length / entriesPerPage)}
+                      <span className="ml-2 text-xs text-gray-500">
+                        ({getFilteredEntries().length} entries)
+                      </span>
+                    </div>
+                    
+                    <button
+                      onClick={() => handleEntriesPageChange(entriesCurrentPage + 1)}
+                      disabled={entriesCurrentPage === Math.ceil(getFilteredEntries().length / entriesPerPage)}
+                      className={`px-3 py-1 rounded border ${entriesCurrentPage === Math.ceil(getFilteredEntries().length / entriesPerPage) ? 'text-gray-300 border-gray-200' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </nav>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

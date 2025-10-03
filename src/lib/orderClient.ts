@@ -23,8 +23,10 @@ export type Order = {
   }>;
   pricingProfileId?: number; // ID of the pricing profile used
   pricingProfileName?: string; // Name of the pricing profile used
+  cost?: number; // Total cost of the order
   estimatedCost?: number | null; // Total estimated cost of the order
   isSelected?: boolean;
+  userId?: number;
 };
 
 // Utility function to perform API requests with retry logic
@@ -284,6 +286,28 @@ export const clearOrders = async (): Promise<void> => {
     notifyOrderUpdated();
   } catch (error) {
     console.error('Failed to clear orders:', error);
+    throw error;
+  }
+};
+
+// Update entry statuses for an order
+export const updateEntryStatuses = async (orderId: string, status: OrderEntryStatus): Promise<void> => {
+  try {
+    const response = await fetchWithRetry('/api/orders/update-entry-statuses', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ orderId, status }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update entry statuses');
+    }
+
+    console.log(`Updated entry statuses for order ${orderId} to ${status}`);
+  } catch (error) {
+    console.error('Failed to update entry statuses:', error);
     throw error;
   }
 };
