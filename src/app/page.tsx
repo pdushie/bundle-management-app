@@ -2370,7 +2370,7 @@ function AppContent() {
           </div>
           <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Access Required</h3>
           <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto">
-            Please sign in to access the Data Processing Suite
+            Please sign in to access the Data Processing Portal
           </p>
         </div>
       </div>

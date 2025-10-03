@@ -59,16 +59,13 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Set status based on enabled parameter
-      const status = enabled ? "approved" : "disabled";
-      
-      // Update user status
+      // Update user active status
       const result = await client.query(
         `UPDATE users 
-         SET status = $1
+         SET is_active = $1
          WHERE id = $2
-         RETURNING id, name, email, role, status`,
-        [status, userId]
+         RETURNING id, name, email, role, status, is_active`,
+        [enabled, userId]
       );
 
       return NextResponse.json({ 

@@ -20,7 +20,7 @@ export async function GET() {
 
   try {
     const result = await client.query(`
-      SELECT id, name, email, role, status, created_at
+      SELECT id, name, email, role, status, is_active, created_at
       FROM users
       ORDER BY created_at DESC
     `);

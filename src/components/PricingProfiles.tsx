@@ -287,8 +287,8 @@ export default function PricingProfiles() {
         isActive,
         isTiered: true, // Always use tiered pricing
         tiers: pricingTiers.map(tier => ({
-          dataGB: parseFloat(tier.dataGB),
-          price: parseFloat(tier.price)
+          dataGB: tier.dataGB,
+          price: tier.price
         }))
       };
       let res;
@@ -491,8 +491,8 @@ export default function PricingProfiles() {
       const data = await res.json();
       if (data.tiers && Array.isArray(data.tiers)) {
         setPricingTiers(data.tiers.map((tier: any) => ({
-          dataGB: tier.dataGB.toString(),
-          price: tier.price.toString()
+          dataGB: tier.dataGB, // Keep exact string representation from Excel
+          price: tier.price     // Keep exact string representation from Excel
         })));
         toast({
           title: 'Success',
@@ -641,56 +641,56 @@ export default function PricingProfiles() {
       
       {/* Create/Edit Profile Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-white text-gray-900 border-gray-200">
           <DialogHeader>
-            <DialogTitle>{isEditing ? 'Edit Pricing Profile' : 'Create Pricing Profile'}</DialogTitle>
+            <DialogTitle className="text-gray-900">{isEditing ? 'Edit Pricing Profile' : 'Create Pricing Profile'}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-6 py-4">
             <div className="grid grid-cols-6 items-center gap-4">
-              <Label htmlFor="name" className="text-right col-span-1">
+              <Label htmlFor="name" className="text-right col-span-1 text-gray-900">
                 Name <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="col-span-5"
+                className="col-span-5 bg-white text-gray-900 border-gray-300"
                 placeholder="Standard, Premium, etc."
               />
             </div>
             <div className="grid grid-cols-6 items-center gap-4">
-              <Label htmlFor="description" className="text-right col-span-1">
+              <Label htmlFor="description" className="text-right col-span-1 text-gray-900">
                 Description
               </Label>
               <Textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="col-span-5"
+                className="col-span-5 bg-white text-gray-900 border-gray-300"
                 placeholder="Optional description of this pricing profile"
                 rows={2}
               />
             </div>
             <div className="grid grid-cols-6 items-center gap-4">
-              <Label htmlFor="pricingType" className="text-right col-span-1">
+              <Label htmlFor="pricingType" className="text-right col-span-1 text-gray-900">
                 Pricing Type
               </Label>
               <div className="flex items-center space-x-2 col-span-5">
-                <span className="text-sm font-medium">Tiered pricing</span>
+                <span className="text-sm font-medium text-gray-900">Tiered pricing</span>
               </div>
             </div>
             
             {isTiered && (
               <div className="grid grid-cols-12 gap-4">
                 <div className="text-right pt-2 col-span-2">
-                  <Label>
+                  <Label className="text-gray-900">
                     Pricing Tiers <span className="text-red-500">*</span>
                   </Label>
                 </div>
                 <div className="col-span-10 space-y-3">
                   <div className="grid grid-cols-10 gap-4 mb-1">
-                    <div className="text-sm font-medium text-center col-span-4">Data (GB)</div>
-                    <div className="text-sm font-medium text-center col-span-5">Price (GHS)</div>
+                    <div className="text-sm font-medium text-center col-span-4 text-gray-900">Data (GB)</div>
+                    <div className="text-sm font-medium text-center col-span-5 text-gray-900">Price (GHS)</div>
                     <div className="text-sm font-medium text-center col-span-1"></div>
                   </div>
                   
@@ -708,6 +708,7 @@ export default function PricingProfiles() {
                             step="0.01"
                             min="0.01"
                             placeholder="1"
+                            className="bg-white text-gray-900 border-gray-300"
                           />
                         </div>
                         <div className="relative col-span-5">
@@ -717,7 +718,7 @@ export default function PricingProfiles() {
                           <Input
                             value={tier.price}
                             onChange={(e) => updatePricingTier(index, 'price', e.target.value)}
-                            className="pl-10"
+                            className="pl-10 bg-white text-gray-900 border-gray-300"
                             type="number"
                             step="0.01"
                             min="0"
@@ -730,7 +731,7 @@ export default function PricingProfiles() {
                               type="button"
                               variant="ghost"
                               size="sm"
-                              className="p-1 h-8 w-8 text-red-500"
+                              className="p-1 h-8 w-8 text-red-500 hover:bg-red-50"
                               onClick={() => removePricingTier(index)}
                             >
                               <X className="h-4 w-4" />
@@ -747,7 +748,7 @@ export default function PricingProfiles() {
                     variant="outline"
                     size="sm"
                     onClick={addPricingTier}
-                    className="w-full mt-3"
+                    className="w-full mt-3 bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
                   >
                     <CirclePlus className="h-4 w-4 mr-2" /> Add Tier
                   </Button>
@@ -760,6 +761,7 @@ export default function PricingProfiles() {
                           type="file" 
                           accept=".xlsx,.xls" 
                           onChange={handleFileChange}
+                          className="bg-white text-gray-900 border-gray-300"
                         />
                       </div>
                       <div>
@@ -768,7 +770,7 @@ export default function PricingProfiles() {
                           variant="secondary" 
                           onClick={handleProcessExcel}
                           disabled={!excelFile}
-                          className="w-full"
+                          className="w-full bg-gray-100 text-gray-900 border-gray-300 hover:bg-gray-200"
                         >
                           Import
                         </Button>
@@ -803,10 +805,10 @@ export default function PricingProfiles() {
 
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setDialogOpen(false)} className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
               Cancel
             </Button>
-            <Button onClick={handleSubmit} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={handleSubmit} className="bg-blue-600 hover:bg-blue-700 text-white">
               {isEditing ? 'Save Changes' : 'Create Profile'}
             </Button>
           </DialogFooter>
@@ -815,9 +817,9 @@ export default function PricingProfiles() {
       
       {/* Manage Users Dialog */}
       <Dialog open={userDialogOpen} onOpenChange={setUserDialogOpen}>
-        <DialogContent className="sm:max-w-xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-xl max-h-[80vh] overflow-y-auto bg-white text-gray-900 border-gray-200">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-gray-900">
               {currentProfile?.name} - Manage Users
             </DialogTitle>
           </DialogHeader>
@@ -931,7 +933,7 @@ export default function PricingProfiles() {
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setUserDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setUserDialogOpen(false)} className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
               Done
             </Button>
           </DialogFooter>

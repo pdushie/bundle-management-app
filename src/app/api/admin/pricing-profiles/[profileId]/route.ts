@@ -191,8 +191,8 @@ export async function PUT(
     if (tiers && tiers.length > 0) {
       const tierValues = tiers.map((tier: any) => ({
         profileId,
-        dataGB: tier.dataGB.toString(),
-        price: tier.price.toString()
+        dataGB: String(tier.dataGB),
+        price: String(tier.price)
       }));
       
       await db.insert(pricingTiers).values(tierValues);

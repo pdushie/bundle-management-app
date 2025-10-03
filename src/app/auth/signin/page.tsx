@@ -12,6 +12,7 @@ export default function SignIn() {
     name: "",
     email: "",
     password: "",
+    confirmPassword: "",
     requestMessage: "",
   });
   const [error, setError] = useState("");
@@ -45,7 +46,13 @@ export default function SignIn() {
           router.push("/");
         }
       } else {
-        // Register
+        // Register - validate password confirmation
+        if (formData.password !== formData.confirmPassword) {
+          setError("Passwords do not match");
+          setIsLoading(false);
+          return;
+        }
+
         const response = await fetch("/api/auth/register", {
           method: "POST",
           headers: {
@@ -58,7 +65,7 @@ export default function SignIn() {
 
         if (response.ok) {
           setSuccess("Registration successful! Your account is pending approval. You will be notified once approved.");
-          setFormData({ name: "", email: "", password: "", requestMessage: "" });
+          setFormData({ name: "", email: "", password: "", confirmPassword: "", requestMessage: "" });
         } else {
           setError(data.error || "Registration failed");
         }
@@ -80,7 +87,7 @@ export default function SignIn() {
               <Database className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Data Processing Suite</h1>
+              <h1 className="text-xl font-bold text-gray-900">Clickyfied</h1>
               <p className="text-sm text-gray-600">Secure access required</p>
             </div>
           </div>
@@ -188,6 +195,35 @@ export default function SignIn() {
                 <p className="text-xs text-gray-500 mt-1">Password must be at least 6 characters long</p>
               )}
             </div>
+
+            {!isLogin && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="password"
+                    required={!isLogin}
+                    className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-500 sm:text-gray-700 ${
+                      formData.confirmPassword && formData.password !== formData.confirmPassword
+                        ? 'border-red-300 bg-red-50'
+                        : 'border-gray-300'
+                    }`}
+                    placeholder="Confirm your password"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  />
+                </div>
+                {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                  <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
+                )}
+                {formData.confirmPassword && formData.password === formData.confirmPassword && formData.password.length >= 6 && (
+                  <p className="text-xs text-green-500 mt-1">✓ Passwords match</p>
+                )}
+              </div>
+            )}
 
             {!isLogin && (
               <div>

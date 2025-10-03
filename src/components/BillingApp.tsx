@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, DollarSign, Download, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowLeft, ArrowRight, FileText, User, Package, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Calendar, DollarSign, Download, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowLeft, ArrowRight, FileText, User, Package, CheckCircle, Clock, AlertCircle, Eye, X, Search } from 'lucide-react';
 import { getUserBilling, getUserBillingRange, getMonthlyBilling } from '../lib/billingClient';
 import { getCurrentTimeSync, getCurrentDateStringSync } from '../lib/timeService';
 import { getFormattedDate } from '../lib/dateUtils';
@@ -12,6 +12,13 @@ export default function BillingApp() {
   const [billingData, setBillingData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Modal state for order details
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [entriesSearchText, setEntriesSearchText] = useState<string>('');
+  const [entriesCurrentPage, setEntriesCurrentPage] = useState<number>(1);
+  const [entriesPerPage] = useState<number>(20);
 
   // Function to format currency
   const formatCurrency = (amount: number) => {
@@ -158,6 +165,69 @@ export default function BillingApp() {
     const today = new Date();
     today.setHours(23, 59, 59, 999); // End of today
     return date > today;
+  };
+
+  // Modal functions
+  const openOrderDetails = (order: any) => {
+    setSelectedOrder(order);
+    setModalVisible(true);
+    setEntriesSearchText('');
+    setEntriesCurrentPage(1);
+  };
+
+  const closeOrderDetails = () => {
+    setModalVisible(false);
+    setSelectedOrder(null);
+    setEntriesSearchText('');
+    setEntriesCurrentPage(1);
+  };
+
+  // Handle keyboard events (Escape to close modal)
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && modalVisible) {
+        closeOrderDetails();
+      }
+    };
+
+    if (modalVisible) {
+      document.addEventListener('keydown', handleKeyDown);
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [modalVisible]);
+
+  // Filter entries based on search text
+  const getFilteredEntries = () => {
+    if (!selectedOrder) return [];
+    
+    const entries = selectedOrder.entries || [];
+    if (!entriesSearchText) return entries;
+    
+    const searchTerm = entriesSearchText.toLowerCase();
+    return entries.filter((entry: any) => 
+      entry.number.toLowerCase().includes(searchTerm) ||
+      entry.allocationGB.toString().includes(searchTerm) ||
+      (entry.status?.toLowerCase() || '').includes(searchTerm)
+    );
+  };
+
+  // Get paginated entries
+  const getPaginatedEntries = () => {
+    const filteredEntries = getFilteredEntries();
+    const startIndex = (entriesCurrentPage - 1) * entriesPerPage;
+    const endIndex = startIndex + entriesPerPage;
+    return filteredEntries.slice(startIndex, endIndex);
+  };
+
+  // Handle entries page navigation
+  const handleEntriesPageChange = (pageNumber: number) => {
+    setEntriesCurrentPage(pageNumber);
   };
 
   return (
@@ -339,9 +409,19 @@ export default function BillingApp() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {billingData.orders.map((order: any) => (
-                      <tr key={order.id} className={`hover:bg-gray-50 ${order.status === 'processed' ? 'bg-green-50' : order.status === 'pending' ? 'bg-yellow-50' : ''}`}>
+                      <tr 
+                        key={order.id} 
+                        className={`hover:bg-blue-50 cursor-pointer transition-colors ${order.status === 'processed' ? 'bg-green-50' : order.status === 'pending' ? 'bg-yellow-50' : ''}`}
+                        onClick={() => openOrderDetails(order)}
+                        title="Click to view order entries and costs"
+                      >
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{order.time}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{order.id}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                          <div className="flex items-center gap-2">
+                            <Eye className="w-4 h-4 text-blue-500" />
+                            {order.id}
+                          </div>
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             order.status === 'processed' 
@@ -381,6 +461,152 @@ export default function BillingApp() {
           )}
         </div>
       </div>
+      
+      {/* Order Details Modal */}
+      {modalVisible && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 border-b">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-xl font-bold mb-2">Order Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div><span className="font-medium">Order ID:</span> {selectedOrder.id}</div>
+                    <div><span className="font-medium">Date:</span> {getFormattedDate(selectedDate)} at {selectedOrder.time}</div>
+                    <div><span className="font-medium">Status:</span> 
+                      <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        selectedOrder.status === 'processed' 
+                          ? 'bg-green-100 text-green-800' 
+                          : selectedOrder.status === 'pending'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {selectedOrder.status === 'processed' && <CheckCircle className="w-3 h-3 mr-1" />}
+                        {selectedOrder.status === 'pending' && <Clock className="w-3 h-3 mr-1" />}
+                        {selectedOrder.status !== 'processed' && selectedOrder.status !== 'pending' && <AlertCircle className="w-3 h-3 mr-1" />}
+                        {selectedOrder.status || 'Unknown'}
+                      </span>
+                    </div>
+                    <div><span className="font-medium">Total Data:</span> {selectedOrder.totalData > 1024 
+                      ? `${(selectedOrder.totalData / 1024).toFixed(2)} TB` 
+                      : `${selectedOrder.totalData.toFixed(2)} GB`}
+                    </div>
+                    <div><span className="font-medium">Pricing Profile:</span> {selectedOrder.pricingProfileName || "Default"}</div>
+                    <div><span className="font-medium">Total Cost:</span> {formatCurrency(selectedOrder.estimatedCost || 0)}</div>
+                  </div>
+                </div>
+                <button
+                  onClick={closeOrderDetails}
+                  className="text-white hover:text-gray-200 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              {/* Search Bar */}
+              <div className="mb-4">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search entries by phone number, allocation, or status..."
+                    className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={entriesSearchText}
+                    onChange={(e) => {
+                      setEntriesSearchText(e.target.value);
+                      setEntriesCurrentPage(1); // Reset to first page on search
+                    }}
+                  />
+                  <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                </div>
+              </div>
+
+              {/* Entries Table */}
+              <div className="overflow-x-auto max-h-[50vh] border rounded-lg">
+                <table className="w-full min-w-[600px]">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">#</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Phone Number</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Data Allocation</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Cost</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {getPaginatedEntries().length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                          {entriesSearchText ? 'No entries match your search' : 'No entries found'}
+                        </td>
+                      </tr>
+                    ) : (
+                      getPaginatedEntries().map((entry: any, index: number) => (
+                        <tr key={`${entry.number}-${index}`} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 text-sm text-gray-500">
+                            {(entriesCurrentPage - 1) * entriesPerPage + index + 1}
+                          </td>
+                          <td className="px-4 py-3 text-sm font-medium text-gray-900">{entry.number}</td>
+                          <td className="px-4 py-3 text-sm text-gray-900">
+                            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                              {entry.allocationGB} GB
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                              entry.status === 'sent' ? 'bg-green-100 text-green-800' :
+                              entry.status === 'error' ? 'bg-red-100 text-red-800' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {entry.status || 'pending'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900">
+                            {entry.cost ? `GHS ${Number(entry.cost).toFixed(2)}` : 'N/A'}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Entries Pagination */}
+              {getFilteredEntries().length > entriesPerPage && (
+                <div className="flex justify-center items-center py-4 mt-4 border-t">
+                  <nav className="flex items-center">
+                    <button
+                      onClick={() => handleEntriesPageChange(entriesCurrentPage - 1)}
+                      disabled={entriesCurrentPage === 1}
+                      className={`px-3 py-1 rounded border ${entriesCurrentPage === 1 ? 'text-gray-300 border-gray-200' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    
+                    <div className="px-4 text-sm text-gray-700">
+                      Page {entriesCurrentPage} of {Math.ceil(getFilteredEntries().length / entriesPerPage)}
+                      <span className="ml-2 text-xs text-gray-500">
+                        ({getFilteredEntries().length} entries)
+                      </span>
+                    </div>
+                    
+                    <button
+                      onClick={() => handleEntriesPageChange(entriesCurrentPage + 1)}
+                      disabled={entriesCurrentPage === Math.ceil(getFilteredEntries().length / entriesPerPage)}
+                      className={`px-3 py-1 rounded border ${entriesCurrentPage === Math.ceil(getFilteredEntries().length / entriesPerPage) ? 'text-gray-300 border-gray-200' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </nav>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -123,8 +123,8 @@ export async function POST(req: NextRequest) {
       if (tiers && tiers.length > 0 && newProfile.id) {
         const tierValues = tiers.map((tier: any) => ({
           profileId: newProfile.id,
-          dataGB: tier.dataGB.toString(),
-          price: tier.price.toString()
+          dataGB: String(tier.dataGB),
+          price: String(tier.price)
         }));
         
         newTiers = await db.insert(pricingTiers).values(tierValues).returning();

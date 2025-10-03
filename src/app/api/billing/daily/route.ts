@@ -237,6 +237,7 @@ export async function GET(request: NextRequest) {
         status: order.status, // Include the status
         pricingProfileName: order.pricingProfileName || undefined,
         estimatedCost: orderAmount, // Use our calculated orderAmount which includes all fallbacks
+        entries: order.entries || [], // Include the order entries
       };
     });
 

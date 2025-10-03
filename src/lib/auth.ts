@@ -80,6 +80,11 @@ export const authOptions: NextAuthOptions = {
             throw new Error('Account access denied');
           }
           
+          // Check if account is active (not disabled)
+          if (user.is_active === false) {
+            throw new Error('Your account has been disabled. Please contact support');
+          }
+          
           const passwordMatch = await bcrypt.compare(
             credentials.password,
             user.hashed_password

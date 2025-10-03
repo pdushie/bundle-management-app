@@ -32,12 +32,12 @@ export const viewport: Viewport = {
 
 // Metadata export - for general metadata
 export const metadata: Metadata = {
-  title: 'Data Processing Suite',
+  title: 'Clickyfied',
   description: 'Data validation and categorization tool',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Data Processing Suite'
+    title: ''
   },
 };
 

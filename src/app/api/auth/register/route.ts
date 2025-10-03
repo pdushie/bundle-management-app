@@ -11,11 +11,18 @@ export async function POST(req: NextRequest) {
   const client = await pool.connect();
   
   try {
-    const { name, email, password, requestMessage } = await req.json();
+    const { name, email, password, confirmPassword, requestMessage } = await req.json();
 
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !confirmPassword) {
       return NextResponse.json(
         { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    if (password !== confirmPassword) {
+      return NextResponse.json(
+        { error: "Passwords do not match" },
         { status: 400 }
       );
     }

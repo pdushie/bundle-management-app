@@ -15,6 +15,12 @@ export interface BillingSummary {
     status: string;
     pricingProfileName?: string;
     estimatedCost: number;
+    entries?: Array<{
+      number: string;
+      allocationGB: number;
+      status: string;
+      cost?: number;
+    }>;
   }>;
 }
 

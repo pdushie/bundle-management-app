@@ -10,6 +10,7 @@ export const users = pgTable("users", {
   hashedPassword: text("hashed_password").notNull(), // Changed to text to match actual database
   role: varchar("role").default("user"), // 'admin' or 'user'
   status: varchar("status").default("pending"), // 'pending', 'approved', 'rejected'
+  isActive: boolean("is_active").default(true).notNull(), // Whether user account is enabled/disabled
   requestMessage: text("request_message"), // User's reason for requesting access
   approvedBy: text("approved_by"), // Changed to text to match actual database
   approvedAt: timestamp("approved_at", { withTimezone: true }), // Added timezone
