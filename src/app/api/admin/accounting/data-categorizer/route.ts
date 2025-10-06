@@ -187,7 +187,7 @@ export async function GET(req: NextRequest) {
           // Update user stats
           if (!userMap.has(userIdentifier)) {
             userMap.set(userIdentifier, {
-              userId: row.userId || Math.abs(userIdentifier.split('').reduce((a,b) => (((a << 5) - a) + b.charCodeAt(0))|0, 0)), // Create unique ID from identifier
+              userId: row.userId || Math.abs(String(userIdentifier).split('').reduce((a,b) => (((a << 5) - a) + b.charCodeAt(0))|0, 0)), // Create unique ID from identifier
               userName: row.userName,
               userEmail: row.userEmail,
               categories: new Map(),
