@@ -368,24 +368,24 @@ export default function BillingApp() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                  <p className="text-sm text-blue-600 mb-1">Total Orders</p>
-                  <p className="text-2xl font-bold">{billingData.orders.length}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-4 sm:mb-6">
+                <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 sm:p-4">
+                  <p className="text-xs sm:text-sm text-blue-600 mb-1">Total Orders</p>
+                  <p className="text-lg sm:text-2xl font-bold">{billingData.orders.length}</p>
                 </div>
-                <div className="bg-green-50 border border-green-100 rounded-lg p-4">
-                  <p className="text-sm text-green-600 mb-1">Processed Orders</p>
-                  <p className="text-2xl font-bold">{billingData.orders.filter((order: any) => order.status === 'processed').length}</p>
+                <div className="bg-green-50 border border-green-100 rounded-lg p-3 sm:p-4">
+                  <p className="text-xs sm:text-sm text-green-600 mb-1">Processed Orders</p>
+                  <p className="text-lg sm:text-2xl font-bold">{billingData.orders.filter((order: any) => order.status === 'processed').length}</p>
                   <p className="text-xs text-green-500 mt-1">Billable orders</p>
                 </div>
-                <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-4">
-                  <p className="text-sm text-yellow-600 mb-1">Pending Orders</p>
-                  <p className="text-2xl font-bold">{billingData.orders.filter((order: any) => order.status === 'pending').length}</p>
+                <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-3 sm:p-4">
+                  <p className="text-xs sm:text-sm text-yellow-600 mb-1">Pending Orders</p>
+                  <p className="text-lg sm:text-2xl font-bold">{billingData.orders.filter((order: any) => order.status === 'pending').length}</p>
                   <p className="text-xs text-yellow-500 mt-1">Not yet billable</p>
                 </div>
-                <div className="bg-purple-50 border border-purple-100 rounded-lg p-4">
-                  <p className="text-sm text-purple-600 mb-1">Billable Amount</p>
-                  <p className="text-2xl font-bold">{formatCurrency(billingData.totalAmount || 0)}</p>
+                <div className="bg-purple-50 border border-purple-100 rounded-lg p-3 sm:p-4">
+                  <p className="text-xs sm:text-sm text-purple-600 mb-1">Billable Amount</p>
+                  <p className="text-lg sm:text-2xl font-bold">{formatCurrency(billingData.totalAmount || 0)}</p>
                   <p className="text-xs text-purple-500 mt-1">
                     Processed orders only
                   </p>
@@ -393,7 +393,7 @@ export default function BillingApp() {
               </div>
 
               {/* Orders Table */}
-              <h3 className="font-medium text-gray-700 mb-3">Orders</h3>
+              <h3 className="font-medium text-gray-700 mb-2 sm:mb-3 text-sm sm:text-base">Orders</h3>
               <div className="overflow-x-auto rounded-lg border border-gray-200">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -464,27 +464,27 @@ export default function BillingApp() {
       
       {/* Order Details Modal */}
       {modalVisible && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="bg-white rounded-lg sm:rounded-2xl shadow-2xl max-w-sm sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 border-b">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-xl font-bold mb-2">Order Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div><span className="font-medium">Order ID:</span> {selectedOrder.id}</div>
-                    <div><span className="font-medium">Date:</span> {getFormattedDate(selectedDate)} at {selectedOrder.time}</div>
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-3 sm:p-4 lg:p-6 border-b">
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-0">
+                <div className="flex-1">
+                  <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3">Order Details</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 lg:gap-4 text-xs sm:text-sm">
+                    <div><span className="font-medium">Order ID:</span> <span className="break-all">{selectedOrder.id}</span></div>
+                    <div><span className="font-medium">Date:</span> <span className="break-words">{getFormattedDate(selectedDate)} at {selectedOrder.time}</span></div>
                     <div><span className="font-medium">Status:</span> 
-                      <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                      <span className={`ml-1 sm:ml-2 inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-medium ${
                         selectedOrder.status === 'processed' 
                           ? 'bg-green-100 text-green-800' 
                           : selectedOrder.status === 'pending'
                           ? 'bg-yellow-100 text-yellow-800'
                           : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {selectedOrder.status === 'processed' && <CheckCircle className="w-3 h-3 mr-1" />}
-                        {selectedOrder.status === 'pending' && <Clock className="w-3 h-3 mr-1" />}
-                        {selectedOrder.status !== 'processed' && selectedOrder.status !== 'pending' && <AlertCircle className="w-3 h-3 mr-1" />}
+                        {selectedOrder.status === 'processed' && <CheckCircle className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />}
+                        {selectedOrder.status === 'pending' && <Clock className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />}
+                        {selectedOrder.status !== 'processed' && selectedOrder.status !== 'pending' && <AlertCircle className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />}
                         {selectedOrder.status || 'Unknown'}
                       </span>
                     </div>
@@ -492,71 +492,71 @@ export default function BillingApp() {
                       ? `${(selectedOrder.totalData / 1024).toFixed(2)} TB` 
                       : `${selectedOrder.totalData.toFixed(2)} GB`}
                     </div>
-                    <div><span className="font-medium">Pricing Profile:</span> {selectedOrder.pricingProfileName || "Default"}</div>
+                    <div><span className="font-medium">Pricing Profile:</span> <span className="break-words">{selectedOrder.pricingProfileName || "Default"}</span></div>
                     <div><span className="font-medium">Total Cost:</span> {formatCurrency(selectedOrder.estimatedCost || 0)}</div>
                   </div>
                 </div>
                 <button
                   onClick={closeOrderDetails}
-                  className="text-white hover:text-gray-200 transition-colors"
+                  className="text-white hover:text-gray-200 transition-colors flex-shrink-0"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
               </div>
             </div>
 
             {/* Modal Content */}
-            <div className="p-6">
+            <div className="p-3 sm:p-4 lg:p-6">
               {/* Search Bar */}
-              <div className="mb-4">
+              <div className="mb-3 sm:mb-4">
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search entries by phone number, allocation, or status..."
-                    className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Search entries..."
+                    className="w-full px-3 sm:px-4 py-2 pl-8 sm:pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                     value={entriesSearchText}
                     onChange={(e) => {
                       setEntriesSearchText(e.target.value);
                       setEntriesCurrentPage(1); // Reset to first page on search
                     }}
                   />
-                  <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                  <Search className="absolute left-2 sm:left-3 top-2.5 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                 </div>
               </div>
 
               {/* Entries Table */}
-              <div className="overflow-x-auto max-h-[50vh] border rounded-lg">
-                <table className="w-full min-w-[600px]">
+              <div className="overflow-x-auto max-h-[40vh] sm:max-h-[50vh] border rounded-lg">
+                <table className="w-full min-w-[400px] sm:min-w-[600px]">
                   <thead className="bg-gray-50 sticky top-0">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">#</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Phone Number</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Data Allocation</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Cost</th>
+                      <th className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">#</th>
+                      <th className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Phone</th>
+                      <th className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Data</th>
+                      <th className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
+                      <th className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Cost</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {getPaginatedEntries().length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                        <td colSpan={5} className="px-2 sm:px-4 py-6 sm:py-8 text-center text-gray-500 text-xs sm:text-sm">
                           {entriesSearchText ? 'No entries match your search' : 'No entries found'}
                         </td>
                       </tr>
                     ) : (
                       getPaginatedEntries().map((entry: any, index: number) => (
                         <tr key={`${entry.number}-${index}`} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-sm text-gray-500">
+                          <td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-500">
                             {(entriesCurrentPage - 1) * entriesPerPage + index + 1}
                           </td>
-                          <td className="px-4 py-3 text-sm font-medium text-gray-900">{entry.number}</td>
-                          <td className="px-4 py-3 text-sm text-gray-900">
-                            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                          <td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-gray-900 break-all">{entry.number}</td>
+                          <td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
+                            <span className="bg-blue-100 text-blue-800 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium">
                               {entry.allocationGB} GB
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-sm">
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          <td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-xs sm:text-sm">
+                            <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs font-medium rounded-full ${
                               entry.status === 'sent' ? 'bg-green-100 text-green-800' :
                               entry.status === 'error' ? 'bg-red-100 text-red-800' :
                               'bg-yellow-100 text-yellow-800'
@@ -564,7 +564,7 @@ export default function BillingApp() {
                               {entry.status || 'pending'}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-900">
+                          <td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                             {entry.cost ? `GHS ${Number(entry.cost).toFixed(2)}` : 'N/A'}
                           </td>
                         </tr>

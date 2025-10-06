@@ -329,30 +329,30 @@ export default function SentOrdersApp() {
       
       {/* Order Details Modal */}
       {selectedOrder && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-purple-50 to-indigo-50">
-              <h2 className="text-lg font-bold text-gray-900">Order Details</h2>
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50 p-2 sm:p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-xs sm:max-w-lg lg:max-w-3xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-3 sm:p-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-purple-50 to-indigo-50">
+              <h2 className="text-base sm:text-lg font-bold text-gray-900">Order Details</h2>
               <button 
                 onClick={() => setSelectedOrder(null)}
                 className="p-1 rounded-full hover:bg-gray-200 transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
             
-            <div className="p-4 border-b border-gray-200">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="p-3 sm:p-4 border-b border-gray-200">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                 <div>
-                  <p className="text-sm text-gray-500">Order ID</p>
-                  <p className="font-medium">{selectedOrder.id}</p>
+                  <p className="text-xs sm:text-sm text-gray-500">Order ID</p>
+                  <p className="font-medium text-sm sm:text-base">{selectedOrder.id}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Date</p>
-                  <p className="font-medium">{new Date(selectedOrder.timestamp).toLocaleString()}</p>
+                  <p className="text-xs sm:text-sm text-gray-500">Date</p>
+                  <p className="font-medium text-sm sm:text-base">{new Date(selectedOrder.timestamp).toLocaleString()}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Status</p>
+                  <p className="text-xs sm:text-sm text-gray-500">Status</p>
                   <p className="font-medium">
                     <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                       selectedOrder.status === "processed"
@@ -368,27 +368,27 @@ export default function SentOrdersApp() {
             
             {/* Pricing Information */}
             {selectedOrder.pricingProfileName && (
-              <div className="p-4 border-b border-gray-200 bg-green-50">
+              <div className="p-3 sm:p-4 border-b border-gray-200 bg-green-50">
                 <div className="flex items-center gap-2 mb-2">
-                  <DollarSign className="w-5 h-5 text-green-600" />
-                  <h3 className="font-medium">Pricing Information</h3>
+                  <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+                  <h3 className="font-medium text-sm sm:text-base">Pricing Information</h3>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                   <div>
-                    <p className="text-sm text-gray-500">Pricing Plan</p>
-                    <p className="font-medium">{selectedOrder.pricingProfileName}</p>
+                    <p className="text-xs sm:text-sm text-gray-500">Pricing Plan</p>
+                    <p className="font-medium text-sm sm:text-base">{selectedOrder.pricingProfileName}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Total Data</p>
-                    <p className="font-medium">
+                    <p className="text-xs sm:text-sm text-gray-500">Total Data</p>
+                    <p className="font-medium text-sm sm:text-base">
                       {selectedOrder.totalData > 1023 
                         ? `${(selectedOrder.totalData / 1024).toFixed(2)} TB` 
                         : `${selectedOrder.totalData} GB`}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Total Cost</p>
-                    <p className="font-bold text-lg">
+                    <p className="text-xs sm:text-sm text-gray-500">Total Cost</p>
+                    <p className="font-bold text-base sm:text-lg">
                       {selectedOrder.estimatedCost !== undefined && selectedOrder.estimatedCost !== null 
                         ? `GHS ${selectedOrder.estimatedCost.toFixed(2)}` 
                         : 'N/A'}
@@ -398,29 +398,29 @@ export default function SentOrdersApp() {
               </div>
             )}
             
-            <div className="p-4 overflow-auto flex-grow">
-              <h3 className="font-medium mb-3">Order Entries ({selectedOrder?.totalCount ?? 0})</h3>
-              <div className="grid grid-cols-1 gap-2 max-h-[50vh] overflow-y-auto">
-                <div className="bg-gray-100 px-4 py-2 grid grid-cols-3 rounded-md text-sm font-medium text-gray-700">
-                  <div>Phone Number</div>
-                  <div>Data Allocation</div>
+            <div className="p-3 sm:p-4 overflow-auto flex-grow">
+              <h3 className="font-medium mb-3 text-sm sm:text-base">Order Entries ({selectedOrder?.totalCount ?? 0})</h3>
+              <div className="grid grid-cols-1 gap-2 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto">
+                <div className="bg-gray-100 px-2 sm:px-4 py-2 grid grid-cols-3 rounded-md text-xs sm:text-sm font-medium text-gray-700">
+                  <div>Phone</div>
+                  <div>Data</div>
                   <div>Cost</div>
                 </div>
                 {selectedOrder?.entries?.map((entry, index) => (
-                  <div key={index} className="border border-gray-200 px-4 py-3 grid grid-cols-3 rounded-md hover:bg-gray-50">
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4 text-gray-400" />
-                      <span>{entry.number}</span>
+                  <div key={index} className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 grid grid-cols-3 gap-1 sm:gap-2 rounded-md hover:bg-gray-50">
+                    <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+                      <Phone className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm truncate">{entry.number}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Database className="w-4 h-4 text-purple-400" />
-                      <span>{entry.allocationGB} GB</span>
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <Database className="w-3 h-3 sm:w-4 sm:h-4 text-purple-400 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm">{entry.allocationGB} GB</span>
                     </div>
                     <div>
                       {entry.cost !== undefined && entry.cost !== null ? (
-                        <span className="text-green-600 font-medium">GHS {entry.cost.toFixed(2)}</span>
+                        <span className="text-green-600 font-medium text-xs sm:text-sm">GHS {entry.cost.toFixed(2)}</span>
                       ) : (
-                        <span className="text-gray-400">N/A</span>
+                        <span className="text-gray-400 text-xs sm:text-sm">N/A</span>
                       )}
                     </div>
                   </div>
@@ -428,10 +428,10 @@ export default function SentOrdersApp() {
               </div>
             </div>
             
-            <div className="p-4 border-t border-gray-200 flex justify-end">
+            <div className="p-3 sm:p-4 border-t border-gray-200 flex justify-end">
               <button 
                 onClick={() => setSelectedOrder(null)}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                className="px-3 sm:px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm sm:text-base w-full sm:w-auto"
               >
                 Close
               </button>
