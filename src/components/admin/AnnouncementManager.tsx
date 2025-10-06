@@ -236,14 +236,14 @@ export default function AnnouncementManager() {
   return (
     <div className="bg-white rounded-lg shadow-md">
       {/* Header with Add Button */}
-      <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-        <h2 className="text-lg font-medium">System Announcements</h2>
+      <div className="p-3 sm:p-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
+        <h2 className="text-base sm:text-lg font-medium">System Announcements</h2>
         <button 
           onClick={handleNewAnnouncement}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center gap-2"
+          className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-md hover:bg-blue-700 flex items-center gap-2 text-sm sm:text-base w-full sm:w-auto justify-center"
         >
-          <Plus className="h-4 w-4" />
-          New Announcement
+          <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+          <span className="sm:inline">New Announcement</span>
         </button>
       </div>
 
@@ -257,13 +257,13 @@ export default function AnnouncementManager() {
       ) : (
         <div className="divide-y divide-gray-200">
           {announcements.map((announcement) => (
-            <div key={announcement.id} className="p-4 hover:bg-gray-50 transition-colors">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
+            <div key={announcement.id} className="p-3 sm:p-4 hover:bg-gray-50 transition-colors">
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
+                <div className="flex-1 w-full">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
                     {getTypeIcon(announcement.type)}
                     <span 
-                      className={`text-sm font-medium px-2 py-1 rounded-full ${
+                      className={`text-xs sm:text-sm font-medium px-2 py-1 rounded-full ${
                         announcement.type === 'warning' ? 'bg-yellow-100 text-yellow-800' : 
                         announcement.type === 'error' ? 'bg-red-100 text-red-800' : 
                         'bg-blue-100 text-blue-800'
@@ -271,42 +271,42 @@ export default function AnnouncementManager() {
                     >
                       {announcement.type.charAt(0).toUpperCase() + announcement.type.slice(1)}
                     </span>
-                    <span className={`ml-2 ${announcement.isActive ? 'text-green-600' : 'text-gray-400'}`}>
+                    <span className={`text-xs sm:text-sm ${announcement.isActive ? 'text-green-600' : 'text-gray-400'}`}>
                       {announcement.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </div>
-                  <p className="text-gray-800">{announcement.message}</p>
-                  <div className="flex items-center gap-3 mt-2 text-sm text-gray-500">
+                  <p className="text-sm sm:text-base text-gray-800 mb-2">{announcement.message}</p>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-500">
                     <span>From: {formatDate(announcement.startDate)}</span>
                     <span>To: {formatDate(announcement.endDate)}</span>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                   <button
                     onClick={() => handleToggleActive(announcement)}
-                    className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                    className="p-1.5 sm:p-2 hover:bg-gray-200 rounded-full transition-colors"
                     title={announcement.isActive ? "Deactivate" : "Activate"}
                   >
                     {announcement.isActive ? (
-                      <ToggleRight className="h-5 w-5 text-green-600" />
+                      <ToggleRight className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                     ) : (
-                      <ToggleLeft className="h-5 w-5 text-gray-400" />
+                      <ToggleLeft className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                     )}
                   </button>
                   <button
                     onClick={() => handleEditAnnouncement(announcement)}
-                    className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                    className="p-1.5 sm:p-2 hover:bg-gray-200 rounded-full transition-colors"
                     title="Edit"
                   >
-                    <Edit className="h-5 w-5 text-blue-600" />
+                    <Edit className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                   </button>
                   <button
                     onClick={() => handleDeleteAnnouncement(announcement.id)}
-                    className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                    className="p-1.5 sm:p-2 hover:bg-gray-200 rounded-full transition-colors"
                     title="Delete"
                   >
-                    <Trash className="h-5 w-5 text-red-600" />
+                    <Trash className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
                   </button>
                 </div>
               </div>
@@ -317,10 +317,10 @@ export default function AnnouncementManager() {
 
       {/* Add/Edit Announcement Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-2xl max-w-lg w-full">
-            <div className="p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-lg shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-4">
                 {editingAnnouncement ? "Edit Announcement" : "Create New Announcement"}
               </h3>
               

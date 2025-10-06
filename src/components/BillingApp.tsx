@@ -232,9 +232,9 @@ export default function BillingApp() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
+      <div className="max-w-4xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
+        <div className="mb-4 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-2">
             <DollarSign className="w-8 h-8 text-blue-600" />
             Billing History
           </h1>
@@ -398,13 +398,13 @@ export default function BillingApp() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Entries</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Data</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pricing Profile</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Entries</th>
+                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Total Data</th>
+                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Pricing Profile</th>
+                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -415,37 +415,37 @@ export default function BillingApp() {
                         onClick={() => openOrderDetails(order)}
                         title="Click to view order entries and costs"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{order.time}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                          <div className="flex items-center gap-2">
-                            <Eye className="w-4 h-4 text-blue-500" />
-                            {order.id}
+                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600">{order.time}</td>
+                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 font-medium">
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <Eye className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
+                            <span className="text-xs sm:text-sm">{order.id}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm">
+                          <span className={`inline-flex items-center px-1.5 sm:px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             order.status === 'processed' 
                               ? 'bg-green-100 text-green-800' 
                               : order.status === 'pending'
                               ? 'bg-yellow-100 text-yellow-800'
                               : 'bg-gray-100 text-gray-800'
                           }`}>
-                            {order.status === 'processed' && <CheckCircle className="w-3 h-3 mr-1" />}
-                            {order.status === 'pending' && <Clock className="w-3 h-3 mr-1" />}
-                            {order.status !== 'processed' && order.status !== 'pending' && <AlertCircle className="w-3 h-3 mr-1" />}
-                            {order.status || 'Unknown'}
+                            {order.status === 'processed' && <CheckCircle className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />}
+                            {order.status === 'pending' && <Clock className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />}
+                            {order.status !== 'processed' && order.status !== 'pending' && <AlertCircle className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />}
+                            <span className="text-xs">{order.status || 'Unknown'}</span>
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{order.totalCount}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600">{order.totalCount}</td>
+                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600">
                           {order.totalData > 1024 
                             ? `${(order.totalData / 1024).toFixed(2)} TB` 
                             : `${order.totalData.toFixed(2)} GB`}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600">
                           {order.pricingProfileName || "Default"}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium">
                           <span className={order.status === 'processed' ? 'text-green-600' : 'text-gray-400'}>
                             {formatCurrency(order.estimatedCost || 0)}
                           </span>

@@ -1173,25 +1173,25 @@ export default function OrdersApp() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th scope="col" className="px-2 sm:px-4 py-3 text-center">
+                  <th scope="col" className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-center">
                     <div 
                       className="cursor-pointer inline-flex justify-center"
                       onClick={handleToggleSelectAll}
                     >
                       {selectAll ? (
-                        <CheckSquare className="h-5 w-5 text-blue-600 hover:text-blue-700 transition-colors" />
+                        <CheckSquare className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 hover:text-blue-700 transition-colors" />
                       ) : (
-                        <Square className="h-5 w-5 text-gray-400 hover:text-gray-700 transition-colors" />
+                        <Square className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 hover:text-gray-700 transition-colors" />
                       )}
                     </div>
                   </th>
                   <th 
                     scope="col" 
-                    className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("date")}
                   >
                     <div className="flex items-center gap-1">
-                      <span>Date & Time</span>
+                      <span className="text-xs sm:text-xs">Date & Time</span>
                       {sortField === "date" && (
                         <span className="text-blue-500">
                           {sortDirection === "asc" ? " ↑" : " ↓"}
@@ -1201,11 +1201,11 @@ export default function OrdersApp() {
                   </th>
                   <th 
                     scope="col" 
-                    className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("userName")}
                   >
                     <div className="flex items-center gap-1">
-                      <span>Submitted By</span>
+                      <span className="text-xs sm:text-xs">Submitted By</span>
                       {sortField === "userName" && (
                         <span className="text-blue-500">
                           {sortDirection === "asc" ? " ↑" : " ↓"}
@@ -1215,7 +1215,7 @@ export default function OrdersApp() {
                   </th>
                   <th 
                     scope="col" 
-                    className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("totalData")}
                   >
                     <div className="flex items-center gap-1">
@@ -1292,9 +1292,9 @@ export default function OrdersApp() {
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
+                        <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">
                           <div className="flex flex-col">
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-xs sm:text-sm font-medium text-gray-900">
                               {order.date}
                             </div>
                             <div className="text-xs text-gray-500">
@@ -1302,13 +1302,13 @@ export default function OrdersApp() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
+                        <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                              <User className="h-4 w-4" />
+                            <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                              <User className="h-3 w-3 sm:h-4 sm:w-4" />
                             </div>
-                            <div className="ml-3">
-                              <div className="text-sm font-medium text-gray-900">
+                            <div className="ml-2 sm:ml-3">
+                              <div className="text-xs sm:text-sm font-medium text-gray-900">
                                 {order.userName}
                               </div>
                               <div className="text-xs text-gray-500">
@@ -1317,13 +1317,13 @@ export default function OrdersApp() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
+                        <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="mr-2">
-                              <Database className="h-4 w-4 text-purple-600" />
+                            <div className="mr-1 sm:mr-2">
+                              <Database className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600" />
                             </div>
                             <div>
-                              <div className="text-sm font-bold text-gray-900">
+                              <div className="text-xs sm:text-sm font-bold text-gray-900">
                                 {order.totalData > 1023 
                                   ? `${(order.totalData / 1024).toFixed(2)} TB` 
                                   : `${order.totalData} GB`
@@ -1335,16 +1335,16 @@ export default function OrdersApp() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <span className="text-sm font-medium text-gray-900">
+                        <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">
+                          <span className="text-xs sm:text-sm font-medium text-gray-900">
                             {order.totalCount} numbers
                           </span>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
+                        <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">
                           {order.estimatedCost !== undefined ? (
                             <div className="flex items-center text-amber-600">
-                              <DollarSign className="h-4 w-4 mr-1" />
-                              <span className="text-sm font-medium">
+                              <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                              <span className="text-xs sm:text-sm font-medium">
                                 {new Intl.NumberFormat('en-GH', { 
                                   style: 'currency', 
                                   currency: 'GHS',

@@ -22,8 +22,8 @@ export default async function AnnouncementsPage() {
 
   return (
     <AppWithProviders>
-      <div className="container mx-auto px-4 py-6">
-        <h1 className="text-2xl font-bold mb-6">Announcements Management</h1>
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
+        <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Announcements Management</h1>
         <AnnouncementFeatureGuide />
         <AnnouncementManager />
       </div>

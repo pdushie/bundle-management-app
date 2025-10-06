@@ -183,11 +183,11 @@ export default function UserChat() {
       {/* Chat Button */}
       <button
         onClick={toggleChat}
-        className="fixed bottom-6 left-6 z-50 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-all flex items-center justify-center"
+        className="fixed bottom-4 sm:bottom-6 left-4 sm:left-6 z-50 bg-blue-600 text-white p-2.5 sm:p-3 rounded-full shadow-lg hover:bg-blue-700 transition-all flex items-center justify-center"
       >
-        <MessageSquare className="h-6 w-6" />
+        <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center">
             {unreadCount}
           </span>
         )}
@@ -195,21 +195,21 @@ export default function UserChat() {
 
       {/* Chat Window */}
       {isChatOpen && (
-        <div className="fixed bottom-24 left-6 z-50 bg-white rounded-lg shadow-xl border border-gray-200 w-80 sm:w-96 max-h-[500px] flex flex-col">
+        <div className="fixed bottom-16 sm:bottom-20 left-2 sm:left-4 lg:left-6 right-2 sm:right-auto z-50 bg-white rounded-lg shadow-xl border border-gray-200 w-auto sm:w-80 lg:w-96 max-h-[70vh] sm:max-h-[500px] flex flex-col">
           {/* Chat Header */}
-          <div className="bg-blue-600 text-white p-4 rounded-t-lg flex items-center justify-between">
-            <h3 className="font-medium">Chat with Admin</h3>
+          <div className="bg-blue-600 text-white p-3 sm:p-4 rounded-t-lg flex items-center justify-between">
+            <h3 className="font-medium text-sm sm:text-base">Chat with Admin</h3>
             <button onClick={toggleChat} className="text-white hover:text-blue-100">
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </div>
           
           {/* Chat Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[300px]">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 max-h-[50vh] sm:max-h-[300px]">
             {messages.length === 0 ? (
-              <div className="text-center text-gray-500 py-8">
-                <MessageSquare className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                <p>No messages yet. Start the conversation!</p>
+              <div className="text-center text-gray-500 py-6 sm:py-8">
+                <MessageSquare className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 text-gray-400" />
+                <p className="text-sm sm:text-base">No messages yet. Start the conversation!</p>
               </div>
             ) : (
               messages.map((msg) => (
@@ -220,7 +220,7 @@ export default function UserChat() {
                   }`}
                 >
                   <div
-                    className={`max-w-[80%] p-3 rounded-lg ${
+                    className={`max-w-[85%] sm:max-w-[80%] p-2 sm:p-3 rounded-lg ${
                       msg.senderType === "user"
                         ? "bg-blue-600 text-white rounded-br-none"
                         : "bg-gray-200 text-gray-800 rounded-bl-none"
@@ -242,14 +242,14 @@ export default function UserChat() {
           </div>
           
           {/* Chat Input */}
-          <form onSubmit={sendMessage} className="border-t border-gray-200 p-3">
+          <form onSubmit={sendMessage} className="border-t border-gray-200 p-2 sm:p-3">
             <div className="flex items-center">
               <input
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type a message..."
-                className="flex-1 border border-gray-300 rounded-l-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-gray-900 bg-white placeholder:text-gray-500"
+                className="flex-1 border border-gray-300 rounded-l-lg px-2 sm:px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-900 bg-white placeholder:text-gray-500"
               />
               <button
                 type="submit"
@@ -261,9 +261,9 @@ export default function UserChat() {
                 }`}
               >
                 {loading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
                 ) : (
-                  <Send className="h-5 w-5" />
+                  <Send className="h-4 w-4 sm:h-5 sm:w-5" />
                 )}
               </button>
             </div>

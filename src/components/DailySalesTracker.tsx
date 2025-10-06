@@ -185,8 +185,8 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
               Back to Summary
             </Button>
             <div>
-              <h2 className="text-2xl font-bold">Daily Sales Details</h2>
-              <p className="text-gray-600">
+              <h2 className="text-lg sm:text-2xl font-bold">Daily Sales Details</h2>
+              <p className="text-sm sm:text-base text-gray-600">
                 {format(selectedDate || new Date(), 'EEEE, MMMM d, yyyy')}
               </p>
             </div>
@@ -279,21 +279,21 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left p-3">User</th>
-                      <th className="text-left p-3">Email</th>
-                      <th className="text-right p-3">Orders</th>
-                      <th className="text-right p-3">Data (GB)</th>
-                      <th className="text-right p-3">Sales</th>
+                      <th className="text-left p-2 sm:p-3 text-xs sm:text-sm">User</th>
+                      <th className="text-left p-2 sm:p-3 text-xs sm:text-sm">Email</th>
+                      <th className="text-right p-2 sm:p-3 text-xs sm:text-sm">Orders</th>
+                      <th className="text-right p-2 sm:p-3 text-xs sm:text-sm">Data (GB)</th>
+                      <th className="text-right p-2 sm:p-3 text-xs sm:text-sm">Sales</th>
                     </tr>
                   </thead>
                   <tbody>
                     {dailyDetails.userBreakdown.map((user, index) => (
                       <tr key={index} className="border-b">
-                        <td className="p-3 font-medium">{user.userName}</td>
-                        <td className="p-3 text-sm text-gray-600">{user.userEmail}</td>
-                        <td className="p-3 text-right">{user.totalOrders}</td>
-                        <td className="p-3 text-right">{user.totalData.toFixed(2)}</td>
-                        <td className="p-3 text-right font-bold text-green-700">
+                        <td className="p-2 sm:p-3 font-medium text-xs sm:text-sm">{user.userName}</td>
+                        <td className="p-2 sm:p-3 text-xs sm:text-sm text-gray-600">{user.userEmail}</td>
+                        <td className="p-2 sm:p-3 text-right text-xs sm:text-sm">{user.totalOrders}</td>
+                        <td className="p-2 sm:p-3 text-right text-xs sm:text-sm">{user.totalData.toFixed(2)}</td>
+                        <td className="p-2 sm:p-3 text-right font-bold text-green-700 text-xs sm:text-sm">
                           {formatCurrency(user.totalSales)}
                         </td>
                       </tr>

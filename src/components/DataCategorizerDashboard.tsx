@@ -192,8 +192,8 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
             </Button>
           )}
           <div>
-            <h2 className="text-2xl font-bold">Data Package Categorizer</h2>
-            <p className="text-gray-600">Analyze data allocation purchases by package size and user patterns</p>
+            <h2 className="text-lg sm:text-2xl font-bold">Data Package Categorizer</h2>
+            <p className="text-sm sm:text-base text-gray-600">Analyze data allocation purchases by package size and user patterns</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -277,14 +277,14 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
       {data && (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-3 sm:p-6">
                 <div className="flex items-center">
-                  <Package2 className="h-8 w-8 text-blue-500 mr-3" />
+                  <Package2 className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 mr-2 sm:mr-3" />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Total Package Types</p>
-                    <h3 className="text-2xl font-bold text-blue-700">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">Total Package Types</p>
+                    <h3 className="text-lg sm:text-2xl font-bold text-blue-700">
                       {data.summary.totalCategories}
                     </h3>
                     <p className="text-xs text-gray-400">
@@ -296,12 +296,12 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
             </Card>
 
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-3 sm:p-6">
                 <div className="flex items-center">
-                  <Target className="h-8 w-8 text-green-500 mr-3" />
+                  <Target className="h-6 w-6 sm:h-8 sm:w-8 text-green-500 mr-2 sm:mr-3" />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Total Orders</p>
-                    <h3 className="text-2xl font-bold text-green-700">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">Total Orders</p>
+                    <h3 className="text-lg sm:text-2xl font-bold text-green-700">
                       {data.summary.totalOrders.toLocaleString()}
                     </h3>
                     <p className="text-xs text-gray-400">
@@ -313,12 +313,12 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
             </Card>
 
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-3 sm:p-6">
                 <div className="flex items-center">
-                  <Users className="h-8 w-8 text-purple-500 mr-3" />
+                  <Users className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500 mr-2 sm:mr-3" />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Active Users</p>
-                    <h3 className="text-2xl font-bold text-purple-700">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">Active Users</p>
+                    <h3 className="text-lg sm:text-2xl font-bold text-purple-700">
                       {data.summary.totalUsers.toLocaleString()}
                     </h3>
                     <p className="text-xs text-gray-400">
@@ -330,12 +330,12 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
             </Card>
 
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-3 sm:p-6">
                 <div className="flex items-center">
-                  <Award className="h-8 w-8 text-orange-500 mr-3" />
+                  <Award className="h-6 w-6 sm:h-8 sm:w-8 text-orange-500 mr-2 sm:mr-3" />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Most Popular</p>
-                    <h3 className="text-lg font-bold text-orange-700">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">Most Popular</p>
+                    <h3 className="text-sm sm:text-lg font-bold text-orange-700">
                       {data.summary.mostPopularCategory || 'N/A'}
                     </h3>
                     <p className="text-xs text-gray-400">
