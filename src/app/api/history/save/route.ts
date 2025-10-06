@@ -11,6 +11,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Prevent bundle-categorizer data from being saved to database
+    if (type === 'bundle-categorizer') {
+      return NextResponse.json({ error: 'Bundle categorizer data should not be saved to database' }, { status: 400 });
+    }
+
     // Execute database operations with proper error handling
     const result = await executeDbQuery(async () => {
       // Start transaction

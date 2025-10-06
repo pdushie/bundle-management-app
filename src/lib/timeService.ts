@@ -8,13 +8,14 @@ let timeOffset: number = 0;
 let lastSyncTime: number = 0;
 const SYNC_INTERVAL = 5 * 60 * 1000; // Sync every 5 minutes
 
-// World Time API as primary source, with server fallback
+// Local server time API as primary source, with external fallbacks
 const TIME_API_ENDPOINTS = [
+  // Primary: our own server time API (most reliable)
+  '/api/time',
+  // External fallbacks (may fail due to network restrictions)
   'https://worldtimeapi.org/api/timezone/Etc/UTC',
   'https://api.timezonedb.com/v2.1/get-zone?key=demo&format=json&by=zone&zone=UTC',
-  'https://timeapi.io/api/Time/current/zone?timeZone=UTC',
-  // Fallback to our own server time API
-  '/api/time'
+  'https://timeapi.io/api/Time/current/zone?timeZone=UTC'
 ];
 
 interface WorldTimeResponse {
@@ -37,10 +38,41 @@ interface TimeAPIResponse {
  * Fetch current UTC time from external API
  */
 async function fetchExternalTime(): Promise<Date> {
+  // First try our local server endpoint since it's most reliable
+  const localEndpoint = '/api/time';
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout for local
+    
+    const response = await fetch(localEndpoint, {
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/json',
+      }
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.timestamp) {
+        return new Date(data.timestamp);
+      }
+      if (data.datetime) {
+        return new Date(data.datetime);
+      }
+    }
+  } catch (error) {
+    console.warn(`Local time service failed:`, error);
+  }
+
+  // Fallback to external services if local fails
   for (const endpoint of TIME_API_ENDPOINTS) {
+    if (endpoint === '/api/time') continue; // Already tried above
+    
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout for external
       
       const response = await fetch(endpoint, {
         signal: controller.signal,
@@ -82,14 +114,6 @@ async function fetchExternalTime(): Promise<Date> {
         if (timeApiData.timeStamp) {
           return new Date(timeApiData.timeStamp);
         }
-      } else if (endpoint === '/api/time') {
-        // Our own server time API
-        if (data.timestamp) {
-          return new Date(data.timestamp);
-        }
-        if (data.datetime) {
-          return new Date(data.datetime);
-        }
       }
       
       // Generic fallback - look for common timestamp fields
@@ -106,7 +130,9 @@ async function fetchExternalTime(): Promise<Date> {
     }
   }
   
-  throw new Error('All time service endpoints failed');
+  // If all external services fail, return local time instead of throwing
+  console.warn('All time service endpoints failed, using local system time');
+  return new Date();
 }
 
 /**
@@ -127,7 +153,10 @@ async function syncTime(): Promise<void> {
     
     console.log(`Time synced successfully. Offset: ${timeOffset}ms`);
   } catch (error) {
-    console.error('Failed to sync time:', error);
+    console.warn('Failed to sync time with external services, using local time:', error);
+    // Fallback to local time with zero offset
+    timeOffset = 0;
+    lastSyncTime = Date.now();
     // Don't throw - allow system to work with local time as fallback
   }
 }
@@ -139,10 +168,15 @@ export async function getCurrentTime(): Promise<Date> {
   // Check if we need to sync or re-sync
   const now = Date.now();
   if (lastSyncTime === 0 || (now - lastSyncTime) > SYNC_INTERVAL) {
-    await syncTime();
+    try {
+      await syncTime();
+    } catch (error) {
+      console.warn('Time sync failed, using local time:', error);
+      // Continue with local time if sync fails
+    }
   }
   
-  // Return adjusted time
+  // Return adjusted time (or local time if offset is 0)
   return new Date(now + timeOffset);
 }
 

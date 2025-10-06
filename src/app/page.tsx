@@ -2452,17 +2452,19 @@ function AppContent() {
     // Add to local state first (for admins to see)
     setHistory(prev => [newEntry, ...prev]);
 
-    // Save to database (for ALL users - admins and non-admins)
-    try {
-      await fetch('/api/history/save', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newEntry),
-      });
-    } catch (error) {
-      console.error('Failed to save history to database:', error);
+    // Save to database - ONLY for bundle-allocator, NOT for bundle-categorizer
+    if (type === 'bundle-allocator') {
+      try {
+        await fetch('/api/history/save', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newEntry),
+        });
+      } catch (error) {
+        console.error('Failed to save history to database:', error);
+      }
     }
   };
 

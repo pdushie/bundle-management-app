@@ -5,10 +5,17 @@ import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { CalendarIcon, Download, FileText, Loader2, RefreshCw, AlertTriangle } from 'lucide-react';
+import { CalendarIcon, Download, FileText, Loader2, RefreshCw, AlertTriangle, TrendingUp, Receipt, BarChart3, Package2, User } from 'lucide-react';
 import NotAuthorized from '@/components/NotAuthorized';
 import { generateInvoicePDF } from '@/lib/invoiceGenerator';
 import { UserBillData } from '@/types/accounting';
+import DailySalesTracker from '@/components/DailySalesTracker';
+import DataAllocationDashboard from '@/components/DataAllocationDashboard';
+import DataCategorizerDashboard from '@/components/DataCategorizerDashboard';
+import UserPackageBreakdown from '@/components/UserPackageBreakdown';
+
+// Tab options for the accounting app
+type AccountingTab = 'user-billing' | 'daily-sales' | 'dashboard' | 'categorizer' | 'user-packages';
 
 export default function AccountingApp({ tabActive = false }: { tabActive?: boolean }) {
   const { data: session, status } = useSession();
@@ -31,6 +38,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [billData, setBillData] = useState<UserBillData | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<AccountingTab>('user-billing');
   
   // Check if user has admin privileges
   const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'superadmin';
@@ -214,8 +222,79 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
           </div>
         </div>
       )}
-      
-      <Card>
+
+      {/* Accounting Section Tabs */}
+      <div className="mb-6">
+        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+          <button
+            onClick={() => setActiveTab('user-billing')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+              activeTab === 'user-billing'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <Receipt className="h-4 w-4" />
+            User Billing
+          </button>
+          <button
+            onClick={() => setActiveTab('daily-sales')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+              activeTab === 'daily-sales'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <TrendingUp className="h-4 w-4" />
+            Daily Sales
+          </button>
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+              activeTab === 'dashboard'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <BarChart3 className="h-4 w-4" />
+            Dashboard
+          </button>
+          <button
+            onClick={() => setActiveTab('categorizer')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+              activeTab === 'categorizer'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <Package2 className="h-4 w-4" />
+            Package Categorizer
+          </button>
+          <button
+            onClick={() => setActiveTab('user-packages')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+              activeTab === 'user-packages'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <User className="h-4 w-4" />
+            User Packages
+          </button>
+        </div>
+      </div>
+
+      {/* Render content based on active tab */}
+      {activeTab === 'daily-sales' ? (
+        <DailySalesTracker />
+      ) : activeTab === 'dashboard' ? (
+        <DataAllocationDashboard />
+      ) : activeTab === 'categorizer' ? (
+        <DataCategorizerDashboard />
+      ) : activeTab === 'user-packages' ? (
+        <UserPackageBreakdown />
+      ) : (
+        <Card>
         <CardHeader className="bg-blue-50">
           <div className="flex items-center justify-between">
             <div>
@@ -381,6 +460,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
           )}
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }
