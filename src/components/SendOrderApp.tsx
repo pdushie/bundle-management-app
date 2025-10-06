@@ -1159,7 +1159,7 @@ export default function SendOrderApp() {
                       style={{ width: `${progressPercent}%` }}
                     ></div>
                   </div>
-                  <span className="text-xs font-medium text-gray-600">{Math.round(progressPercent)}%</span>
+                  <span className="text-xs sm:text-sm font-medium text-gray-600">{Math.round(progressPercent)}%</span>
                 </div>
               )}
 
@@ -1185,7 +1185,7 @@ export default function SendOrderApp() {
             {/* Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 p-3 sm:p-6">
               <div className="bg-green-50 rounded-lg p-2 sm:p-3 text-center">
-                <p className="text-xs text-green-700 font-medium mb-1">
+                <p className="text-xs sm:text-sm text-green-700 font-medium mb-1">
                   {status === "sending" || status === "success" ? "Successful" : "Valid"}
                 </p>
                 <p className="text-xl font-bold text-green-700">
@@ -1207,7 +1207,7 @@ export default function SendOrderApp() {
                 }}
                 title={invalidCount > 0 ? "Click to scroll to invalid entry" : ""}
               >
-                <p className="text-xs text-red-700 font-medium mb-1">
+                <p className="text-xs sm:text-sm text-red-700 font-medium mb-1">
                   {status === "sending" || status === "success" ? "Failed" : "Invalid"}
                 </p>
                 <p className="text-xl font-bold text-red-700">
@@ -1217,7 +1217,7 @@ export default function SendOrderApp() {
                 </p>
               </div>
               <div className="bg-yellow-50 rounded-lg p-2 sm:p-3 text-center">
-                <p className="text-xs text-yellow-700 font-medium mb-1">
+                <p className="text-xs sm:text-sm text-yellow-700 font-medium mb-1">
                   {status === "sending" || status === "success" ? "Pending" : "Duplicates"}
                 </p>
                 <p className="text-xl font-bold text-yellow-700">
@@ -1227,7 +1227,7 @@ export default function SendOrderApp() {
                 </p>
               </div>
               <div className="bg-cyan-50 rounded-lg p-2 sm:p-3 text-center">
-                <p className="text-xs text-cyan-700 font-medium mb-1">Auto-fixed</p>
+                <p className="text-xs sm:text-sm text-cyan-700 font-medium mb-1">Auto-fixed</p>
                 <p className="text-xl font-bold text-cyan-700">{fixedCount}</p>
               </div>
             </div>
@@ -1243,12 +1243,12 @@ export default function SendOrderApp() {
                   
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                      <p className="text-xs text-emerald-700">Pricing Plan</p>
+                      <p className="text-xs sm:text-sm text-emerald-700">Pricing Plan</p>
                       <p className="font-medium">{pricingData.profile.name}</p>
                     </div>
                     
                     <div>
-                      <p className="text-xs text-emerald-700">Total Data</p>
+                      <p className="text-xs sm:text-sm text-emerald-700">Total Data</p>
                       <p className="font-medium">
                         {totalGB > 1023 
                           ? `${(totalGB / 1024).toFixed(2)} TB` 
@@ -1257,12 +1257,12 @@ export default function SendOrderApp() {
                     </div>
                     
                     <div>
-                      <p className="text-xs text-emerald-700">Estimated Cost</p>
+                      <p className="text-xs sm:text-sm text-emerald-700">Estimated Cost</p>
                       <p className="font-bold text-lg">GHS {totalCost.toFixed(2)}</p>
                     </div>
                   </div>
                   
-                  <div className="mt-2 text-xs text-emerald-700">
+                  <div className="mt-2 text-xs sm:text-sm text-emerald-700">
                     <p>* Cost calculated by applying pricing to each individual allocation</p>
                     
                     {pricingData.profile.isTiered && pricingData.profile.tiers && 
@@ -1334,7 +1334,7 @@ export default function SendOrderApp() {
                           entry.wasFixed ? "text-cyan-700" : ""
                         }`}>{entry.number}</p>
                         {entry.message && (
-                          <p className={`text-xs mt-1 ${
+                          <p className={`text-xs sm:text-sm mt-1 ${
                             entry.status === "sent" 
                               ? "text-green-600" 
                               : entry.status === "error" 
@@ -1345,7 +1345,7 @@ export default function SendOrderApp() {
                           </p>
                         )}
                         {(!(/^0\d{9}$/.test(entry.number)) || entry.isValid === false) && !entry.message && (
-                          <p className="text-xs text-red-600 font-medium mt-1">
+                          <p className="text-xs sm:text-sm text-red-600 font-medium mt-1">
                             {entry.number.length !== 10
                               ? `Invalid length (must be 10 digits, got ${entry.number.length})` 
                               : !entry.number.startsWith('0')
@@ -1356,18 +1356,18 @@ export default function SendOrderApp() {
                           </p>
                         )}
                         {entry.isDuplicate && !entry.message && (
-                          <p className="text-xs text-yellow-600 font-medium mt-1">Duplicate entry</p>
+                          <p className="text-xs sm:text-sm text-yellow-600 font-medium mt-1">Duplicate entry</p>
                         )}
                         {entry.wasFixed && !entry.message && (
-                          <p className="text-xs text-cyan-600 font-medium mt-1">Auto-fixed (added leading zero)</p>
+                          <p className="text-xs sm:text-sm text-cyan-600 font-medium mt-1">Auto-fixed (added leading zero)</p>
                         )}
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold">{entry.allocationGB.toFixed(2)} GB</p>
-                      <p className="text-xs text-gray-500">{(entry.allocationGB * 1024).toFixed(0)} MB</p>
+                      <p className="text-xs sm:text-sm text-gray-500">{(entry.allocationGB * 1024).toFixed(0)} MB</p>
                       {pricingData?.hasProfile && pricingData?.profile && (
-                        <p className="text-xs text-green-600 font-medium mt-1">
+                        <p className="text-xs sm:text-sm text-green-600 font-medium mt-1">
                           GHS {calculatePrice(pricingData.profile, entry.allocationGB)?.toFixed(2)}
                         </p>
                       )}

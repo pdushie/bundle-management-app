@@ -228,7 +228,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
         <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
           <button
             onClick={() => setActiveTab('user-billing')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+            className={`px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-2 ${
               activeTab === 'user-billing'
                 ? 'bg-white text-blue-600 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
@@ -239,7 +239,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
           </button>
           <button
             onClick={() => setActiveTab('daily-sales')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+            className={`px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-2 ${
               activeTab === 'daily-sales'
                 ? 'bg-white text-blue-600 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
@@ -317,7 +317,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
           <div className="grid md:grid-cols-3 gap-6">
             {/* User Selection */}
             <div>
-              <label className="text-sm font-medium mb-2 block text-gray-700">Select User</label>
+              <label className="text-sm sm:text-base font-medium mb-2 block text-gray-700">Select User</label>
               <Select 
                 disabled={loadingUsers}
                 value={selectedUserId || undefined}
@@ -344,7 +344,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
 
             {/* Date Selection - Simple Input */}
             <div>
-              <label className="text-sm font-medium mb-2 block text-gray-700">Select Date</label>
+              <label className="text-sm sm:text-base font-medium mb-2 block text-gray-700">Select Date</label>
               <div className="flex items-center">
                 <CalendarIcon className="mr-2 h-4 w-4 text-gray-400" />
                 <input 
@@ -358,7 +358,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
                   }}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
-                <span className="ml-2 text-xs text-gray-500">(UTC)</span>
+                <span className="ml-2 text-xs sm:text-sm text-gray-500">(UTC)</span>
               </div>
             </div>
 

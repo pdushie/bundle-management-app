@@ -250,7 +250,7 @@ export default function UserPricingAssignment({ profileId, onClose }: UserPricin
           <Users className="w-4 h-4" />
           Users assigned to this profile: {assignedUsers.length}
         </h4>
-        <p className="text-xs text-blue-700">
+        <p className="text-xs sm:text-sm text-blue-700">
           {assignedUsers.length === 0 
             ? "No users are currently assigned to this profile." 
             : "These users will be charged according to this pricing profile."}

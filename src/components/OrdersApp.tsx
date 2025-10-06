@@ -1137,7 +1137,7 @@ export default function OrdersApp() {
                 placeholder="Search orders by user or date..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white placeholder:text-gray-500"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white placeholder:text-gray-500"
               />
             </div>
             
@@ -1191,7 +1191,7 @@ export default function OrdersApp() {
                     onClick={() => handleSort("date")}
                   >
                     <div className="flex items-center gap-1">
-                      <span className="text-xs sm:text-xs">Date & Time</span>
+                      <span className="text-xs sm:text-sm">Date & Time</span>
                       {sortField === "date" && (
                         <span className="text-blue-500">
                           {sortDirection === "asc" ? " ↑" : " ↓"}
@@ -1205,7 +1205,7 @@ export default function OrdersApp() {
                     onClick={() => handleSort("userName")}
                   >
                     <div className="flex items-center gap-1">
-                      <span className="text-xs sm:text-xs">Submitted By</span>
+                      <span className="text-xs sm:text-sm">Submitted By</span>
                       {sortField === "userName" && (
                         <span className="text-blue-500">
                           {sortDirection === "asc" ? " ↑" : " ↓"}

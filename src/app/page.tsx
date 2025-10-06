@@ -255,11 +255,11 @@ function HistoryManager({
           <div className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
               <div>
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3 mb-2">
+                <h2 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3 mb-2">
                   <History className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                   History & Analytics
                 </h2>
-                <p className="text-xs sm:text-sm text-gray-600">
+                <p className="text-sm sm:text-base text-gray-600">
                   Track and analyze your daily data processing activities
                 </p>
               </div>
@@ -346,8 +346,8 @@ function HistoryManager({
                     <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium text-gray-600 truncate">Total Days</p>
-                    <p className="text-lg sm:text-xl font-bold text-gray-900">{availableDates.length}</p>
+                    <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Days</p>
+                    <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">{availableDates.length}</p>
                   </div>
                 </div>
               </div>
@@ -358,8 +358,8 @@ function HistoryManager({
                     <Database className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium text-gray-600 truncate">Total Entries</p>
-                    <p className="text-lg sm:text-xl font-bold text-gray-900">
+                    <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Entries</p>
+                    <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">
                       {totalDatabaseEntries}
                     </p>
                   </div>
@@ -372,8 +372,8 @@ function HistoryManager({
                     <Database className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                   </div>
                   <div className="min-w-0 flex-1 overflow-hidden">
-                    <p className="text-xs font-medium text-gray-600 truncate">Total Data</p>
-                    <p className="text-xs sm:text-lg font-bold text-gray-900 break-words">
+                    <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Data</p>
+                    <p className="text-sm sm:text-base lg:text-lg font-bold text-gray-900 break-words">
                       {(() => {
                         // Safely calculate the total GB
                         const totalTB = dailySummaries.reduce((sum, day) => {
@@ -396,8 +396,8 @@ function HistoryManager({
                     <BarChart className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium text-gray-600 truncate">Sessions</p>
-                    <p className="text-lg sm:text-xl font-bold text-gray-900">{history.length}</p>
+                    <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Sessions</p>
+                    <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">{history.length}</p>
                   </div>
                 </div>
               </div>
@@ -1389,7 +1389,7 @@ function BundleAllocatorApp({
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium text-gray-600 truncate">Total Entries</p>
-                  <p className="text-sm sm:text-xl font-bold text-gray-900">{entries.length}</p>
+                  <p className="text-sm sm:text-lg font-bold text-gray-900">{entries.length}</p>
                 </div>
               </div>
             </div>
@@ -1401,7 +1401,7 @@ function BundleAllocatorApp({
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium text-gray-600 truncate">Valid Numbers</p>
-                  <p className="text-sm sm:text-xl font-bold text-green-600">{validEntries.length}</p>
+                  <p className="text-sm sm:text-lg font-bold text-green-600">{validEntries.length}</p>
                 </div>
               </div>
             </div>
@@ -1413,7 +1413,7 @@ function BundleAllocatorApp({
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium text-gray-600 truncate">Invalid Numbers</p>
-                  <p className="text-sm sm:text-xl font-bold text-red-600">{invalidEntries.length}</p>
+                  <p className="text-sm sm:text-lg font-bold text-red-600">{invalidEntries.length}</p>
                 </div>
               </div>
             </div>
@@ -1425,7 +1425,7 @@ function BundleAllocatorApp({
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium text-gray-600 truncate">Duplicates</p>
-                  <p className="text-sm sm:text-xl font-bold text-yellow-600">{duplicateEntries.length}</p>
+                  <p className="text-sm sm:text-lg font-bold text-yellow-600">{duplicateEntries.length}</p>
                 </div>
               </div>
             </div>
@@ -1437,7 +1437,7 @@ function BundleAllocatorApp({
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium text-gray-600 truncate">Auto-Fixed</p>
-                  <p className="text-sm sm:text-xl font-bold text-cyan-600">{fixedEntries.length}</p>
+                  <p className="text-sm sm:text-lg font-bold text-cyan-600">{fixedEntries.length}</p>
                 </div>
               </div>
             </div>
@@ -2785,13 +2785,13 @@ function AppContent() {
                   <Database className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Clickyfied</h1>
-                  <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Your reliable data plug</p>
+                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Clickyfied</h1>
+                  <p className="text-sm text-gray-600">Your reliable data plug</p>
                 </div>
               </div>
 
               {/* User Info & Stats - Mobile Optimized */}
-              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm w-full sm:w-auto justify-end sm:justify-start">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm sm:text-base w-full sm:w-auto justify-end sm:justify-start">
                 {/* Show history stats for authorized users */}
                 {(isSuperAdmin || isAdmin) && history.length > 0 && activeTab !== "history" && (
                   <>

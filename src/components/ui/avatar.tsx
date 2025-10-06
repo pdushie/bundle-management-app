@@ -21,7 +21,7 @@ export function Avatar({
   size?: "sm" | "md" | "lg"
 }) {
   const sizeClasses = {
-    sm: "h-8 w-8 text-xs",
+    sm: "h-8 w-8 text-xs sm:text-sm",
     md: "h-10 w-10 text-sm",
     lg: "h-12 w-12 text-base",
   }

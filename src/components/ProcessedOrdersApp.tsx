@@ -251,7 +251,7 @@ export default function ProcessedOrdersApp() {
               <table className="w-full min-w-[600px]">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Order ID</th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">Order ID</th>
                     <th 
                       className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider cursor-pointer hover:text-blue-600"
                       onClick={() => toggleSort('userName')}
@@ -278,8 +278,8 @@ export default function ProcessedOrdersApp() {
                         )}
                       </div>
                     </th>
-                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Data</th>
-                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">Data</th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">Status</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">

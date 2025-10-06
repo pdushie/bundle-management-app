@@ -546,7 +546,7 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
                             {user.categories.slice(0, 3).map((cat) => (
                               <span 
                                 key={cat.packageSize}
-                                className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs"
+                                className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs sm:text-sm"
                               >
                                 {cat.packageSize} ({cat.quantity})
                               </span>

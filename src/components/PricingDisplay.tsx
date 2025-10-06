@@ -59,11 +59,11 @@ export default function PricingDisplay({
     null;
   
   return (
-    <div className={`bg-white rounded-lg shadow p-6 ${className}`}>
-      <h2 className="text-xl font-semibold mb-4">Your Pricing Plan</h2>
-      <div className="mb-4">
-        <h3 className="font-medium text-gray-700">{profile.name}</h3>
-        {profile.description && <p className="text-gray-600 mt-1">{profile.description}</p>}
+    <div className={`bg-white rounded-lg shadow p-4 sm:p-6 ${className}`}>
+      <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Your Pricing Plan</h2>
+      <div className="mb-3 sm:mb-4">
+        <h3 className="font-medium text-gray-700 text-sm sm:text-base">{profile.name}</h3>
+        {profile.description && <p className="text-gray-600 mt-1 text-sm sm:text-base">{profile.description}</p>}
       </div>
       
       {showDetails && (
@@ -72,23 +72,25 @@ export default function PricingDisplay({
           
           {profile.isTiered ? (
             <div>
-              <p className="mb-2 text-gray-700">Tiered pricing based on data size:</p>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="px-4 py-2 text-left">Data (GB)</th>
-                    <th className="px-4 py-2 text-right">Price (GHS)</th>
-                  </tr>
-                </thead>
+              <p className="mb-2 text-gray-700 text-sm sm:text-base">Tiered pricing based on data size:</p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs sm:text-sm">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="px-2 sm:px-4 py-2 text-left text-xs sm:text-sm">Data (GB)</th>
+                      <th className="px-2 sm:px-4 py-2 text-right text-xs sm:text-sm">Price (GHS)</th>
+                    </tr>
+                  </thead>
                 <tbody>
                   {profile.tiers?.sort((a: any, b: any) => parseFloat(a.dataGB) - parseFloat(b.dataGB)).map((tier: any) => (
                     <tr key={tier.id} className="border-t border-gray-200">
-                      <td className="px-4 py-2">{tier.dataGB}</td>
-                      <td className="px-4 py-2 text-right">{tier.price}</td>
+                      <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm">{tier.dataGB}</td>
+                      <td className="px-2 sm:px-4 py-2 text-right text-xs sm:text-sm">{tier.price}</td>
                     </tr>
                   ))}
                 </tbody>
-              </table>
+                </table>
+              </div>
             </div>
           ) : (
             <div>

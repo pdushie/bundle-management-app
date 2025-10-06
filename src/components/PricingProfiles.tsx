@@ -556,7 +556,7 @@ export default function PricingProfiles() {
                 <CardTitle className="text-xl">
                   {profile.name}
                   {!profile.isActive && (
-                    <span className="ml-2 text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full">
+                    <span className="ml-2 text-xs sm:text-sm bg-gray-200 text-gray-700 px-2 py-1 rounded-full">
                       Inactive
                     </span>
                   )}
@@ -696,7 +696,7 @@ export default function PricingProfiles() {
                   
                   <div className={`${pricingTiers.length > 5 ? 'max-h-72 overflow-y-auto pr-1 border border-gray-200 rounded-md p-3' : ''}`}>
                     {pricingTiers.length > 5 && (
-                      <p className="text-xs text-blue-600 mb-2 text-center">Scroll to see all tiers</p>
+                      <p className="text-xs sm:text-sm text-blue-600 mb-2 text-center">Scroll to see all tiers</p>
                     )}
                     {pricingTiers.map((tier, index) => (
                       <div key={index} className="grid grid-cols-10 gap-4 items-center mb-3">
@@ -712,7 +712,7 @@ export default function PricingProfiles() {
                           />
                         </div>
                         <div className="relative col-span-5">
-                          <div className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 flex items-center justify-center text-xs font-medium">
+                          <div className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 flex items-center justify-center text-xs sm:text-sm font-medium">
                             GHS
                           </div>
                           <Input
@@ -779,7 +779,7 @@ export default function PricingProfiles() {
                     {importError && (
                       <p className="text-sm text-red-500 mt-2">{importError}</p>
                     )}
-                    <p className="text-xs text-gray-500 mt-3 bg-blue-50 p-3 rounded-md">
+                    <p className="text-xs sm:text-sm text-gray-500 mt-3 bg-blue-50 p-3 rounded-md">
                       Excel format: Column A = Data GB, Column B = Price (GHS)
                     </p>
                   </div>
