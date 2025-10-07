@@ -271,7 +271,7 @@ export default function AnnouncementManager() {
                     >
                       {announcement.type.charAt(0).toUpperCase() + announcement.type.slice(1)}
                     </span>
-                    <span className={`text-xs sm:text-sm ${announcement.isActive ? 'text-green-600' : 'text-gray-400'}`}>
+                    <span className={`text-xs sm:text-sm ${announcement.isActive ? 'text-green-600' : 'text-gray-600'}`}>
                       {announcement.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </div>

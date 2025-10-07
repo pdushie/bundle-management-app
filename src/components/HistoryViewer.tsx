@@ -206,7 +206,7 @@ export default function HistoryViewer() {
                 <Clock className="h-8 w-8 text-gray-400 mb-3" />
                 <p className="text-gray-500">No history entries found</p>
                 {searchTerm || typeFilter !== "all" ? (
-                  <p className="text-gray-400 text-sm mt-1">Try adjusting your filters</p>
+                  <p className="text-gray-600 text-sm mt-1">Try adjusting your filters</p>
                 ) : null}
               </div>
             ) : (

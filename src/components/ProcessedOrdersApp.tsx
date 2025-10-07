@@ -330,7 +330,7 @@ export default function ProcessedOrdersApp() {
                     <button
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
-                      className={`px-2 py-1 rounded border ${currentPage === 1 ? 'text-gray-300 border-gray-200' : 'text-green-600 border-green-300 hover:bg-green-50'}`}
+                      className={`px-2 py-1 rounded border ${currentPage === 1 ? 'text-gray-500 border-gray-300' : 'text-green-600 border-green-300 hover:bg-green-50'}`}
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </button>

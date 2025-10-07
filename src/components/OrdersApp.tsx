@@ -1269,7 +1269,7 @@ export default function OrdersApp() {
                         <FileText className="h-8 w-8 text-gray-400 mb-3" />
                         <p className="text-gray-500">No orders found</p>
                         {searchTerm || statusFilter !== "all" ? (
-                          <p className="text-gray-400 text-sm mt-1">Try adjusting your filters</p>
+                          <p className="text-gray-600 text-sm mt-1">Try adjusting your filters</p>
                         ) : null}
                       </div>
                     </td>
@@ -1357,7 +1357,7 @@ export default function OrdersApp() {
                               )}
                             </div>
                           ) : (
-                            <span className="text-xs text-gray-400">Not calculated</span>
+                            <span className="text-xs text-gray-600">Not calculated</span>
                           )}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">

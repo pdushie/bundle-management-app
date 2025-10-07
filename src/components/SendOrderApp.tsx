@@ -1026,7 +1026,7 @@ export default function SendOrderApp() {
                 onDrop={handleDrop}
                 className="border-2 border-dashed rounded-lg sm:rounded-xl p-4 sm:p-8 text-center cursor-pointer transition-all duration-300 border-gray-300 hover:border-blue-400 hover:bg-blue-50"
               >
-                <div className="w-10 h-10 sm:w-14 sm:h-14 mx-auto mb-2 sm:mb-4 flex items-center justify-center rounded-full bg-gray-100 text-gray-400">
+                <div className="w-10 h-10 sm:w-14 sm:h-14 mx-auto mb-2 sm:mb-4 flex items-center justify-center rounded-full bg-gray-100 text-gray-500">
                   <Upload className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <p className="text-gray-700 font-medium mb-1 sm:mb-2 text-sm sm:text-base">

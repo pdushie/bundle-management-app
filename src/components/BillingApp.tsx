@@ -294,7 +294,7 @@ export default function BillingApp() {
               <button 
                 onClick={goToToday}
                 disabled={isToday(selectedDate)}
-                className={`px-4 py-2 ${!isToday(selectedDate) ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed'} rounded-md font-medium transition-colors`}
+                className={`px-4 py-2 ${!isToday(selectedDate) ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 text-gray-500 cursor-not-allowed'} rounded-md font-medium transition-colors`}
               >
                 Today
               </button>
@@ -446,7 +446,7 @@ export default function BillingApp() {
                           {order.pricingProfileName || "Default"}
                         </td>
                         <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium">
-                          <span className={order.status === 'processed' ? 'text-green-600' : 'text-gray-400'}>
+                          <span className={order.status === 'processed' ? 'text-green-600' : 'text-gray-600'}>
                             {formatCurrency(order.estimatedCost || 0)}
                           </span>
                           {order.status === "pending" && <span className="text-xs text-yellow-600 block">Not billable yet</span>}
@@ -581,7 +581,7 @@ export default function BillingApp() {
                     <button
                       onClick={() => handleEntriesPageChange(entriesCurrentPage - 1)}
                       disabled={entriesCurrentPage === 1}
-                      className={`px-3 py-1 rounded border ${entriesCurrentPage === 1 ? 'text-gray-300 border-gray-200' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
+                      className={`px-3 py-1 rounded border ${entriesCurrentPage === 1 ? 'text-gray-500 border-gray-300' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </button>

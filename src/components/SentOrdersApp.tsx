@@ -267,7 +267,7 @@ export default function SentOrdersApp() {
                         ) : order.pricingProfileName ? (
                           <span className="text-gray-500">{order.pricingProfileName}</span>
                         ) : (
-                          <span className="text-gray-400">N/A</span>
+                          <span className="text-gray-600">N/A</span>
                         )}
                       </td>
                       <td className="px-3 sm:px-6 py-2 sm:py-4">
@@ -291,7 +291,7 @@ export default function SentOrdersApp() {
                     <button
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
-                      className={`px-2 py-1 rounded border ${currentPage === 1 ? 'text-gray-300 border-gray-200' : 'text-purple-600 border-purple-300 hover:bg-purple-50'}`}
+                      className={`px-2 py-1 rounded border ${currentPage === 1 ? 'text-gray-500 border-gray-300' : 'text-purple-600 border-purple-300 hover:bg-purple-50'}`}
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </button>
@@ -420,7 +420,7 @@ export default function SentOrdersApp() {
                       {entry.cost !== undefined && entry.cost !== null ? (
                         <span className="text-green-600 font-medium text-xs sm:text-sm">GHS {entry.cost.toFixed(2)}</span>
                       ) : (
-                        <span className="text-gray-400 text-xs sm:text-sm">N/A</span>
+                        <span className="text-gray-600 text-xs sm:text-sm">N/A</span>
                       )}
                     </div>
                   </div>
