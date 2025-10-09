@@ -166,7 +166,7 @@ export default function UserPricingAssignment({ profileId, onClose }: UserPricin
       </div>
       
       <div className="relative mb-4">
-        <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-600" />
+        <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-700" />
         <Input
           placeholder="Search users by name or email..."
           value={searchTerm}

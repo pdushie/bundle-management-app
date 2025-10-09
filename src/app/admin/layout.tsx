@@ -75,7 +75,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-                <p className="text-sm text-gray-600">System Management</p>
+                <p className="text-sm text-gray-700">System Management</p>
               </div>
             </div>
 

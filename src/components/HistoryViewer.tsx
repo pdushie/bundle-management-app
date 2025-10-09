@@ -142,7 +142,7 @@ export default function HistoryViewer() {
                   <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                   <span>Order Processing History</span>
                 </h2>
-                <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                <p className="text-xs sm:text-sm text-gray-700 mt-1">
                   View detailed history of processed orders and phone numbers
                 </p>
               </div>
@@ -180,7 +180,7 @@ export default function HistoryViewer() {
             
             {/* Type Filter */}
             <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-gray-600" />
+              <Filter className="h-4 w-4 text-gray-700" />
               <select 
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
@@ -199,33 +199,33 @@ export default function HistoryViewer() {
             {isLoading ? (
               <div className="flex justify-center items-center py-12">
                 <Loader className="h-8 w-8 text-blue-500 animate-spin" />
-                <span className="ml-2 text-gray-600">Loading history...</span>
+                <span className="ml-2 text-gray-700">Loading history...</span>
               </div>
             ) : filteredHistory.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <Clock className="h-8 w-8 text-gray-700 mb-3" />
                 <p className="text-gray-700">No history entries found</p>
                 {searchTerm || typeFilter !== "all" ? (
-                  <p className="text-gray-600 text-sm mt-1">Try adjusting your filters</p>
+                  <p className="text-gray-700 text-sm mt-1">Try adjusting your filters</p>
                 ) : null}
               </div>
             ) : (
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Date & Time
                     </th>
-                    <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Type
                     </th>
-                    <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Data & Numbers
                     </th>
-                    <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Entries &amp; Stats
                     </th>
-                    <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -348,13 +348,13 @@ export default function HistoryViewer() {
                                   <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-100">
                                       <tr>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                                           Number
                                         </th>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                                           Data
                                         </th>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                                           Status
                                         </th>
                                       </tr>
@@ -364,7 +364,7 @@ export default function HistoryViewer() {
                                         <tr key={phone.id} className="hover:bg-gray-50">
                                           <td className="px-3 py-2 whitespace-nowrap">
                                             <div className="flex items-center">
-                                              <Phone className="h-3 w-3 text-gray-600 mr-2" />
+                                              <Phone className="h-3 w-3 text-gray-700 mr-2" />
                                               <span className="text-sm font-medium text-gray-900">
                                                 {phone.number}
                                               </span>
@@ -482,7 +482,7 @@ export default function HistoryViewer() {
                       }}
                       className="w-14 h-8 text-center border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    <span className="text-gray-600">of {totalPages}</span>
+                    <span className="text-gray-700">of {totalPages}</span>
                     <button
                       onClick={() => {
                         const pageInput = document.querySelector("input[type='number']") as HTMLInputElement;

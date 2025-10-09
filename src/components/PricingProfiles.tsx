@@ -625,7 +625,7 @@ export default function PricingProfiles() {
         {!loading && profiles.length === 0 && (
           <Card className="col-span-full bg-gray-50 border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <AlertCircle className="h-12 w-12 text-gray-600 mb-4" />
+              <AlertCircle className="h-12 w-12 text-gray-700 mb-4" />
               <h3 className="text-lg font-semibold">No Pricing Profiles</h3>
               <p className="text-sm text-gray-700 text-center max-w-md mt-1 mb-4">
                 Create your first pricing profile to assign to users and calculate order costs.

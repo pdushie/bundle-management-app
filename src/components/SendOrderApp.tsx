@@ -986,7 +986,7 @@ export default function SendOrderApp() {
               <Send className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
               <span>Send Orders</span>
             </h2>
-            <p className="text-xs sm:text-sm text-gray-600 mt-1">
+            <p className="text-xs sm:text-sm text-gray-700 mt-1">
               Upload and process order files for sending
             </p>
           </div>
@@ -999,7 +999,7 @@ export default function SendOrderApp() {
                 className={`flex-1 px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-2 ${
                   inputMethod === "file"
                     ? "bg-white text-blue-600 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
+                    : "text-gray-700 hover:text-gray-900"
                 }`}
               >
                 <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -1010,7 +1010,7 @@ export default function SendOrderApp() {
                 className={`flex-1 px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-2 ${
                   inputMethod === "manual"
                     ? "bg-white text-blue-600 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
+                    : "text-gray-700 hover:text-gray-900"
                 }`}
               >
                 <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -1102,7 +1102,7 @@ export default function SendOrderApp() {
             <div className="p-3 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 flex justify-between items-center flex-wrap gap-3">
               <div>
                 <h2 className="text-lg sm:text-xl font-bold text-gray-900">Order Details</h2>
-                <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                <p className="text-xs sm:text-sm text-gray-700 mt-1">
                   {orderEntries.length} entries, {totalGB > 1023 
                     ? `${(totalGB / 1024).toFixed(2)} TB total` 
                     : `${totalGB.toFixed(2)} GB total`}
@@ -1159,7 +1159,7 @@ export default function SendOrderApp() {
                       style={{ width: `${progressPercent}%` }}
                     ></div>
                   </div>
-                  <span className="text-xs sm:text-sm font-medium text-gray-600">{Math.round(progressPercent)}%</span>
+                  <span className="text-xs sm:text-sm font-medium text-gray-700">{Math.round(progressPercent)}%</span>
                 </div>
               )}
 
@@ -1339,7 +1339,7 @@ export default function SendOrderApp() {
                               ? "text-green-600" 
                               : entry.status === "error" 
                               ? "text-red-600" 
-                              : "text-gray-600"
+                              : "text-gray-700"
                           }`}>
                             {entry.message}
                           </p>
@@ -1386,7 +1386,7 @@ export default function SendOrderApp() {
               <Send className="w-8 h-8 sm:w-10 sm:h-10" />
             </div>
             <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Ready to Send Orders</h3>
-            <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto">
+            <p className="text-sm sm:text-base text-gray-700 max-w-md mx-auto">
               Upload an order file to begin processing and sending orders
             </p>
           </div>

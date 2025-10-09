@@ -267,7 +267,7 @@ export default function UserManagement() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-xl font-bold text-gray-900">User Management</h2>
-          <p className="text-sm text-gray-600">Manage user accounts, roles, and access</p>
+          <p className="text-sm text-gray-700">Manage user accounts, roles, and access</p>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -299,7 +299,7 @@ export default function UserManagement() {
         {isLoading ? (
           <div className="p-8 text-center">
             <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading users...</p>
+            <p className="text-gray-700">Loading users...</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -420,7 +420,7 @@ export default function UserManagement() {
                 <h3 className="text-lg font-bold text-gray-900">Create New User</h3>
                 <button
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="text-gray-600 hover:text-gray-600"
+                  className="text-gray-700 hover:text-gray-700"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -537,13 +537,13 @@ export default function UserManagement() {
                 <h3 className="text-lg font-bold text-gray-900">Reset Password</h3>
                 <button
                   onClick={() => setIsResetPasswordModalOpen(false)}
-                  className="text-gray-600 hover:text-gray-600"
+                  className="text-gray-700 hover:text-gray-700"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
               
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-gray-700 mb-4">
                 Reset password for <span className="font-semibold">{selectedUser.name}</span> ({selectedUser.email})
               </p>
               
@@ -613,13 +613,13 @@ export default function UserManagement() {
                 <h3 className="text-lg font-bold text-gray-900">Update User Role</h3>
                 <button
                   onClick={() => setIsUpdateRoleModalOpen(false)}
-                  className="text-gray-600 hover:text-gray-600"
+                  className="text-gray-700 hover:text-gray-700"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
               
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-gray-700 mb-4">
                 Change role for <span className="font-semibold">{selectedUser.name}</span> ({selectedUser.email})
               </p>
               
@@ -689,7 +689,7 @@ export default function UserManagement() {
                 <h3 className="text-lg font-bold text-gray-900">Manage User Pricing</h3>
                 <button
                   onClick={() => setIsPricingModalOpen(false)}
-                  className="text-gray-600 hover:text-gray-600"
+                  className="text-gray-700 hover:text-gray-700"
                 >
                   <X className="w-5 h-5" />
                 </button>

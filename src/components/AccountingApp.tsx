@@ -231,7 +231,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
             className={`px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-2 ${
               activeTab === 'user-billing'
                 ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                : 'text-gray-700 hover:text-gray-900'
             }`}
           >
             <Receipt className="h-4 w-4" />
@@ -242,7 +242,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
             className={`px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-2 ${
               activeTab === 'daily-sales'
                 ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                : 'text-gray-700 hover:text-gray-900'
             }`}
           >
             <TrendingUp className="h-4 w-4" />
@@ -253,7 +253,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
               activeTab === 'dashboard'
                 ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                : 'text-gray-700 hover:text-gray-900'
             }`}
           >
             <BarChart3 className="h-4 w-4" />
@@ -264,7 +264,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
               activeTab === 'categorizer'
                 ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                : 'text-gray-700 hover:text-gray-900'
             }`}
           >
             <Package2 className="h-4 w-4" />
@@ -275,7 +275,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
               activeTab === 'user-packages'
                 ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                : 'text-gray-700 hover:text-gray-900'
             }`}
           >
             <User className="h-4 w-4" />
@@ -346,7 +346,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
             <div>
               <label className="text-sm sm:text-base font-medium mb-2 block text-gray-700">Select Date</label>
               <div className="flex items-center">
-                <CalendarIcon className="mr-2 h-4 w-4 text-gray-600" />
+                <CalendarIcon className="mr-2 h-4 w-4 text-gray-700" />
                 <input 
                   type="date"
                   value={selectedDate}
@@ -399,11 +399,11 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
               
               <div className="bg-blue-50 p-4 rounded-lg mb-6 grid grid-cols-3 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600">Total Orders</p>
+                  <p className="text-sm text-gray-700">Total Orders</p>
                   <p className="text-xl font-bold">{billData.orders.length}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Total Data</p>
+                  <p className="text-sm text-gray-700">Total Data</p>
                   <p className="text-xl font-bold">
                     {billData.totalData > 1024 
                       ? `${(billData.totalData / 1024).toFixed(2)} TB` 
@@ -411,7 +411,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Total Amount</p>
+                  <p className="text-sm text-gray-700">Total Amount</p>
                   <p className="text-xl font-bold text-green-700">
                     GHS {billData.totalAmount.toFixed(2)}
                   </p>

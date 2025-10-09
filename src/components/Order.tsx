@@ -78,12 +78,12 @@ export function Order({
         <div>
           <p className="text-xs text-gray-700">From</p>
           <p className="text-sm font-medium truncate">{userName}</p>
-          <p className="text-xs text-gray-600 truncate">{userEmail}</p>
+          <p className="text-xs text-gray-700 truncate">{userEmail}</p>
         </div>
         <div>
           <p className="text-xs text-gray-700">Submitted</p>
           <p className="text-sm">{timeAgo}</p>
-          <p className="text-xs text-gray-600">{date} at {time}</p>
+          <p className="text-xs text-gray-700">{date} at {time}</p>
         </div>
       </div>
       

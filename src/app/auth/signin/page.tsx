@@ -88,7 +88,7 @@ export default function SignIn() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900">Clickyfied</h1>
-              <p className="text-sm text-gray-600">Secure access required</p>
+              <p className="text-sm text-gray-700">Secure access required</p>
             </div>
           </div>
           
@@ -102,7 +102,7 @@ export default function SignIn() {
               className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all ${
                 isLogin
                   ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  : 'text-gray-700 hover:text-gray-900'
               }`}
             >
               Sign In
@@ -116,7 +116,7 @@ export default function SignIn() {
               className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all ${
                 !isLogin
                   ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  : 'text-gray-700 hover:text-gray-900'
               }`}
             >
               Request Access
@@ -145,7 +145,7 @@ export default function SignIn() {
                   Full Name
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-600" />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-700" />
                   <input
                     type="text"
                     required={!isLogin}
@@ -163,7 +163,7 @@ export default function SignIn() {
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-600" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-700" />
                 <input
                   type="email"
                   required
@@ -180,7 +180,7 @@ export default function SignIn() {
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-600" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-700" />
                 <input
                   type="password"
                   required
@@ -202,7 +202,7 @@ export default function SignIn() {
                   Confirm Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-600" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-700" />
                   <input
                     type="password"
                     required={!isLogin}
@@ -231,7 +231,7 @@ export default function SignIn() {
                   Request Message (Optional)
                 </label>
                 <div className="relative">
-                  <MessageCircle className="absolute left-3 top-3 w-5 h-5 text-gray-600" />
+                  <MessageCircle className="absolute left-3 top-3 w-5 h-5 text-gray-700" />
                   <textarea
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900 placeholder:text-gray-700 sm:text-gray-700"
                     placeholder="Why do you need access to this system?"

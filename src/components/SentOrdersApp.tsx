@@ -155,7 +155,7 @@ export default function SentOrdersApp() {
                   </svg>
                   <span>My Sent Orders</span>
                 </h2>
-                <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                <p className="text-xs sm:text-sm text-gray-700 mt-1">
                   View all orders that you have sent
                 </p>
               </div>
@@ -171,7 +171,7 @@ export default function SentOrdersApp() {
                       setCurrentPage(1); // Reset to first page on filter change
                     }}
                   />
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600">
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-700">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                     </svg>
@@ -184,7 +184,7 @@ export default function SentOrdersApp() {
           {loading ? (
             <div className="flex items-center justify-center p-8">
               <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-              <p className="ml-3 text-gray-600">Loading your orders...</p>
+              <p className="ml-3 text-gray-700">Loading your orders...</p>
             </div>
           ) : sortedOrders.length === 0 ? (
             <div className="text-center p-8">
@@ -196,7 +196,7 @@ export default function SentOrdersApp() {
                 </svg>
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">No Orders Found</h3>
-              <p className="text-gray-600 max-w-md mx-auto">
+              <p className="text-gray-700 max-w-md mx-auto">
                 You have not sent any orders yet. Create an order using the Send Order tab.
               </p>
             </div>
@@ -267,7 +267,7 @@ export default function SentOrdersApp() {
                         ) : order.pricingProfileName ? (
                           <span className="text-gray-700">{order.pricingProfileName}</span>
                         ) : (
-                          <span className="text-gray-600">N/A</span>
+                          <span className="text-gray-700">N/A</span>
                         )}
                       </td>
                       <td className="px-3 sm:px-6 py-2 sm:py-4">
@@ -409,7 +409,7 @@ export default function SentOrdersApp() {
                 {selectedOrder?.entries?.map((entry, index) => (
                   <div key={index} className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 grid grid-cols-3 gap-1 sm:gap-2 rounded-md hover:bg-gray-50">
                     <div className="flex items-center gap-1 sm:gap-2 min-w-0">
-                      <Phone className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600 flex-shrink-0" />
+                      <Phone className="w-3 h-3 sm:w-4 sm:h-4 text-gray-700 flex-shrink-0" />
                       <span className="text-xs sm:text-sm truncate">{entry.number}</span>
                     </div>
                     <div className="flex items-center gap-1 sm:gap-2">
@@ -420,7 +420,7 @@ export default function SentOrdersApp() {
                       {entry.cost !== undefined && entry.cost !== null ? (
                         <span className="text-green-600 font-medium text-xs sm:text-sm">GHS {entry.cost.toFixed(2)}</span>
                       ) : (
-                        <span className="text-gray-600 text-xs sm:text-sm">N/A</span>
+                        <span className="text-gray-700 text-xs sm:text-sm">N/A</span>
                       )}
                     </div>
                   </div>

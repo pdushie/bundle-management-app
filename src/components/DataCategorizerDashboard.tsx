@@ -193,7 +193,7 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
           )}
           <div>
             <h2 className="text-lg sm:text-2xl font-bold">Data Package Categorizer</h2>
-            <p className="text-sm sm:text-base text-gray-600">Analyze data allocation purchases by package size and user patterns</p>
+            <p className="text-sm sm:text-base text-gray-700">Analyze data allocation purchases by package size and user patterns</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -287,7 +287,7 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
                     <h3 className="text-lg sm:text-2xl font-bold text-blue-700">
                       {data.summary.totalCategories}
                     </h3>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-700">
                       Different package sizes
                     </p>
                   </div>
@@ -304,7 +304,7 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
                     <h3 className="text-lg sm:text-2xl font-bold text-green-700">
                       {data.summary.totalOrders.toLocaleString()}
                     </h3>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-700">
                       {formatDataSize(data.summary.totalDataGB)} allocated
                     </p>
                   </div>
@@ -321,7 +321,7 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
                     <h3 className="text-lg sm:text-2xl font-bold text-purple-700">
                       {data.summary.totalUsers.toLocaleString()}
                     </h3>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-700">
                       Made purchases
                     </p>
                   </div>
@@ -338,7 +338,7 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
                     <h3 className="text-sm sm:text-lg font-bold text-orange-700">
                       {data.summary.mostPopularCategory || 'N/A'}
                     </h3>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-700">
                       Package category
                     </p>
                   </div>

@@ -178,7 +178,7 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
           )}
           <div>
             <h2 className="text-2xl font-bold">Data Allocation Dashboard</h2>
-            <p className="text-gray-600">Compare data processing between Bundle Allocator and Order System</p>
+            <p className="text-gray-700">Compare data processing between Bundle Allocator and Order System</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -272,7 +272,7 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
                     <h3 className="text-2xl font-bold text-blue-700">
                       {formatDataSize(data.summary.bundleAllocator.totalDataGB)}
                     </h3>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-700">
                       {data.summary.bundleAllocator.totalOrders} orders
                     </p>
                   </div>
@@ -289,7 +289,7 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
                     <h3 className="text-2xl font-bold text-green-700">
                       {formatDataSize(data.summary.orderSystem.totalDataGB)}
                     </h3>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-700">
                       {data.summary.orderSystem.totalOrders} orders
                     </p>
                   </div>
@@ -306,7 +306,7 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
                     <h3 className="text-2xl font-bold text-purple-700">
                       {formatDataSize(data.summary.combined.totalDataGB)}
                     </h3>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-700">
                       {data.summary.combined.totalOrders} total orders
                     </p>
                   </div>
@@ -323,7 +323,7 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
                     <h3 className="text-2xl font-bold text-orange-700">
                       {formatDataSize(data.summary.combined.avgDailyDataGB)}
                     </h3>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-700">
                       over {data.summary.combined.totalDays} days
                     </p>
                   </div>

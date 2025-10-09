@@ -1118,7 +1118,7 @@ export default function OrdersApp() {
               <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
               <span>Pending Orders Queue</span>
             </h2>
-            <p className="text-xs sm:text-sm text-gray-600 mt-1">
+            <p className="text-xs sm:text-sm text-gray-700 mt-1">
               View and download pending orders
             </p>
           </div>
@@ -1130,7 +1130,7 @@ export default function OrdersApp() {
             {/* Search */}
             <div className="relative flex-1">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-gray-600" />
+                <Search className="h-4 w-4 text-gray-700" />
               </div>
               <input
                 type="text"
@@ -1181,13 +1181,13 @@ export default function OrdersApp() {
                       {selectAll ? (
                         <CheckSquare className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 hover:text-blue-700 transition-colors" />
                       ) : (
-                        <Square className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 hover:text-gray-700 transition-colors" />
+                        <Square className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700 hover:text-gray-700 transition-colors" />
                       )}
                     </div>
                   </th>
                   <th 
                     scope="col" 
-                    className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("date")}
                   >
                     <div className="flex items-center gap-1">
@@ -1201,7 +1201,7 @@ export default function OrdersApp() {
                   </th>
                   <th 
                     scope="col" 
-                    className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("userName")}
                   >
                     <div className="flex items-center gap-1">
@@ -1215,7 +1215,7 @@ export default function OrdersApp() {
                   </th>
                   <th 
                     scope="col" 
-                    className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("totalData")}
                   >
                     <div className="flex items-center gap-1">
@@ -1229,7 +1229,7 @@ export default function OrdersApp() {
                   </th>
                   <th 
                     scope="col" 
-                    className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort("totalCount")}
                   >
                     <div className="flex items-center gap-1">
@@ -1241,13 +1241,13 @@ export default function OrdersApp() {
                       )}
                     </div>
                   </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                     Cost
                   </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                     Status
                   </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -1266,10 +1266,10 @@ export default function OrdersApp() {
                   <tr>
                     <td colSpan={7} className="px-4 py-12 text-center">
                       <div className="flex flex-col items-center justify-center">
-                        <FileText className="h-8 w-8 text-gray-600 mb-3" />
+                        <FileText className="h-8 w-8 text-gray-700 mb-3" />
                         <p className="text-gray-700">No orders found</p>
                         {searchTerm || statusFilter !== "all" ? (
-                          <p className="text-gray-600 text-sm mt-1">Try adjusting your filters</p>
+                          <p className="text-gray-700 text-sm mt-1">Try adjusting your filters</p>
                         ) : null}
                       </div>
                     </td>
@@ -1288,7 +1288,7 @@ export default function OrdersApp() {
                             {order.isSelected ? (
                               <CheckSquare className="h-5 w-5 text-blue-600 hover:text-blue-700 transition-colors" />
                             ) : (
-                              <Square className="h-5 w-5 text-gray-600 hover:text-gray-700 transition-colors" />
+                              <Square className="h-5 w-5 text-gray-700 hover:text-gray-700 transition-colors" />
                             )}
                           </div>
                         </td>
@@ -1357,7 +1357,7 @@ export default function OrdersApp() {
                               )}
                             </div>
                           ) : (
-                            <span className="text-xs text-gray-600">Not calculated</span>
+                            <span className="text-xs text-gray-700">Not calculated</span>
                           )}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
@@ -1372,7 +1372,7 @@ export default function OrdersApp() {
                             className="inline-flex items-center p-1.5 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition"
                             title="Download order"
                           >
-                            <Download className="h-4 w-4 text-gray-600" />
+                            <Download className="h-4 w-4 text-gray-700" />
                           </button>
                         </td>
                       </tr>
@@ -1440,7 +1440,7 @@ export default function OrdersApp() {
                       }}
                       className="w-14 h-8 text-center border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    <span className="text-gray-600">of {totalPages}</span>
+                    <span className="text-gray-700">of {totalPages}</span>
                     <button
                       onClick={() => {
                         const pageInput = document.querySelector('input[type="number"]') as HTMLInputElement;

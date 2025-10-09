@@ -153,7 +153,7 @@ export default function AdminDashboard() {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-700">Loading...</p>
         </div>
       </div>
     );
@@ -169,7 +169,7 @@ export default function AdminDashboard() {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Redirecting to announcements...</p>
+          <p className="text-gray-700">Redirecting to announcements...</p>
         </div>
       </div>
     );
@@ -188,7 +188,7 @@ export default function AdminDashboard() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-                <p className="text-sm text-gray-600">Manage user access requests</p>
+                <p className="text-sm text-gray-700">Manage user access requests</p>
               </div>
             </div>
 
@@ -240,7 +240,7 @@ export default function AdminDashboard() {
                 <Clock className="w-5 h-5 text-yellow-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600 font-medium">Pending Requests</p>
+                <p className="text-sm text-gray-700 font-medium">Pending Requests</p>
                 <p className="text-2xl font-bold text-gray-900">{pendingUsers.length}</p>
               </div>
             </div>
@@ -252,7 +252,7 @@ export default function AdminDashboard() {
                 <Users className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600 font-medium">Total Users</p>
+                <p className="text-sm text-gray-700 font-medium">Total Users</p>
                 <p className="text-2xl font-bold text-gray-900">{userStats.totalUsers}</p>
               </div>
             </div>
@@ -264,7 +264,7 @@ export default function AdminDashboard() {
                 <Check className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600 font-medium">Approved Users</p>
+                <p className="text-sm text-gray-700 font-medium">Approved Users</p>
                 <p className="text-2xl font-bold text-gray-900">{userStats.approvedCount}</p>
               </div>
             </div>
@@ -276,7 +276,7 @@ export default function AdminDashboard() {
                 <Shield className="w-5 h-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600 font-medium">Admins</p>
+                <p className="text-sm text-gray-700 font-medium">Admins</p>
                 <p className="text-2xl font-bold text-gray-900">{userStats.adminCount}</p>
               </div>
             </div>
@@ -291,7 +291,7 @@ export default function AdminDashboard() {
               className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
                 activeTab === 'pending' 
                   ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
-                  : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
               }`}
             >
               <Clock className="w-4 h-4" />
@@ -308,7 +308,7 @@ export default function AdminDashboard() {
               className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
                 activeTab === 'users' 
                   ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
-                  : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
               }`}
             >
               <Users className="w-4 h-4" />
@@ -320,7 +320,7 @@ export default function AdminDashboard() {
               className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
                 activeTab === 'pricing' 
                   ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
-                  : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
               }`}
             >
               <DollarSign className="w-4 h-4" />
@@ -337,7 +337,7 @@ export default function AdminDashboard() {
                 <Users className="w-6 h-6 text-blue-600" />
                 Pending Access Requests
               </h2>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-gray-700 mt-1">
                 Review and approve or reject user access requests
               </p>
             </div>
@@ -345,13 +345,13 @@ export default function AdminDashboard() {
             {isLoading ? (
               <div className="p-8 text-center">
                 <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading pending requests...</p>
+                <p className="text-gray-700">Loading pending requests...</p>
               </div>
             ) : pendingUsers.length === 0 ? (
               <div className="p-8 text-center">
-                <Clock className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                <Clock className="w-12 h-12 text-gray-700 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No Pending Requests</h3>
-                <p className="text-gray-600">All access requests have been processed.</p>
+                <p className="text-gray-700">All access requests have been processed.</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-200">
@@ -361,11 +361,11 @@ export default function AdminDashboard() {
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <div className="p-2 bg-gray-100 rounded-full">
-                            <Users className="w-4 h-4 text-gray-600" />
+                            <Users className="w-4 h-4 text-gray-700" />
                           </div>
                           <div>
                             <h3 className="font-medium text-gray-900">{user.name}</h3>
-                            <p className="text-sm text-gray-600">{user.email}</p>
+                            <p className="text-sm text-gray-700">{user.email}</p>
                           </div>
                         </div>
                         
@@ -431,7 +431,7 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
             <div className="p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4">Reject Access Request</h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-gray-700 mb-4">
                 Provide a reason for rejecting this access request (optional):
               </p>
               <textarea

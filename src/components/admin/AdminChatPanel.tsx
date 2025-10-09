@@ -257,7 +257,7 @@ export default function AdminChatPanel() {
             {/* Search */}
             <div className="p-4 border-b border-gray-200">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-700 h-4 w-4" />
                 <input
                   type="text"
                   placeholder="Search users..."
@@ -318,7 +318,7 @@ export default function AdminChatPanel() {
                 </div>
               ) : messages.length === 0 ? (
                 <div className="text-center text-gray-700 py-8">
-                  <MessageSquare className="h-8 w-8 mx-auto mb-2 text-gray-600" />
+                  <MessageSquare className="h-8 w-8 mx-auto mb-2 text-gray-700" />
                   <p>No messages yet. Start the conversation!</p>
                 </div>
               ) : (

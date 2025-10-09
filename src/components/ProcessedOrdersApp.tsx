@@ -201,7 +201,7 @@ export default function ProcessedOrdersApp() {
                   </svg>
                   <span>Processed Orders</span>
                 </h2>
-                <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                <p className="text-xs sm:text-sm text-gray-700 mt-1">
                   View all orders that have been processed
                 </p>
               </div>
@@ -217,7 +217,7 @@ export default function ProcessedOrdersApp() {
                       setCurrentPage(1); // Reset to first page on filter change
                     }}
                   />
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600">
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-700">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                     </svg>
@@ -230,7 +230,7 @@ export default function ProcessedOrdersApp() {
           {loading ? (
             <div className="flex items-center justify-center p-8">
               <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-              <p className="ml-3 text-gray-600">Loading processed orders...</p>
+              <p className="ml-3 text-gray-700">Loading processed orders...</p>
             </div>
           ) : sortedOrders.length === 0 ? (
             <div className="text-center p-8">
@@ -242,7 +242,7 @@ export default function ProcessedOrdersApp() {
                 </svg>
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">No Processed Orders</h3>
-              <p className="text-gray-600 max-w-md mx-auto">
+              <p className="text-gray-700 max-w-md mx-auto">
                 There are no processed orders to display. Orders will appear here after they are processed.
               </p>
             </div>
@@ -409,7 +409,7 @@ export default function ProcessedOrdersApp() {
                       setEntriesCurrentPage(1); // Reset to first page on search
                     }}
                   />
-                  <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-600" />
+                  <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-700" />
                 </div>
               </div>
 

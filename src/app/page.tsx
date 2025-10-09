@@ -259,7 +259,7 @@ function HistoryManager({
                   <History className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                   History & Analytics
                 </h2>
-                <p className="text-sm sm:text-base text-gray-600">
+                <p className="text-sm sm:text-base text-gray-700">
                   Track and analyze your daily data processing activities
                 </p>
               </div>
@@ -283,7 +283,7 @@ function HistoryManager({
                   onClick={() => setViewMode('summary')}
                   className={`flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all ${viewMode === 'summary'
                       ? 'bg-white text-blue-600 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                      : 'text-gray-700 hover:text-gray-900'
                     }`}
                 >
                   Summary
@@ -292,7 +292,7 @@ function HistoryManager({
                   onClick={() => setViewMode('detailed')}
                   className={`flex-1 sm:flex-initial px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all ${viewMode === 'detailed'
                       ? 'bg-white text-blue-600 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                      : 'text-gray-700 hover:text-gray-900'
                     }`}
                 >
                   Detailed
@@ -331,7 +331,7 @@ function HistoryManager({
               <History className="w-8 h-8 sm:w-10 sm:h-10" />
             </div>
             <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">No History Yet</h3>
-            <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto">
+            <p className="text-sm sm:text-base text-gray-700 max-w-md mx-auto">
               Process some data using the Bundle Allocator or Categorizer to start building your history
             </p>
           </div>
@@ -346,7 +346,7 @@ function HistoryManager({
                     <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Days</p>
+                    <p className="text-xs sm:text-sm font-medium text-gray-700 truncate">Total Days</p>
                     <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">{availableDates.length}</p>
                   </div>
                 </div>
@@ -358,7 +358,7 @@ function HistoryManager({
                     <Database className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Entries</p>
+                    <p className="text-xs sm:text-sm font-medium text-gray-700 truncate">Total Entries</p>
                     <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">
                       {totalDatabaseEntries}
                     </p>
@@ -372,7 +372,7 @@ function HistoryManager({
                     <Database className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                   </div>
                   <div className="min-w-0 flex-1 overflow-hidden">
-                    <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Data</p>
+                    <p className="text-xs sm:text-sm font-medium text-gray-700 truncate">Total Data</p>
                     <p className="text-sm sm:text-base lg:text-lg font-bold text-gray-900 break-words">
                       {(() => {
                         // Safely calculate the total GB
@@ -396,7 +396,7 @@ function HistoryManager({
                     <BarChart className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Sessions</p>
+                    <p className="text-xs sm:text-sm font-medium text-gray-700 truncate">Sessions</p>
                     <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">{history.length}</p>
                   </div>
                 </div>
@@ -414,7 +414,7 @@ function HistoryManager({
                     </div>
                     <div>
                       <h3 className="text-base sm:text-lg font-bold text-gray-900">Daily Entries Trend</h3>
-                      <p className="text-xs text-gray-600">Number of entries processed per day</p>
+                      <p className="text-xs text-gray-700">Number of entries processed per day</p>
                     </div>
                   </div>
                   <div className="h-48 sm:h-64">
@@ -464,7 +464,7 @@ function HistoryManager({
                     </div>
                     <div>
                       <h3 className="text-base sm:text-lg font-bold text-gray-900">Daily Data Volume Trend</h3>
-                      <p className="text-xs text-gray-600">Amount of data processed per day (TB)</p>
+                      <p className="text-xs text-gray-700">Amount of data processed per day (TB)</p>
                     </div>
                   </div>
                   <div className="h-48 sm:h-64">
@@ -531,8 +531,8 @@ function HistoryManager({
                     {paginatedSummaries.map((summary) => (
                       <tr key={summary.date} className="hover:bg-gray-50">
                         <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-gray-900">{summary.date}</td>
-                        <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600">{summary.sessionsCount}</td>
-                        <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600">{summary.totalEntries}</td>
+                        <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700">{summary.sessionsCount}</td>
+                        <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700">{summary.totalEntries}</td>
                         <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-green-600 font-medium">{summary.totalValid}</td>
                         <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-red-600 font-medium">{summary.totalInvalid}</td>
                         <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-yellow-600 font-medium">{summary.totalDuplicates}</td>
@@ -566,7 +566,7 @@ function HistoryManager({
                       disabled={currentPage === 1}
                       className={`px-3 py-1 rounded-md text-sm font-medium ${
                         currentPage === 1
-                          ? 'text-gray-600 cursor-not-allowed'
+                          ? 'text-gray-700 cursor-not-allowed'
                           : 'text-blue-600 hover:bg-blue-50'
                       }`}
                     >
@@ -607,7 +607,7 @@ function HistoryManager({
                       disabled={currentPage === totalPages}
                       className={`px-3 py-1 rounded-md text-sm font-medium ${
                         currentPage === totalPages
-                          ? 'text-gray-600 cursor-not-allowed'
+                          ? 'text-gray-700 cursor-not-allowed'
                           : 'text-blue-600 hover:bg-blue-50'
                       }`}
                     >
@@ -623,7 +623,7 @@ function HistoryManager({
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
             <div className="p-3 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
               <h3 className="text-base sm:text-lg font-bold text-gray-900">Detailed History</h3>
-              <p className="text-xs sm:text-sm text-gray-600 mt-1">
+              <p className="text-xs sm:text-sm text-gray-700 mt-1">
                 {filteredHistory.length} sessions {selectedDate && `on ${selectedDate}`}
               </p>
             </div>
@@ -642,7 +642,7 @@ function HistoryManager({
                         <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">
                           {entry.type === 'bundle-allocator' ? 'Bundle Allocator' : 'Bundle Categorizer'}
                         </p>
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-gray-700">
                           {entry.date} at {new Date(entry.timestamp).toLocaleTimeString()}
                         </p>
                       </div>
@@ -660,7 +660,7 @@ function HistoryManager({
                             : `${totalGB.toFixed(2)} GB`;
                         })()}
                       </p>
-                      <p className="text-xs text-gray-600">
+                      <p className="text-xs text-gray-700">
                         {entry.validCount + entry.invalidCount + entry.duplicateCount} entries
                       </p>
                     </div>
@@ -1318,7 +1318,7 @@ function BundleAllocatorApp({
               <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
               <span>Input Data</span>
             </h2>
-            <p className="text-xs sm:text-sm text-gray-600 mt-1">
+            <p className="text-xs sm:text-sm text-gray-700 mt-1">
               Paste phone numbers with allocations or drag & drop a file
             </p>
           </div>
@@ -1353,7 +1353,7 @@ function BundleAllocatorApp({
                   : "border-gray-300 hover:border-blue-400 hover:bg-blue-50"
                 }`}
             >
-              <div className={`w-10 h-10 sm:w-14 sm:h-14 mx-auto mb-2 sm:mb-4 flex items-center justify-center rounded-full ${isDragActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
+              <div className={`w-10 h-10 sm:w-14 sm:h-14 mx-auto mb-2 sm:mb-4 flex items-center justify-center rounded-full ${isDragActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'
                 }`}>
                 <Upload className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
@@ -1388,7 +1388,7 @@ function BundleAllocatorApp({
                   <Database className="w-3 h-3 sm:w-5 sm:h-5 text-blue-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium text-gray-600 truncate">Total Entries</p>
+                  <p className="text-xs font-medium text-gray-700 truncate">Total Entries</p>
                   <p className="text-sm sm:text-lg font-bold text-gray-900">{entries.length}</p>
                 </div>
               </div>
@@ -1400,7 +1400,7 @@ function BundleAllocatorApp({
                   <Check className="w-3 h-3 sm:w-5 sm:h-5 text-green-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium text-gray-600 truncate">Valid Numbers</p>
+                  <p className="text-xs font-medium text-gray-700 truncate">Valid Numbers</p>
                   <p className="text-sm sm:text-lg font-bold text-green-600">{validEntries.length}</p>
                 </div>
               </div>
@@ -1412,7 +1412,7 @@ function BundleAllocatorApp({
                   <X className="w-3 h-3 sm:w-5 sm:h-5 text-red-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium text-gray-600 truncate">Invalid Numbers</p>
+                  <p className="text-xs font-medium text-gray-700 truncate">Invalid Numbers</p>
                   <p className="text-sm sm:text-lg font-bold text-red-600">{invalidEntries.length}</p>
                 </div>
               </div>
@@ -1424,7 +1424,7 @@ function BundleAllocatorApp({
                   <AlertCircle className="w-3 h-3 sm:w-5 sm:h-5 text-yellow-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium text-gray-600 truncate">Duplicates</p>
+                  <p className="text-xs font-medium text-gray-700 truncate">Duplicates</p>
                   <p className="text-sm sm:text-lg font-bold text-yellow-600">{duplicateEntries.length}</p>
                 </div>
               </div>
@@ -1436,7 +1436,7 @@ function BundleAllocatorApp({
                   <Check className="w-3 h-3 sm:w-5 sm:h-5 text-cyan-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium text-gray-600 truncate">Auto-Fixed</p>
+                  <p className="text-xs font-medium text-gray-700 truncate">Auto-Fixed</p>
                   <p className="text-sm sm:text-lg font-bold text-cyan-600">{fixedEntries.length}</p>
                 </div>
               </div>
@@ -1448,7 +1448,7 @@ function BundleAllocatorApp({
                   <Database className="w-3 h-3 sm:w-5 sm:h-5 text-purple-600" />
                 </div>
                 <div className="min-w-0 flex-1 overflow-hidden">
-                  <p className="text-xs font-medium text-gray-600 truncate">Total Data</p>
+                  <p className="text-xs font-medium text-gray-700 truncate">Total Data</p>
                   <p className="text-xs sm:text-sm font-bold text-purple-600 break-words">{totalGB.toFixed(1)}GB</p>
                 </div>
               </div>
@@ -1465,7 +1465,7 @@ function BundleAllocatorApp({
                   <Check className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
                   <span>Processed Results</span>
                 </h2>
-                <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                <p className="text-xs sm:text-sm text-gray-700 mt-1">
                   {validEntries.length} valid, {invalidEntries.length} invalid, {duplicateEntries.length} duplicates
                   {fixedEntries.length > 0 && `, ${fixedEntries.length} auto-fixed`}
                 </p>
@@ -1559,7 +1559,7 @@ function BundleAllocatorApp({
               <Phone className="w-8 h-8 sm:w-10 sm:h-10" />
             </div>
             <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Ready to Process Data</h3>
-            <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto">
+            <p className="text-sm sm:text-base text-gray-700 max-w-md mx-auto">
               Enter phone numbers above or drag & drop a file to get started
             </p>
           </div>
@@ -1754,7 +1754,7 @@ function BundleCategorizerApp({
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="text-xs sm:text-sm text-gray-600 font-medium">
+            <div className="text-xs sm:text-sm text-gray-700 font-medium">
               {rawData.split('\n').filter(line => line.trim().length > 0).length} lines detected
             </div>
             <button
@@ -1886,7 +1886,7 @@ function BundleCategorizerApp({
               <BarChart className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600" />
             </div>
             <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 sm:mb-3">Ready to Analyze Data</h3>
-            <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto">
+            <p className="text-sm sm:text-base text-gray-700 max-w-md mx-auto">
               Paste your data in the input field above and click "Process Data" to see allocation summaries and visualizations.
             </p>
           </div>
@@ -2239,7 +2239,7 @@ function TabNavigation({
                 tab.id === "history" ? "sm:min-w-[180px] " : ""
               }${activeTab === tab.id
                 ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
               }`}
           >
             <Icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
@@ -2355,7 +2355,7 @@ function AppContent() {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center px-4">
         <div className="text-center">
           <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 text-sm sm:text-base">Loading...</p>
+          <p className="text-gray-700 text-sm sm:text-base">Loading...</p>
         </div>
       </div>
     );
@@ -2370,7 +2370,7 @@ function AppContent() {
             <Database className="w-8 h-8 sm:w-10 sm:h-10" />
           </div>
           <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Access Required</h3>
-          <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto">
+          <p className="text-sm sm:text-base text-gray-700 max-w-md mx-auto">
             Please sign in to access the Data Processing Portal
           </p>
         </div>
@@ -2787,7 +2787,7 @@ function AppContent() {
                 </div>
                 <div>
                   <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Clickyfied</h1>
-                  <p className="text-sm text-gray-600">Your reliable data plug</p>
+                  <p className="text-sm text-gray-700">Your reliable data plug</p>
                 </div>
               </div>
 

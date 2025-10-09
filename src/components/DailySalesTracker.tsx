@@ -186,7 +186,7 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
             </Button>
             <div>
               <h2 className="text-lg sm:text-2xl font-bold">Daily Sales Details</h2>
-              <p className="text-sm sm:text-base text-gray-600">
+              <p className="text-sm sm:text-base text-gray-700">
                 {format(selectedDate || new Date(), 'EEEE, MMMM d, yyyy')}
               </p>
             </div>
@@ -290,7 +290,7 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
                     {dailyDetails.userBreakdown.map((user, index) => (
                       <tr key={index} className="border-b">
                         <td className="p-2 sm:p-3 font-medium text-xs sm:text-sm">{user.userName}</td>
-                        <td className="p-2 sm:p-3 text-xs sm:text-sm text-gray-600">{user.userEmail}</td>
+                        <td className="p-2 sm:p-3 text-xs sm:text-sm text-gray-700">{user.userEmail}</td>
                         <td className="p-2 sm:p-3 text-right text-xs sm:text-sm">{user.totalOrders}</td>
                         <td className="p-2 sm:p-3 text-right text-xs sm:text-sm">{user.totalData.toFixed(2)}</td>
                         <td className="p-2 sm:p-3 text-right font-bold text-green-700 text-xs sm:text-sm">
@@ -367,7 +367,7 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
           )}
           <div>
             <h2 className="text-2xl font-bold">Daily Sales Overview</h2>
-            <p className="text-gray-600">Track sales performance by date</p>
+            <p className="text-gray-700">Track sales performance by date</p>
           </div>
         </div>
         <div className="flex items-center gap-2">

@@ -104,7 +104,7 @@ export function OrderDetailModal({
                 </div>
               )}
             </div>
-            <p className="text-sm text-gray-600">{formattedDate}</p>
+            <p className="text-sm text-gray-700">{formattedDate}</p>
           </div>
           
           <button 
@@ -123,7 +123,7 @@ export function OrderDetailModal({
                 <User className="w-4 h-4" /> From
               </p>
               <p className="font-medium">{order.userName}</p>
-              <p className="text-sm text-gray-600">{order.userEmail}</p>
+              <p className="text-sm text-gray-700">{order.userEmail}</p>
             </div>
             
             <div>
@@ -131,7 +131,7 @@ export function OrderDetailModal({
                 <Calendar className="w-4 h-4" /> Submitted
               </p>
               <p className="font-medium">{order.date}</p>
-              <p className="text-sm text-gray-600">{order.time}</p>
+              <p className="text-sm text-gray-700">{order.time}</p>
             </div>
           </div>
           
@@ -164,7 +164,7 @@ export function OrderDetailModal({
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
           />
-          <div className="mt-2 text-sm text-gray-600">
+          <div className="mt-2 text-sm text-gray-700">
             Showing {filteredEntries.length} of {order.entries.length} numbers
             {searchTerm && (
               <button
@@ -194,7 +194,7 @@ export function OrderDetailModal({
                 >
                   <div>
                     <p className="font-medium">{entry.number}</p>
-                    <p className="text-sm text-gray-600">{entry.allocationGB.toFixed(2)} GB</p>
+                    <p className="text-sm text-gray-700">{entry.allocationGB.toFixed(2)} GB</p>
                     {entryCost !== null && (
                       <p className="text-sm text-amber-600 font-medium flex items-center mt-1">
                         <DollarSign className="w-3 h-3 mr-0.5" />

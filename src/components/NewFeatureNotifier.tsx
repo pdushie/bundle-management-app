@@ -77,7 +77,7 @@ export default function NewFeatureNotifier() {
           <h4 className="font-medium text-lg text-gray-900 mb-2">
             Announcements System
           </h4>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-700 mb-4">
             You can now create and manage important announcements that will be displayed to all users at the top of the application.
           </p>
           

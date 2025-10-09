@@ -85,7 +85,7 @@ export default function TimeServiceStatus() {
       
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-600">Status:</span>
+          <span className="text-xs text-gray-700">Status:</span>
           <div className={`flex items-center gap-1 text-xs ${getStatusColor()}`}>
             {getStatusIcon()}
             {getStatusText()}
@@ -93,12 +93,12 @@ export default function TimeServiceStatus() {
         </div>
         
         <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-600">Current Time:</span>
+          <span className="text-xs text-gray-700">Current Time:</span>
           <span className="text-xs font-mono text-gray-900">{currentTime}</span>
         </div>
         
         <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-600">Offset:</span>
+          <span className="text-xs text-gray-700">Offset:</span>
           <span className="text-xs font-mono text-gray-900">
             {syncStatus.timeOffset > 0 ? '+' : ''}{syncStatus.timeOffset}ms
           </span>
@@ -106,8 +106,8 @@ export default function TimeServiceStatus() {
         
         {syncStatus.lastSyncTime > 0 && (
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-600">Last Sync:</span>
-            <span className="text-xs text-gray-600">
+            <span className="text-xs text-gray-700">Last Sync:</span>
+            <span className="text-xs text-gray-700">
               {Math.round((Date.now() - syncStatus.lastSyncTime) / 1000)}s ago
             </span>
           </div>

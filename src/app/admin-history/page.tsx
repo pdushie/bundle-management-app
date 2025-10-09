@@ -20,10 +20,10 @@ export default async function SuperAdminHistoryPage() {
       <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 p-8">
         <div className="bg-white p-6 rounded-xl shadow-lg max-w-lg mx-auto">
           <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-700 mb-4">
             This page is only accessible to users with the superadmin role.
           </p>
-          <p className="text-gray-600">
+          <p className="text-gray-700">
             Your current role is: <span className="font-bold">{session.user.role}</span>
           </p>
           

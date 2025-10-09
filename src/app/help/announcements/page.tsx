@@ -19,7 +19,7 @@ export default function AnnouncementsHelpPage() {
             <Bell className="mr-3 h-6 w-6 text-blue-600" />
             Announcements System Guide
           </h1>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-gray-700">
             Learn how to create and manage announcements to communicate important information to your users
           </p>
         </div>

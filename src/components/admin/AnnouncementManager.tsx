@@ -252,7 +252,7 @@ export default function AnnouncementManager() {
         <div className="p-8 text-center">
           <Info className="h-12 w-12 text-gray-700 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Announcements</h3>
-          <p className="text-gray-600">Create your first announcement to display messages to users.</p>
+          <p className="text-gray-700">Create your first announcement to display messages to users.</p>
         </div>
       ) : (
         <div className="divide-y divide-gray-200">
@@ -271,7 +271,7 @@ export default function AnnouncementManager() {
                     >
                       {announcement.type.charAt(0).toUpperCase() + announcement.type.slice(1)}
                     </span>
-                    <span className={`text-xs sm:text-sm ${announcement.isActive ? 'text-green-600' : 'text-gray-600'}`}>
+                    <span className={`text-xs sm:text-sm ${announcement.isActive ? 'text-green-600' : 'text-gray-700'}`}>
                       {announcement.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </div>
@@ -291,7 +291,7 @@ export default function AnnouncementManager() {
                     {announcement.isActive ? (
                       <ToggleRight className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                     ) : (
-                      <ToggleLeft className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                      <ToggleLeft className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700" />
                     )}
                   </button>
                   <button

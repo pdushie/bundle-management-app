@@ -244,7 +244,7 @@ export default function OrderTrackingApp() {
     return (
       <div className="flex flex-col items-center justify-center p-8 min-h-[60vh]">
         <Loader className="w-8 h-8 text-blue-600 animate-spin mb-4" />
-        <p className="text-gray-600">Loading order data...</p>
+        <p className="text-gray-700">Loading order data...</p>
       </div>
     );
   }
@@ -255,7 +255,7 @@ export default function OrderTrackingApp() {
       <div className="flex flex-col items-center justify-center p-8 min-h-[60vh] text-center">
         <AlertTriangle className="w-8 h-8 text-red-600 mb-4" />
         <h3 className="text-lg font-bold text-gray-900 mb-2">Error</h3>
-        <p className="text-gray-600">{error}</p>
+        <p className="text-gray-700">{error}</p>
         <button 
           onClick={() => window.location.reload()}
           className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
@@ -280,7 +280,7 @@ export default function OrderTrackingApp() {
           {/* Search Filter */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-600" />
+              <Search className="h-5 w-5 text-gray-700" />
             </div>
             <input
               type="text"
@@ -294,7 +294,7 @@ export default function OrderTrackingApp() {
           {/* Status Filter */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Filter className="h-5 w-5 text-gray-600" />
+              <Filter className="h-5 w-5 text-gray-700" />
             </div>
             <select
               className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
@@ -312,7 +312,7 @@ export default function OrderTrackingApp() {
           <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Calendar className="h-5 w-5 text-gray-600" />
+                <Calendar className="h-5 w-5 text-gray-700" />
               </div>
               <input
                 type="date"
@@ -330,7 +330,7 @@ export default function OrderTrackingApp() {
             
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Calendar className="h-5 w-5 text-gray-600" />
+                <Calendar className="h-5 w-5 text-gray-700" />
               </div>
               <input
                 type="date"
@@ -349,7 +349,7 @@ export default function OrderTrackingApp() {
           
           {/* Filter Actions */}
           <div className="md:col-span-2 flex items-center justify-between">
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-700">
               <Database className="w-4 h-4 inline mr-2" />
               <span>
                 {filteredEntries.length} {filteredEntries.length === 1 ? "entry" : "entries"} found
@@ -499,7 +499,7 @@ export default function OrderTrackingApp() {
               disabled={currentPage === 1}
               className={`px-3 py-1 rounded-md ${
                 currentPage === 1
-                  ? "bg-gray-100 text-gray-600 cursor-not-allowed"
+                  ? "bg-gray-100 text-gray-700 cursor-not-allowed"
                   : "bg-white text-gray-700 hover:bg-gray-50"
               } border border-gray-300`}
             >
@@ -538,7 +538,7 @@ export default function OrderTrackingApp() {
               disabled={currentPage === totalPages}
               className={`px-3 py-1 rounded-md ${
                 currentPage === totalPages
-                  ? "bg-gray-100 text-gray-600 cursor-not-allowed"
+                  ? "bg-gray-100 text-gray-700 cursor-not-allowed"
                   : "bg-white text-gray-700 hover:bg-gray-50"
               } border border-gray-300`}
             >

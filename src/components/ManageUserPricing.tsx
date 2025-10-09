@@ -145,7 +145,7 @@ export default function ManageUserPricing({ userId, userName, userEmail, onClose
       {isLoading ? (
         <div className="py-8 text-center">
           <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading pricing profiles...</p>
+          <p className="mt-4 text-gray-700">Loading pricing profiles...</p>
         </div>
       ) : (
         <>
@@ -163,7 +163,7 @@ export default function ManageUserPricing({ userId, userName, userEmail, onClose
                       <span className="font-semibold">{currentProfile.name}</span>
                     </div>
                     {currentProfile.description && (
-                      <p className="text-sm text-gray-600 mt-1">{currentProfile.description}</p>
+                      <p className="text-sm text-gray-700 mt-1">{currentProfile.description}</p>
                     )}
                     <div className="grid grid-cols-2 gap-4 mt-3">
                       <div className="text-sm">

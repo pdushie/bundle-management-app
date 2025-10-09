@@ -14,7 +14,7 @@ export default function TestPage() {
       <div className="grid grid-cols-1 gap-8">
         <div>
           <h2 className="text-xl font-semibold mb-2">Notification Tester</h2>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-700 mb-4">
             Use this tool to test notification badges, sounds, and browser notifications.
           </p>
           <OrderProvider>

@@ -33,7 +33,7 @@ export default function CheckUserRolePage() {
           
           <div className="mt-4">
             <h3 className="text-md font-semibold mb-2">Force History Tab</h3>
-            <p className="text-sm text-gray-600 mb-3">If the History tab still doesn't show up, you can try forcing it to appear with this link:</p>
+            <p className="text-sm text-gray-700 mb-3">If the History tab still doesn't show up, you can try forcing it to appear with this link:</p>
             <Link 
               href="/?showHistory=true"
               className="inline-block px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"

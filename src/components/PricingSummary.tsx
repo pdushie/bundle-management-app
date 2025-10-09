@@ -69,14 +69,14 @@ export default function PricingSummary({
       
       {calculatedPrice !== null && dataSizeGB !== undefined ? (
         <div className="mt-1">
-          <span className="text-gray-600">Cost for {dataSizeGB} GB:</span> 
+          <span className="text-gray-700">Cost for {dataSizeGB} GB:</span> 
           <span className="font-medium ml-1">GHS {calculatedPrice}</span>
         </div>
       ) : (
         profile?.isTiered ? (
-          <div className="text-gray-600 mt-1">Tiered pricing based on data size</div>
+          <div className="text-gray-700 mt-1">Tiered pricing based on data size</div>
         ) : (
-          <div className="text-gray-600 mt-1">
+          <div className="text-gray-700 mt-1">
             Base: GHS {profile?.basePrice ?? '0.00'}, 
             Per GB: GHS {profile?.dataPricePerGB ?? '0.00'}
           </div>

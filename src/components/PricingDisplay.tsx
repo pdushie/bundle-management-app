@@ -63,7 +63,7 @@ export default function PricingDisplay({
       <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Your Pricing Plan</h2>
       <div className="mb-3 sm:mb-4">
         <h3 className="font-medium text-gray-700 text-sm sm:text-base">{profile.name}</h3>
-        {profile.description && <p className="text-gray-600 mt-1 text-sm sm:text-base">{profile.description}</p>}
+        {profile.description && <p className="text-gray-700 mt-1 text-sm sm:text-base">{profile.description}</p>}
       </div>
       
       {showDetails && (

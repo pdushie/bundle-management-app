@@ -238,7 +238,7 @@ export default function BillingApp() {
             <DollarSign className="w-8 h-8 text-blue-600" />
             Billing History
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-gray-700 mt-2">
             View your billing details and history
           </p>
         </div>
@@ -252,14 +252,14 @@ export default function BillingApp() {
                 className="p-2 rounded-md hover:bg-gray-100"
                 title="Previous Month"
               >
-                <ChevronsLeft className="w-5 h-5 text-gray-600" />
+                <ChevronsLeft className="w-5 h-5 text-gray-700" />
               </button>
               <button 
                 onClick={goToPreviousDay} 
                 className="p-2 rounded-md hover:bg-gray-100"
                 title="Previous Day"
               >
-                <ChevronLeft className="w-5 h-5 text-gray-600" />
+                <ChevronLeft className="w-5 h-5 text-gray-700" />
               </button>
               
               <div className="relative">
@@ -278,7 +278,7 @@ export default function BillingApp() {
                 className={`p-2 rounded-md ${!isFutureDate(selectedDate) ? 'hover:bg-gray-100' : 'opacity-50 cursor-not-allowed'}`}
                 title={isFutureDate(selectedDate) ? "Cannot select future date" : "Next Day"}
               >
-                <ChevronRight className="w-5 h-5 text-gray-600" />
+                <ChevronRight className="w-5 h-5 text-gray-700" />
               </button>
               <button 
                 onClick={goToNextMonth} 
@@ -286,7 +286,7 @@ export default function BillingApp() {
                 className={`p-2 rounded-md ${!isFutureDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, selectedDate.getDate())) ? 'hover:bg-gray-100' : 'opacity-50 cursor-not-allowed'}`}
                 title={isFutureDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, selectedDate.getDate())) ? "Cannot select future date" : "Next Month"}
               >
-                <ChevronsRight className="w-5 h-5 text-gray-600" />
+                <ChevronsRight className="w-5 h-5 text-gray-700" />
               </button>
             </div>
 
@@ -415,7 +415,7 @@ export default function BillingApp() {
                         onClick={() => openOrderDetails(order)}
                         title="Click to view order entries and costs"
                       >
-                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600">{order.time}</td>
+                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700">{order.time}</td>
                         <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 font-medium">
                           <div className="flex items-center gap-1 sm:gap-2">
                             <Eye className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
@@ -436,17 +436,17 @@ export default function BillingApp() {
                             <span className="text-xs">{order.status || 'Unknown'}</span>
                           </span>
                         </td>
-                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600">{order.totalCount}</td>
-                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600">
+                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700">{order.totalCount}</td>
+                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700">
                           {order.totalData > 1024 
                             ? `${(order.totalData / 1024).toFixed(2)} TB` 
                             : `${order.totalData.toFixed(2)} GB`}
                         </td>
-                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600">
+                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700">
                           {order.pricingProfileName || "Default"}
                         </td>
                         <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium">
-                          <span className={order.status === 'processed' ? 'text-green-600' : 'text-gray-600'}>
+                          <span className={order.status === 'processed' ? 'text-green-600' : 'text-gray-700'}>
                             {formatCurrency(order.estimatedCost || 0)}
                           </span>
                           {order.status === "pending" && <span className="text-xs text-yellow-600 block">Not billable yet</span>}
@@ -520,7 +520,7 @@ export default function BillingApp() {
                       setEntriesCurrentPage(1); // Reset to first page on search
                     }}
                   />
-                  <Search className="absolute left-2 sm:left-3 top-2.5 h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                  <Search className="absolute left-2 sm:left-3 top-2.5 h-4 w-4 sm:h-5 sm:w-5 text-gray-700" />
                 </div>
               </div>
 

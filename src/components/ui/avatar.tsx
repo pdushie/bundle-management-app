@@ -41,7 +41,7 @@ export function Avatar({
           alt={name}
         />
       ) : (
-        <div className="flex h-full w-full items-center justify-center font-medium text-gray-600">
+        <div className="flex h-full w-full items-center justify-center font-medium text-gray-700">
           {getInitials(name)}
         </div>
       )}
