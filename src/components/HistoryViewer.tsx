@@ -153,7 +153,7 @@ export default function HistoryViewer() {
                 </div>
                 <div className="text-xs text-blue-600">
                   <span>Phone Entries: {phoneEntriesCount}</span>
-                  <span className="mx-1">•</span>
+                  <span className="mx-1">â€¢</span>
                   <span>Processed Orders: {processedOrderEntriesCount}</span>
                 </div>
               </div>
