@@ -217,7 +217,7 @@ export default function ProcessedOrdersApp() {
                       setCurrentPage(1); // Reset to first page on filter change
                     }}
                   />
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400">
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                     </svg>
@@ -338,7 +338,7 @@ export default function ProcessedOrdersApp() {
                     <div className="px-4 text-sm text-gray-700">
                       Page {currentPage} of {totalPages}
                       {filterText && (
-                        <span className="ml-2 text-xs text-gray-500">
+                        <span className="ml-2 text-xs text-gray-700">
                           (Showing {filteredOrders.length} of {orders.length} orders)
                         </span>
                       )}
@@ -360,7 +360,7 @@ export default function ProcessedOrdersApp() {
         
         {/* Page info */}
         {!loading && sortedOrders.length > 0 && (
-          <div className="text-center mt-4 text-sm text-gray-500">
+          <div className="text-center mt-4 text-sm text-gray-700">
             Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, sortedOrders.length)} of {sortedOrders.length} orders
           </div>
         )}
@@ -409,7 +409,7 @@ export default function ProcessedOrdersApp() {
                       setEntriesCurrentPage(1); // Reset to first page on search
                     }}
                   />
-                  <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                  <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-600" />
                 </div>
               </div>
 
@@ -428,14 +428,14 @@ export default function ProcessedOrdersApp() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {getPaginatedEntries().length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                        <td colSpan={5} className="px-4 py-8 text-center text-gray-700">
                           {entriesSearchText ? 'No entries match your search' : 'No entries found'}
                         </td>
                       </tr>
                     ) : (
                       getPaginatedEntries().map((entry, index) => (
                         <tr key={`${entry.number}-${index}`} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-sm text-gray-500">
+                          <td className="px-4 py-3 text-sm text-gray-700">
                             {(entriesCurrentPage - 1) * entriesPerPage + index + 1}
                           </td>
                           <td className="px-4 py-3 text-sm font-medium text-gray-900">{entry.number}</td>
@@ -477,7 +477,7 @@ export default function ProcessedOrdersApp() {
                     
                     <div className="px-4 text-sm text-gray-700">
                       Page {entriesCurrentPage} of {Math.ceil(getFilteredEntries().length / entriesPerPage)}
-                      <span className="ml-2 text-xs text-gray-500">
+                      <span className="ml-2 text-xs text-gray-700">
                         ({getFilteredEntries().length} entries)
                       </span>
                     </div>

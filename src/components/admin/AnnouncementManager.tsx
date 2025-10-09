@@ -250,7 +250,7 @@ export default function AnnouncementManager() {
       {/* Announcements List */}
       {announcements.length === 0 ? (
         <div className="p-8 text-center">
-          <Info className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <Info className="h-12 w-12 text-gray-500 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Announcements</h3>
           <p className="text-gray-600">Create your first announcement to display messages to users.</p>
         </div>
@@ -276,7 +276,7 @@ export default function AnnouncementManager() {
                     </span>
                   </div>
                   <p className="text-sm sm:text-base text-gray-800 mb-2">{announcement.message}</p>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-500">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-700">
                     <span>From: {formatDate(announcement.startDate)}</span>
                     <span>To: {formatDate(announcement.endDate)}</span>
                   </div>
@@ -291,7 +291,7 @@ export default function AnnouncementManager() {
                     {announcement.isActive ? (
                       <ToggleRight className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                     ) : (
-                      <ToggleLeft className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                      <ToggleLeft className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
                     )}
                   </button>
                   <button

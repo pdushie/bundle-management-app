@@ -2543,7 +2543,7 @@ function AppContent() {
     },
     {
       id: "accounting",
-      name: "History",
+      name: "Accounting",
       icon: Calculator,
       roles: ["admin", "superadmin"] // Restrict to admin roles
     }

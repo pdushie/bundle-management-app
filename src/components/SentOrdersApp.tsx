@@ -265,7 +265,7 @@ export default function SentOrdersApp() {
                             GHS {order.estimatedCost.toFixed(2)}
                           </span>
                         ) : order.pricingProfileName ? (
-                          <span className="text-gray-500">{order.pricingProfileName}</span>
+                          <span className="text-gray-700">{order.pricingProfileName}</span>
                         ) : (
                           <span className="text-gray-600">N/A</span>
                         )}
@@ -321,7 +321,7 @@ export default function SentOrdersApp() {
         
         {/* Page info */}
         {!loading && sortedOrders.length > 0 && (
-          <div className="text-center mt-4 text-sm text-gray-500">
+          <div className="text-center mt-4 text-sm text-gray-700">
             Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, sortedOrders.length)} of {sortedOrders.length} orders
           </div>
         )}
@@ -344,15 +344,15 @@ export default function SentOrdersApp() {
             <div className="p-3 sm:p-4 border-b border-gray-200">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                 <div>
-                  <p className="text-xs sm:text-sm text-gray-500">Order ID</p>
+                  <p className="text-xs sm:text-sm text-gray-700">Order ID</p>
                   <p className="font-medium text-sm sm:text-base">{selectedOrder.id}</p>
                 </div>
                 <div>
-                  <p className="text-xs sm:text-sm text-gray-500">Date</p>
+                  <p className="text-xs sm:text-sm text-gray-700">Date</p>
                   <p className="font-medium text-sm sm:text-base">{new Date(selectedOrder.timestamp).toLocaleString()}</p>
                 </div>
                 <div>
-                  <p className="text-xs sm:text-sm text-gray-500">Status</p>
+                  <p className="text-xs sm:text-sm text-gray-700">Status</p>
                   <p className="font-medium">
                     <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                       selectedOrder.status === "processed"
@@ -375,11 +375,11 @@ export default function SentOrdersApp() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                   <div>
-                    <p className="text-xs sm:text-sm text-gray-500">Pricing Plan</p>
+                    <p className="text-xs sm:text-sm text-gray-700">Pricing Plan</p>
                     <p className="font-medium text-sm sm:text-base">{selectedOrder.pricingProfileName}</p>
                   </div>
                   <div>
-                    <p className="text-xs sm:text-sm text-gray-500">Total Data</p>
+                    <p className="text-xs sm:text-sm text-gray-700">Total Data</p>
                     <p className="font-medium text-sm sm:text-base">
                       {selectedOrder.totalData > 1023 
                         ? `${(selectedOrder.totalData / 1024).toFixed(2)} TB` 
@@ -387,7 +387,7 @@ export default function SentOrdersApp() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs sm:text-sm text-gray-500">Total Cost</p>
+                    <p className="text-xs sm:text-sm text-gray-700">Total Cost</p>
                     <p className="font-bold text-base sm:text-lg">
                       {selectedOrder.estimatedCost !== undefined && selectedOrder.estimatedCost !== null 
                         ? `GHS ${selectedOrder.estimatedCost.toFixed(2)}` 

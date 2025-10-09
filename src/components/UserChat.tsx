@@ -207,7 +207,7 @@ export default function UserChat() {
           {/* Chat Messages */}
           <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 max-h-[50vh] sm:max-h-[300px]">
             {messages.length === 0 ? (
-              <div className="text-center text-gray-500 py-6 sm:py-8">
+              <div className="text-center text-gray-700 py-6 sm:py-8">
                 <MessageSquare className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 text-gray-500" />
                 <p className="text-sm sm:text-base">No messages yet. Start the conversation!</p>
               </div>

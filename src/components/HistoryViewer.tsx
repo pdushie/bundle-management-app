@@ -167,7 +167,7 @@ export default function HistoryViewer() {
             {/* Search */}
             <div className="relative flex-1">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-gray-400" />
+                <Search className="h-4 w-4 text-gray-500" />
               </div>
               <input
                 type="text"
@@ -180,7 +180,7 @@ export default function HistoryViewer() {
             
             {/* Type Filter */}
             <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-gray-500" />
+              <Filter className="h-4 w-4 text-gray-600" />
               <select 
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
@@ -203,8 +203,8 @@ export default function HistoryViewer() {
               </div>
             ) : filteredHistory.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <Clock className="h-8 w-8 text-gray-400 mb-3" />
-                <p className="text-gray-500">No history entries found</p>
+                <Clock className="h-8 w-8 text-gray-500 mb-3" />
+                <p className="text-gray-700">No history entries found</p>
                 {searchTerm || typeFilter !== "all" ? (
                   <p className="text-gray-600 text-sm mt-1">Try adjusting your filters</p>
                 ) : null}
@@ -238,7 +238,7 @@ export default function HistoryViewer() {
                           <div className="text-sm font-medium text-gray-900">
                             {formatDate(entry.timestamp)}
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-gray-700">
                             ID: {entry.id.substring(0, 10)}...
                           </div>
                         </td>
@@ -274,7 +274,7 @@ export default function HistoryViewer() {
                                   })()
                                 ) : "0 GB"}
                               </div>
-                              <div className="text-xs text-gray-500">
+                              <div className="text-xs text-gray-700">
                                 {entry.totalGB ? (
                                   // Make sure to safely parse the totalGB value
                                   (() => {
@@ -340,7 +340,7 @@ export default function HistoryViewer() {
                                   <span>Loading phone numbers...</span>
                                 </div>
                               ) : phoneEntries.length === 0 ? (
-                                <div className="text-sm text-gray-500 text-center py-4">
+                                <div className="text-sm text-gray-700 text-center py-4">
                                   No phone entries found for this history record.
                                 </div>
                               ) : (
@@ -364,7 +364,7 @@ export default function HistoryViewer() {
                                         <tr key={phone.id} className="hover:bg-gray-50">
                                           <td className="px-3 py-2 whitespace-nowrap">
                                             <div className="flex items-center">
-                                              <Phone className="h-3 w-3 text-gray-500 mr-2" />
+                                              <Phone className="h-3 w-3 text-gray-600 mr-2" />
                                               <span className="text-sm font-medium text-gray-900">
                                                 {phone.number}
                                               </span>
@@ -385,7 +385,7 @@ export default function HistoryViewer() {
                                                 })()
                                               ) : "0 GB"}
                                             </div>
-                                            <div className="text-xs text-gray-500">
+                                            <div className="text-xs text-gray-700">
                                               {phone.allocationGB ? (
                                                 // Make sure to safely parse the allocationGB value
                                                 (() => {
@@ -438,7 +438,7 @@ export default function HistoryViewer() {
         {!isLoading && filteredHistory.length > 0 && (
           <div className="mt-4 sm:mt-6 flex justify-between items-center">
             {/* Page count info */}
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-gray-700">
               Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredHistory.length)} of {filteredHistory.length} entries
             </div>
             

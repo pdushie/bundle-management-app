@@ -346,7 +346,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
             <div>
               <label className="text-sm sm:text-base font-medium mb-2 block text-gray-700">Select Date</label>
               <div className="flex items-center">
-                <CalendarIcon className="mr-2 h-4 w-4 text-gray-400" />
+                <CalendarIcon className="mr-2 h-4 w-4 text-gray-600" />
                 <input 
                   type="date"
                   value={selectedDate}
@@ -358,7 +358,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
                   }}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
-                <span className="ml-2 text-xs sm:text-sm text-gray-500">(UTC)</span>
+                <span className="ml-2 text-xs sm:text-sm text-gray-700">(UTC)</span>
               </div>
             </div>
 
@@ -455,7 +455,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
           
           {billData && (!billData.orders || billData.orders.length === 0) && (
             <div className="mt-8 text-center p-8 border rounded-lg bg-gray-50">
-              <p className="text-gray-500">No orders found for this user on the selected date.</p>
+              <p className="text-gray-700">No orders found for this user on the selected date.</p>
             </div>
           )}
         </CardContent>
