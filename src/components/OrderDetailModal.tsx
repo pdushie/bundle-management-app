@@ -111,7 +111,7 @@ export function OrderDetailModal({
             className="p-2 rounded-full hover:bg-gray-100 transition-colors"
             onClick={onClose}
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-gray-700" />
           </button>
         </div>
         
@@ -119,7 +119,7 @@ export function OrderDetailModal({
         <div className="p-4 sm:p-6 border-b border-gray-200 bg-gray-50">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-500 mb-1 flex items-center gap-1">
+              <p className="text-sm text-gray-700 mb-1 flex items-center gap-1">
                 <User className="w-4 h-4" /> From
               </p>
               <p className="font-medium">{order.userName}</p>
@@ -127,7 +127,7 @@ export function OrderDetailModal({
             </div>
             
             <div>
-              <p className="text-sm text-gray-500 mb-1 flex items-center gap-1">
+              <p className="text-sm text-gray-700 mb-1 flex items-center gap-1">
                 <Calendar className="w-4 h-4" /> Submitted
               </p>
               <p className="font-medium">{order.date}</p>
@@ -214,7 +214,7 @@ export function OrderDetailModal({
           </div>
           
           {filteredEntries.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-700">
               No matching numbers found
             </div>
           )}

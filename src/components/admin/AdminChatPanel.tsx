@@ -257,7 +257,7 @@ export default function AdminChatPanel() {
             {/* Search */}
             <div className="p-4 border-b border-gray-200">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 h-4 w-4" />
                 <input
                   type="text"
                   placeholder="Search users..."
@@ -271,7 +271,7 @@ export default function AdminChatPanel() {
             {/* Thread List */}
             <div className="overflow-y-auto h-[calc(100%-73px)]">
               {filteredThreads.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">
+                <div className="text-center text-gray-700 py-8">
                   {searchTerm ? "No matching users found" : "No chat threads yet"}
                 </div>
               ) : (
@@ -291,12 +291,12 @@ export default function AdminChatPanel() {
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500 truncate">{thread.userEmail}</p>
+                    <p className="text-sm text-gray-700 truncate">{thread.userEmail}</p>
                     <div className="flex justify-between items-center mt-1">
                       <p className="text-sm text-gray-700 truncate max-w-[70%]">
                         {thread.lastMessage.message}
                       </p>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-700">
                         {formatTimestamp(thread.lastMessage.createdAt)}
                       </span>
                     </div>
@@ -317,8 +317,8 @@ export default function AdminChatPanel() {
                   <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                 </div>
               ) : messages.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">
-                  <MessageSquare className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                <div className="text-center text-gray-700 py-8">
+                  <MessageSquare className="h-8 w-8 mx-auto mb-2 text-gray-600" />
                   <p>No messages yet. Start the conversation!</p>
                 </div>
               ) : (
@@ -340,7 +340,7 @@ export default function AdminChatPanel() {
                       <div className="flex items-center gap-1 mt-1">
                         <span
                           className={`text-xs ${
-                            msg.senderType === "admin" ? "text-blue-200" : "text-gray-500"
+                            msg.senderType === "admin" ? "text-blue-200" : "text-gray-700"
                           }`}
                         >
                           {formatTimestamp(msg.createdAt)}
@@ -364,7 +364,7 @@ export default function AdminChatPanel() {
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
-                  className="flex-1 border border-gray-300 rounded-l-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-gray-900 bg-white placeholder:text-gray-500"
+                  className="flex-1 border border-gray-300 rounded-l-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-gray-900 bg-white placeholder:text-gray-700"
                 />
                 <button
                   type="submit"

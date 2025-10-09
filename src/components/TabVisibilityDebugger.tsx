@@ -89,7 +89,7 @@ export default function TabVisibilityDebugger() {
       
       <div className="mb-4">
         <h3 className="font-medium mb-2">User Role: <span className="font-bold text-blue-600">{session?.user?.role || 'Not logged in'}</span></h3>
-        <p className="text-sm text-gray-500">The tabs below should be visible to you based on your role</p>
+        <p className="text-sm text-gray-700">The tabs below should be visible to you based on your role</p>
       </div>
       
       <div className="flex flex-wrap gap-2">

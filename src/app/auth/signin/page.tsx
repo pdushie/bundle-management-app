@@ -145,11 +145,11 @@ export default function SignIn() {
                   Full Name
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-600" />
                   <input
                     type="text"
                     required={!isLogin}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-500 sm:text-gray-700"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-700 sm:text-gray-700"
                     placeholder="Enter your full name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -163,11 +163,11 @@ export default function SignIn() {
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-600" />
                 <input
                   type="email"
                   required
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-500 sm:text-gray-700"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-700 sm:text-gray-700"
                   placeholder="Enter your email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -180,11 +180,11 @@ export default function SignIn() {
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-600" />
                 <input
                   type="password"
                   required
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-500 sm:text-gray-700"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-700 sm:text-gray-700"
                   placeholder="Enter your password"
                   minLength={6}
                   value={formData.password}
@@ -192,7 +192,7 @@ export default function SignIn() {
                 />
               </div>
               {!isLogin && (
-                <p className="text-xs text-gray-500 mt-1">Password must be at least 6 characters long</p>
+                <p className="text-xs text-gray-700 mt-1">Password must be at least 6 characters long</p>
               )}
             </div>
 
@@ -202,11 +202,11 @@ export default function SignIn() {
                   Confirm Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-600" />
                   <input
                     type="password"
                     required={!isLogin}
-                    className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-500 sm:text-gray-700 ${
+                    className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-700 sm:text-gray-700 ${
                       formData.confirmPassword && formData.password !== formData.confirmPassword
                         ? 'border-red-300 bg-red-50'
                         : 'border-gray-300'
@@ -231,16 +231,16 @@ export default function SignIn() {
                   Request Message (Optional)
                 </label>
                 <div className="relative">
-                  <MessageCircle className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                  <MessageCircle className="absolute left-3 top-3 w-5 h-5 text-gray-600" />
                   <textarea
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900 placeholder:text-gray-500 sm:text-gray-700"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900 placeholder:text-gray-700 sm:text-gray-700"
                     placeholder="Why do you need access to this system?"
                     rows={3}
                     value={formData.requestMessage}
                     onChange={(e) => setFormData({ ...formData, requestMessage: e.target.value })}
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-700 mt-1">
                   Provide a brief explanation to help with approval
                 </p>
               </div>

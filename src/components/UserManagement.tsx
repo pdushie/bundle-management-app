@@ -306,19 +306,19 @@ export default function UserManagement() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                     User
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">
                     Role
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">
                     Status
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                     Created
                   </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-right text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -326,7 +326,7 @@ export default function UserManagement() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {users.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-10 text-center text-gray-500">
+                    <td colSpan={5} className="px-6 py-10 text-center text-gray-700">
                       No users found
                     </td>
                   </tr>
@@ -335,11 +335,11 @@ export default function UserManagement() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center">
-                        <User className="h-5 w-5 text-gray-500" />
+                        <User className="h-5 w-5 text-gray-700" />
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                        <div className="text-sm text-gray-500">{user.email}</div>
+                        <div className="text-sm text-gray-700">{user.email}</div>
                       </div>
                     </div>
                   </td>
@@ -353,7 +353,7 @@ export default function UserManagement() {
                       {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                     {new Date(user.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -420,7 +420,7 @@ export default function UserManagement() {
                 <h3 className="text-lg font-bold text-gray-900">Create New User</h3>
                 <button
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-600 hover:text-gray-600"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -480,7 +480,7 @@ export default function UserManagement() {
                       value={newUser.password}
                       onChange={(e) => setNewUser({...newUser, password: e.target.value})}
                     />
-                    <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                    <p className="text-xs sm:text-sm text-gray-700 mt-1">
                       Must be at least 8 characters long
                     </p>
                   </div>
@@ -537,7 +537,7 @@ export default function UserManagement() {
                 <h3 className="text-lg font-bold text-gray-900">Reset Password</h3>
                 <button
                   onClick={() => setIsResetPasswordModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-600 hover:text-gray-600"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -574,7 +574,7 @@ export default function UserManagement() {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-700 mt-1">
                     Must be at least 8 characters long
                   </p>
                 </div>
@@ -613,7 +613,7 @@ export default function UserManagement() {
                 <h3 className="text-lg font-bold text-gray-900">Update User Role</h3>
                 <button
                   onClick={() => setIsUpdateRoleModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-600 hover:text-gray-600"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -689,7 +689,7 @@ export default function UserManagement() {
                 <h3 className="text-lg font-bold text-gray-900">Manage User Pricing</h3>
                 <button
                   onClick={() => setIsPricingModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-600 hover:text-gray-600"
                 >
                   <X className="w-5 h-5" />
                 </button>

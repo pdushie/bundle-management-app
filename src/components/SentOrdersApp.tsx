@@ -171,7 +171,7 @@ export default function SentOrdersApp() {
                       setCurrentPage(1); // Reset to first page on filter change
                     }}
                   />
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400">
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                     </svg>
@@ -245,7 +245,7 @@ export default function SentOrdersApp() {
                       onClick={() => setSelectedOrder(order)}
                     >
                       <td className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-900 font-medium">{order.id}</td>
-                      <td className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-500">
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-700">
                         {new Date(order.timestamp).toLocaleString()}
                       </td>
                       <td className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-900">
@@ -299,7 +299,7 @@ export default function SentOrdersApp() {
                     <div className="px-4 text-sm text-gray-700">
                       Page {currentPage} of {totalPages}
                       {filterText && (
-                        <span className="ml-2 text-xs text-gray-500">
+                        <span className="ml-2 text-xs text-gray-700">
                           (Showing {filteredOrders.length} of {orders.length} orders)
                         </span>
                       )}
@@ -308,7 +308,7 @@ export default function SentOrdersApp() {
                     <button
                       onClick={() => handlePageChange(currentPage + 1)}
                       disabled={currentPage === totalPages}
-                      className={`px-2 py-1 rounded border ${currentPage === totalPages ? 'text-gray-300 border-gray-200' : 'text-purple-600 border-purple-300 hover:bg-purple-50'}`}
+                      className={`px-2 py-1 rounded border ${currentPage === totalPages ? 'text-gray-500 border-gray-200' : 'text-purple-600 border-purple-300 hover:bg-purple-50'}`}
                     >
                       <ChevronRight className="h-4 w-4" />
                     </button>
@@ -409,7 +409,7 @@ export default function SentOrdersApp() {
                 {selectedOrder?.entries?.map((entry, index) => (
                   <div key={index} className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 grid grid-cols-3 gap-1 sm:gap-2 rounded-md hover:bg-gray-50">
                     <div className="flex items-center gap-1 sm:gap-2 min-w-0">
-                      <Phone className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
+                      <Phone className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600 flex-shrink-0" />
                       <span className="text-xs sm:text-sm truncate">{entry.number}</span>
                     </div>
                     <div className="flex items-center gap-1 sm:gap-2">

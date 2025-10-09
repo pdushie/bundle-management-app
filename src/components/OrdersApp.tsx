@@ -1130,20 +1130,20 @@ export default function OrdersApp() {
             {/* Search */}
             <div className="relative flex-1">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-gray-400" />
+                <Search className="h-4 w-4 text-gray-600" />
               </div>
               <input
                 type="text"
                 placeholder="Search orders by user or date..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white placeholder:text-gray-500"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white placeholder:text-gray-700"
               />
             </div>
             
             {/* Status Filter */}
             <div className="flex items-center gap-2">
-              <SlidersHorizontal className="h-4 w-4 text-gray-500" />
+              <SlidersHorizontal className="h-4 w-4 text-gray-700" />
               <select 
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as any)}
@@ -1181,7 +1181,7 @@ export default function OrdersApp() {
                       {selectAll ? (
                         <CheckSquare className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 hover:text-blue-700 transition-colors" />
                       ) : (
-                        <Square className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 hover:text-gray-700 transition-colors" />
+                        <Square className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 hover:text-gray-700 transition-colors" />
                       )}
                     </div>
                   </th>
@@ -1258,7 +1258,7 @@ export default function OrdersApp() {
                     <td colSpan={7} className="px-4 py-12 text-center">
                       <div className="flex flex-col items-center justify-center">
                         <Loader className="h-8 w-8 text-blue-500 animate-spin mb-3" />
-                        <p className="text-gray-500">Loading orders...</p>
+                        <p className="text-gray-700">Loading orders...</p>
                       </div>
                     </td>
                   </tr>
@@ -1266,8 +1266,8 @@ export default function OrdersApp() {
                   <tr>
                     <td colSpan={7} className="px-4 py-12 text-center">
                       <div className="flex flex-col items-center justify-center">
-                        <FileText className="h-8 w-8 text-gray-400 mb-3" />
-                        <p className="text-gray-500">No orders found</p>
+                        <FileText className="h-8 w-8 text-gray-600 mb-3" />
+                        <p className="text-gray-700">No orders found</p>
                         {searchTerm || statusFilter !== "all" ? (
                           <p className="text-gray-600 text-sm mt-1">Try adjusting your filters</p>
                         ) : null}
@@ -1288,7 +1288,7 @@ export default function OrdersApp() {
                             {order.isSelected ? (
                               <CheckSquare className="h-5 w-5 text-blue-600 hover:text-blue-700 transition-colors" />
                             ) : (
-                              <Square className="h-5 w-5 text-gray-400 hover:text-gray-700 transition-colors" />
+                              <Square className="h-5 w-5 text-gray-600 hover:text-gray-700 transition-colors" />
                             )}
                           </div>
                         </td>
@@ -1297,7 +1297,7 @@ export default function OrdersApp() {
                             <div className="text-xs sm:text-sm font-medium text-gray-900">
                               {order.date}
                             </div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-gray-700">
                               {order.time}
                             </div>
                           </div>
@@ -1311,7 +1311,7 @@ export default function OrdersApp() {
                               <div className="text-xs sm:text-sm font-medium text-gray-900">
                                 {order.userName}
                               </div>
-                              <div className="text-xs text-gray-500">
+                              <div className="text-xs text-gray-700">
                                 {order.userEmail}
                               </div>
                             </div>
@@ -1329,7 +1329,7 @@ export default function OrdersApp() {
                                   : `${order.totalData} GB`
                                 }
                               </div>
-                              <div className="text-xs text-gray-500">
+                              <div className="text-xs text-gray-700">
                                 {(order.totalData * 1024).toLocaleString()} MB
                               </div>
                             </div>
@@ -1387,7 +1387,7 @@ export default function OrdersApp() {
         {/* Pagination Controls */}
         {!isLoading && allFilteredOrders.length > 0 && (
           <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-gray-700">
               {selectedOrderIds.length > 0 ? (
                 <span className="text-blue-600 font-medium">
                   {selectedOrderIds.length} {selectedOrderIds.length === 1 ? 'order' : 'orders'} selected
@@ -1396,7 +1396,7 @@ export default function OrdersApp() {
             </div>
             
             {/* Page count info */}
-            <div className="text-right text-xs text-gray-500">
+            <div className="text-right text-xs text-gray-700">
               Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, allFilteredOrders.length)} of {allFilteredOrders.length} orders
             </div>
             
@@ -1407,7 +1407,7 @@ export default function OrdersApp() {
                   <button
                     onClick={() => setCurrentPage(1)}
                     disabled={currentPage === 1}
-                    className={`p-1 rounded border ${currentPage === 1 ? 'text-gray-300 border-gray-200' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
+                    className={`p-1 rounded border ${currentPage === 1 ? 'text-gray-500 border-gray-200' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
                   >
                     <span className="sr-only">First page</span>
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -1418,7 +1418,7 @@ export default function OrdersApp() {
                   <button
                     onClick={handlePreviousPage}
                     disabled={currentPage === 1}
-                    className={`p-1 rounded border ${currentPage === 1 ? 'text-gray-300 border-gray-200' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
+                    className={`p-1 rounded border ${currentPage === 1 ? 'text-gray-500 border-gray-200' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
                   >
                     <span className="sr-only">Previous page</span>
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -1458,7 +1458,7 @@ export default function OrdersApp() {
                   <button
                     onClick={handleNextPage}
                     disabled={currentPage === totalPages}
-                    className={`p-1 rounded border ${currentPage === totalPages ? 'text-gray-300 border-gray-200' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
+                    className={`p-1 rounded border ${currentPage === totalPages ? 'text-gray-500 border-gray-200' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
                   >
                     <span className="sr-only">Next page</span>
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -1469,7 +1469,7 @@ export default function OrdersApp() {
                   <button
                     onClick={() => setCurrentPage(totalPages)}
                     disabled={currentPage === totalPages}
-                    className={`p-1 rounded border ${currentPage === totalPages ? 'text-gray-300 border-gray-200' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
+                    className={`p-1 rounded border ${currentPage === totalPages ? 'text-gray-500 border-gray-200' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
                   >
                     <span className="sr-only">Last page</span>
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

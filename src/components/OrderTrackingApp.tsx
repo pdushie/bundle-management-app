@@ -280,12 +280,12 @@ export default function OrderTrackingApp() {
           {/* Search Filter */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
+              <Search className="h-5 w-5 text-gray-600" />
             </div>
             <input
               type="text"
               placeholder="Search phone number..."
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-gray-900 bg-white placeholder:text-gray-500"
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-gray-900 bg-white placeholder:text-gray-700"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -294,7 +294,7 @@ export default function OrderTrackingApp() {
           {/* Status Filter */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Filter className="h-5 w-5 text-gray-400" />
+              <Filter className="h-5 w-5 text-gray-600" />
             </div>
             <select
               className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
@@ -312,7 +312,7 @@ export default function OrderTrackingApp() {
           <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Calendar className="h-5 w-5 text-gray-400" />
+                <Calendar className="h-5 w-5 text-gray-600" />
               </div>
               <input
                 type="date"
@@ -325,12 +325,12 @@ export default function OrderTrackingApp() {
                 }}
                 max={endDate || undefined}
               />
-              <span className="block text-xs text-gray-500 mt-1">Start Date</span>
+              <span className="block text-xs text-gray-700 mt-1">Start Date</span>
             </div>
             
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Calendar className="h-5 w-5 text-gray-400" />
+                <Calendar className="h-5 w-5 text-gray-600" />
               </div>
               <input
                 type="date"
@@ -343,7 +343,7 @@ export default function OrderTrackingApp() {
                 }}
                 min={startDate || undefined}
               />
-              <span className="block text-xs text-gray-500 mt-1">End Date</span>
+              <span className="block text-xs text-gray-700 mt-1">End Date</span>
             </div>
           </div>
           
@@ -390,7 +390,7 @@ export default function OrderTrackingApp() {
             <tr>
               <th 
                 scope="col" 
-                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider cursor-pointer"
                 onClick={() => handleSort("createdAt")}
               >
                 <div className="flex items-center">
@@ -400,7 +400,7 @@ export default function OrderTrackingApp() {
               </th>
               <th 
                 scope="col" 
-                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider cursor-pointer"
                 onClick={() => handleSort("number")}
               >
                 <div className="flex items-center">
@@ -410,7 +410,7 @@ export default function OrderTrackingApp() {
               </th>
               <th 
                 scope="col" 
-                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider cursor-pointer"
                 onClick={() => handleSort("allocationGB")}
               >
                 <div className="flex items-center">
@@ -420,7 +420,7 @@ export default function OrderTrackingApp() {
               </th>
               <th 
                 scope="col" 
-                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider cursor-pointer"
                 onClick={() => handleSort("status")}
               >
                 <div className="flex items-center">
@@ -430,7 +430,7 @@ export default function OrderTrackingApp() {
               </th>
               <th 
                 scope="col" 
-                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider"
               >
                 Order ID
               </th>
@@ -463,7 +463,7 @@ export default function OrderTrackingApp() {
                   <td className="px-4 py-3 whitespace-nowrap">
                     {getStatusBadge(entry.status, entry.source)}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
                     {entry.source === 'phone_entries' 
                       ? `History: ${entry.orderId}`
                       : entry.orderId}
@@ -472,7 +472,7 @@ export default function OrderTrackingApp() {
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={5} className="px-4 py-8 text-center text-gray-700">
                   No order entries match your search criteria
                 </td>
               </tr>
@@ -499,7 +499,7 @@ export default function OrderTrackingApp() {
               disabled={currentPage === 1}
               className={`px-3 py-1 rounded-md ${
                 currentPage === 1
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  ? "bg-gray-100 text-gray-600 cursor-not-allowed"
                   : "bg-white text-gray-700 hover:bg-gray-50"
               } border border-gray-300`}
             >
@@ -538,7 +538,7 @@ export default function OrderTrackingApp() {
               disabled={currentPage === totalPages}
               className={`px-3 py-1 rounded-md ${
                 currentPage === totalPages
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  ? "bg-gray-100 text-gray-600 cursor-not-allowed"
                   : "bg-white text-gray-700 hover:bg-gray-50"
               } border border-gray-300`}
             >

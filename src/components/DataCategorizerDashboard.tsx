@@ -227,7 +227,7 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
               </PopoverContent>
             </Popover>
             
-            <span className="text-gray-500">to</span>
+            <span className="text-gray-700">to</span>
             
             <Popover open={showToCalendar} onOpenChange={setShowToCalendar}>
               <PopoverTrigger asChild>
@@ -283,11 +283,11 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
                 <div className="flex items-center">
                   <Package2 className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 mr-2 sm:mr-3" />
                   <div>
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">Total Package Types</p>
+                    <p className="text-xs sm:text-sm font-medium text-gray-700">Total Package Types</p>
                     <h3 className="text-lg sm:text-2xl font-bold text-blue-700">
                       {data.summary.totalCategories}
                     </h3>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-600">
                       Different package sizes
                     </p>
                   </div>
@@ -300,11 +300,11 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
                 <div className="flex items-center">
                   <Target className="h-6 w-6 sm:h-8 sm:w-8 text-green-500 mr-2 sm:mr-3" />
                   <div>
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">Total Orders</p>
+                    <p className="text-xs sm:text-sm font-medium text-gray-700">Total Orders</p>
                     <h3 className="text-lg sm:text-2xl font-bold text-green-700">
                       {data.summary.totalOrders.toLocaleString()}
                     </h3>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-600">
                       {formatDataSize(data.summary.totalDataGB)} allocated
                     </p>
                   </div>
@@ -317,11 +317,11 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
                 <div className="flex items-center">
                   <Users className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500 mr-2 sm:mr-3" />
                   <div>
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">Active Users</p>
+                    <p className="text-xs sm:text-sm font-medium text-gray-700">Active Users</p>
                     <h3 className="text-lg sm:text-2xl font-bold text-purple-700">
                       {data.summary.totalUsers.toLocaleString()}
                     </h3>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-600">
                       Made purchases
                     </p>
                   </div>
@@ -334,11 +334,11 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
                 <div className="flex items-center">
                   <Award className="h-6 w-6 sm:h-8 sm:w-8 text-orange-500 mr-2 sm:mr-3" />
                   <div>
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">Most Popular</p>
+                    <p className="text-xs sm:text-sm font-medium text-gray-700">Most Popular</p>
                     <h3 className="text-sm sm:text-lg font-bold text-orange-700">
                       {data.summary.mostPopularCategory || 'N/A'}
                     </h3>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-600">
                       Package category
                     </p>
                   </div>
@@ -363,7 +363,7 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
               <CardContent>
                 <div className="h-80">
                   {!isClient ? (
-                    <div className="flex items-center justify-center h-full text-gray-500">
+                    <div className="flex items-center justify-center h-full text-gray-700">
                       <Loader2 className="h-6 w-6 animate-spin mr-2" />
                       Loading chart...
                     </div>
@@ -392,7 +392,7 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="flex items-center justify-center h-full text-gray-500">
+                    <div className="flex items-center justify-center h-full text-gray-700">
                       No package data available for the selected date range
                     </div>
                   )}
@@ -414,7 +414,7 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
               <CardContent>
                 <div className="h-[420px]">
                   {!isClient ? (
-                    <div className="flex items-center justify-center h-full text-gray-500">
+                    <div className="flex items-center justify-center h-full text-gray-700">
                       <Loader2 className="h-6 w-6 animate-spin mr-2" />
                       Loading chart...
                     </div>
@@ -441,7 +441,7 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
                       </RechartsPieChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="flex items-center justify-center h-full text-gray-500">
+                    <div className="flex items-center justify-center h-full text-gray-700">
                       No data to display
                     </div>
                   )}
@@ -529,7 +529,7 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
                         <td className="p-3">
                           <div>
                             <div className="font-medium">{user.userName}</div>
-                            <div className="text-sm text-gray-500">{user.userEmail}</div>
+                            <div className="text-sm text-gray-700">{user.userEmail}</div>
                           </div>
                         </td>
                         <td className="p-3 text-right font-bold">
@@ -559,7 +559,7 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
                 </table>
               </div>
               {data.userBreakdowns.length > 20 && (
-                <div className="mt-4 text-center text-sm text-gray-500">
+                <div className="mt-4 text-center text-sm text-gray-700">
                   Showing top 20 users. Total: {data.userBreakdowns.length} users
                 </div>
               )}

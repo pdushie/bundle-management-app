@@ -206,7 +206,7 @@ export default function AccountingPage() {
                     <SelectItem key={user.id} value={user.id.toString()}>
                       <div className="flex flex-col">
                         <span>{user.name}</span>
-                        <span className="text-xs text-gray-500">{user.email}</span>
+                        <span className="text-xs text-gray-700">{user.email}</span>
                       </div>
                     </SelectItem>
                   ))}
@@ -338,14 +338,14 @@ export default function AccountingPage() {
                   <div className="flex items-center">
                     <User className="h-8 w-8 text-blue-500 mr-4" />
                     <div>
-                      <p className="text-sm font-medium text-gray-500">User</p>
+                      <p className="text-sm font-medium text-gray-700">User</p>
                       <h3 className="text-xl font-bold">
                         {users.find(u => u.id.toString() === selectedUser)?.name || 'User'}
                       </h3>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium text-gray-500">Email</p>
+                    <p className="text-sm font-medium text-gray-700">Email</p>
                     <p className="text-sm text-gray-700">
                       {users.find(u => u.id.toString() === selectedUser)?.email || '-'}
                     </p>
@@ -358,7 +358,7 @@ export default function AccountingPage() {
                   <div className="flex items-center">
                     <DollarSign className="h-8 w-8 text-amber-500 mr-4" />
                     <div>
-                      <p className="text-sm font-medium text-gray-500">Total Amount</p>
+                      <p className="text-sm font-medium text-gray-700">Total Amount</p>
                       <h3 className="text-xl font-bold">
                         {new Intl.NumberFormat('en-GH', { 
                           style: 'currency', 
@@ -370,7 +370,7 @@ export default function AccountingPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium text-gray-500">Total Data</p>
+                    <p className="text-sm font-medium text-gray-700">Total Data</p>
                     <p className="text-lg font-semibold text-gray-700">
                       {totalData.toFixed(2)} GB
                     </p>

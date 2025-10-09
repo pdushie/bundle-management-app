@@ -297,7 +297,7 @@ export default function ProcessedOrdersApp() {
                         </div>
                       </td>
                       <td className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-900">{order.userName}</td>
-                      <td className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-500">
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-700">
                         {new Date(order.timestamp).toLocaleString()}
                       </td>
                       <td className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-900">
@@ -313,7 +313,7 @@ export default function ProcessedOrdersApp() {
                           <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                             Processed
                           </span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-gray-700">
                             ({order.totalCount} entries)
                           </span>
                         </div>
@@ -347,7 +347,7 @@ export default function ProcessedOrdersApp() {
                     <button
                       onClick={() => handlePageChange(currentPage + 1)}
                       disabled={currentPage === totalPages}
-                      className={`px-2 py-1 rounded border ${currentPage === totalPages ? 'text-gray-300 border-gray-200' : 'text-green-600 border-green-300 hover:bg-green-50'}`}
+                      className={`px-2 py-1 rounded border ${currentPage === totalPages ? 'text-gray-500 border-gray-200' : 'text-green-600 border-green-300 hover:bg-green-50'}`}
                     >
                       <ChevronRight className="h-4 w-4" />
                     </button>
@@ -470,7 +470,7 @@ export default function ProcessedOrdersApp() {
                     <button
                       onClick={() => handleEntriesPageChange(entriesCurrentPage - 1)}
                       disabled={entriesCurrentPage === 1}
-                      className={`px-3 py-1 rounded border ${entriesCurrentPage === 1 ? 'text-gray-300 border-gray-200' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
+                      className={`px-3 py-1 rounded border ${entriesCurrentPage === 1 ? 'text-gray-500 border-gray-200' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </button>
@@ -485,7 +485,7 @@ export default function ProcessedOrdersApp() {
                     <button
                       onClick={() => handleEntriesPageChange(entriesCurrentPage + 1)}
                       disabled={entriesCurrentPage === Math.ceil(getFilteredEntries().length / entriesPerPage)}
-                      className={`px-3 py-1 rounded border ${entriesCurrentPage === Math.ceil(getFilteredEntries().length / entriesPerPage) ? 'text-gray-300 border-gray-200' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
+                      className={`px-3 py-1 rounded border ${entriesCurrentPage === Math.ceil(getFilteredEntries().length / entriesPerPage) ? 'text-gray-500 border-gray-200' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
                     >
                       <ChevronRight className="h-4 w-4" />
                     </button>

@@ -349,7 +349,7 @@ export default function AdminDashboard() {
               </div>
             ) : pendingUsers.length === 0 ? (
               <div className="p-8 text-center">
-                <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <Clock className="w-12 h-12 text-gray-600 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No Pending Requests</h3>
                 <p className="text-gray-600">All access requests have been processed.</p>
               </div>
@@ -381,7 +381,7 @@ export default function AdminDashboard() {
                           </div>
                         )}
                         
-                        <div className="flex items-center gap-2 mt-3 text-xs text-gray-500">
+                        <div className="flex items-center gap-2 mt-3 text-xs text-gray-700">
                           <Calendar className="w-3 h-3" />
                           Requested {new Date(user.created_at).toLocaleDateString()}
                         </div>

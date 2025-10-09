@@ -139,7 +139,7 @@ export default function ManageUserPricing({ userId, userName, userEmail, onClose
     <div className="space-y-4">
       <div className="flex flex-col space-y-1">
         <Label className="text-lg font-bold">Manage Pricing for {userName}</Label>
-        <p className="text-sm text-gray-500">{userEmail}</p>
+        <p className="text-sm text-gray-700">{userEmail}</p>
       </div>
       
       {isLoading ? (
@@ -167,15 +167,15 @@ export default function ManageUserPricing({ userId, userName, userEmail, onClose
                     )}
                     <div className="grid grid-cols-2 gap-4 mt-3">
                       <div className="text-sm">
-                        <p className="text-gray-500">Base Cost/GB:</p>
+                        <p className="text-gray-700">Base Cost/GB:</p>
                         <p className="font-medium">${currentProfile.dataPricePerGB ? parseFloat(currentProfile.dataPricePerGB.toString()).toFixed(2) : '0.00'}</p>
                       </div>
                       <div className="text-sm">
-                        <p className="text-gray-500">Base Price:</p>
+                        <p className="text-gray-700">Base Price:</p>
                         <p className="font-medium">${currentProfile.basePrice ? parseFloat(currentProfile.basePrice.toString()).toFixed(2) : '0.00'}</p>
                       </div>
                       <div className="text-sm">
-                        <p className="text-gray-500">Min Cost/Order:</p>
+                        <p className="text-gray-700">Min Cost/Order:</p>
                         <p className="font-medium">${currentProfile.minimumCharge ? parseFloat(currentProfile.minimumCharge.toString()).toFixed(2) : '0.00'}</p>
                       </div>
                     </div>
@@ -217,7 +217,7 @@ export default function ManageUserPricing({ userId, userName, userEmail, onClose
                     >
                       <div className="flex items-center">
                         <span className="font-medium">{profile.name}</span>
-                        <span className="ml-2 text-gray-500 text-sm">
+                        <span className="ml-2 text-gray-700 text-sm">
                           - ${profile.dataPricePerGB ? parseFloat(profile.dataPricePerGB.toString()).toFixed(2) : '0.00'}/GB, 
                           Base: ${profile.basePrice ? parseFloat(profile.basePrice.toString()).toFixed(2) : '0.00'}
                         </span>

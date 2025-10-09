@@ -128,7 +128,7 @@ export default function NotificationTester() {
             <div className="text-sm">Sent Orders</div>
           </div>
         </div>
-        <div className="text-xs text-gray-500">
+        <div className="text-xs text-gray-700">
           Last updated: {new Date(lastUpdated).toLocaleTimeString()}
         </div>
       </div>

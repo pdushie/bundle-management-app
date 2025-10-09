@@ -566,7 +566,7 @@ function HistoryManager({
                       disabled={currentPage === 1}
                       className={`px-3 py-1 rounded-md text-sm font-medium ${
                         currentPage === 1
-                          ? 'text-gray-400 cursor-not-allowed'
+                          ? 'text-gray-600 cursor-not-allowed'
                           : 'text-blue-600 hover:bg-blue-50'
                       }`}
                     >
@@ -607,7 +607,7 @@ function HistoryManager({
                       disabled={currentPage === totalPages}
                       className={`px-3 py-1 rounded-md text-sm font-medium ${
                         currentPage === totalPages
-                          ? 'text-gray-400 cursor-not-allowed'
+                          ? 'text-gray-600 cursor-not-allowed'
                           : 'text-blue-600 hover:bg-blue-50'
                       }`}
                     >
@@ -1327,7 +1327,7 @@ function BundleAllocatorApp({
             <div className="relative">
               <textarea
                 placeholder="Paste phone numbers and data allocations here&#10;0554739033 20GB&#10;0201234567 15GB&#10;0556789012 10GB"
-                className="w-full p-3 sm:p-4 border border-gray-300 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none font-mono text-sm sm:text-base text-gray-900 bg-white shadow-sm hover:shadow-md placeholder:text-gray-500"
+                className="w-full p-3 sm:p-4 border border-gray-300 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none font-mono text-sm sm:text-base text-gray-900 bg-white shadow-sm hover:shadow-md placeholder:text-gray-700"
                 rows={6}
                 value={inputText}
                 onChange={(e) => processInput(e.target.value)}
@@ -1353,7 +1353,7 @@ function BundleAllocatorApp({
                   : "border-gray-300 hover:border-blue-400 hover:bg-blue-50"
                 }`}
             >
-              <div className={`w-10 h-10 sm:w-14 sm:h-14 mx-auto mb-2 sm:mb-4 flex items-center justify-center rounded-full ${isDragActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'
+              <div className={`w-10 h-10 sm:w-14 sm:h-14 mx-auto mb-2 sm:mb-4 flex items-center justify-center rounded-full ${isDragActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
                 }`}>
                 <Upload className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
@@ -1362,7 +1362,7 @@ function BundleAllocatorApp({
               ) : (
                 <>
                   <p className="text-gray-700 font-medium mb-1 sm:mb-2 text-sm sm:text-base">Drag & drop Excel, CSV or TXT files</p>
-                  <p className="text-xs sm:text-sm text-gray-500">Supports .xlsx, .csv, and .txt files</p>
+                  <p className="text-xs sm:text-sm text-gray-700">Supports .xlsx, .csv, and .txt files</p>
                 </>
               )}
             </div>
@@ -1541,7 +1541,7 @@ function BundleAllocatorApp({
                         }`}>
                         {allocationGB} GB
                       </p>
-                      <p className="text-xs text-gray-500 font-medium mt-1">
+                      <p className="text-xs text-gray-700 font-medium mt-1">
                         {(allocationGB * 1024).toFixed(0)} MB
                       </p>
                     </div>
@@ -1746,7 +1746,7 @@ function BundleCategorizerApp({
               Data Input
             </label>
             <textarea
-              className="w-full h-32 sm:h-48 p-3 sm:p-4 border border-gray-300 rounded-lg sm:rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 font-mono text-sm sm:text-base text-gray-900 bg-white hover:shadow-md placeholder:text-gray-500"
+              className="w-full h-32 sm:h-48 p-3 sm:p-4 border border-gray-300 rounded-lg sm:rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 font-mono text-sm sm:text-base text-gray-900 bg-white hover:shadow-md placeholder:text-gray-700"
               placeholder="Paste your data here...&#10;Example:&#10;024XXXXXXXX 20GB&#10;059XXXXXXXX 50GB&#10;0249XXXXXXX 10GB"
               value={rawData}
               onChange={(e) => setRawData(e.target.value)}
@@ -2257,7 +2257,8 @@ function TabNavigation({
                tab.id === "orders" ? "Orders" :
                tab.id === "processed-orders" ? "Processed" :
                tab.id === "sent-orders" ? "My Orders" : 
-               tab.id === "history" ? "History & A." : "History"}
+               tab.id === "history" ? "History & A." : 
+               tab.id === "accounting" ? "Accounting" : "History"}
             </span>
             {tab.id === "history" && isSuperAdmin && history.length > 0 && (
               <span className="bg-white/20 text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">

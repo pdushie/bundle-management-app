@@ -250,7 +250,7 @@ export default function AnnouncementManager() {
       {/* Announcements List */}
       {announcements.length === 0 ? (
         <div className="p-8 text-center">
-          <Info className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+          <Info className="h-12 w-12 text-gray-700 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Announcements</h3>
           <p className="text-gray-600">Create your first announcement to display messages to users.</p>
         </div>

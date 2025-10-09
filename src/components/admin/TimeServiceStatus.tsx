@@ -49,7 +49,7 @@ export default function TimeServiceStatus() {
   };
 
   const getStatusColor = () => {
-    if (syncStatus.lastSyncTime === 0) return 'text-gray-500';
+    if (syncStatus.lastSyncTime === 0) return 'text-gray-700';
     if (syncStatus.isStale) return 'text-yellow-600';
     return 'text-green-600';
   };

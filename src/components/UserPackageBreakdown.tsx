@@ -242,7 +242,7 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
             <div>
               <label className="text-sm font-medium mb-2 block text-gray-700">Select Date</label>
               <div className="flex items-center">
-                <CalendarIcon className="mr-2 h-4 w-4 text-gray-400" />
+                <CalendarIcon className="mr-2 h-4 w-4 text-gray-600" />
                 <input 
                   type="date"
                   value={selectedDate}
@@ -250,7 +250,7 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
                   onChange={(e) => setSelectedDate(e.target.value)}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
-                <span className="ml-2 text-xs text-gray-500">(UTC)</span>
+                <span className="ml-2 text-xs text-gray-700">(UTC)</span>
               </div>
             </div>
 
@@ -282,11 +282,11 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
                 <div className="flex items-center">
                   <User className="h-8 w-8 text-blue-500 mr-3" />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">User</p>
+                    <p className="text-sm font-medium text-gray-700">User</p>
                     <h3 className="text-lg font-bold text-blue-700">
                       {data.userName}
                     </h3>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-600">
                       {format(new Date(data.date), 'MMM d, yyyy')}
                     </p>
                   </div>
@@ -299,11 +299,11 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
                 <div className="flex items-center">
                   <Package2 className="h-8 w-8 text-green-500 mr-3" />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Package Types</p>
+                    <p className="text-sm font-medium text-gray-700">Package Types</p>
                     <h3 className="text-2xl font-bold text-green-700">
                       {data.summary.totalPackages}
                     </h3>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-600">
                       {data.summary.totalQuantity} total items
                     </p>
                   </div>
@@ -316,11 +316,11 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
                 <div className="flex items-center">
                   <Database className="h-8 w-8 text-purple-500 mr-3" />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Total Data</p>
+                    <p className="text-sm font-medium text-gray-700">Total Data</p>
                     <h3 className="text-2xl font-bold text-purple-700">
                       {formatDataSize(data.summary.totalDataGB)}
                     </h3>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-600">
                       from {data.summary.totalOrders} orders
                     </p>
                   </div>
@@ -333,11 +333,11 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
                 <div className="flex items-center">
                   <DollarSign className="h-8 w-8 text-orange-500 mr-3" />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Total Cost</p>
+                    <p className="text-sm font-medium text-gray-700">Total Cost</p>
                     <h3 className="text-2xl font-bold text-orange-700">
                       {formatCurrency(data.summary.totalCost)}
                     </h3>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-600">
                       Avg: {formatDataSize(data.summary.averagePackageSize)}/item
                     </p>
                   </div>
@@ -424,9 +424,9 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
           ) : (
             <Card>
               <CardContent className="p-8 text-center">
-                <Package2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <Package2 className="h-12 w-12 text-gray-600 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No Packages Found</h3>
-                <p className="text-gray-500">
+                <p className="text-gray-700">
                   {selectedUserName} did not purchase any data packages on {format(new Date(selectedDate), 'MMMM d, yyyy')}.
                 </p>
               </CardContent>

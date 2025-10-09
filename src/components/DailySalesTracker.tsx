@@ -213,7 +213,7 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
               <div className="flex items-center">
                 <DollarSign className="h-8 w-8 text-green-500 mr-3" />
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Total Sales</p>
+                  <p className="text-sm font-medium text-gray-700">Total Sales</p>
                   <h3 className="text-2xl font-bold text-green-700">
                     {formatCurrency(dailyDetails.summary.totalSales)}
                   </h3>
@@ -227,7 +227,7 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
               <div className="flex items-center">
                 <Package className="h-8 w-8 text-blue-500 mr-3" />
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Total Orders</p>
+                  <p className="text-sm font-medium text-gray-700">Total Orders</p>
                   <h3 className="text-2xl font-bold text-blue-700">
                     {dailyDetails.summary.totalOrders}
                   </h3>
@@ -241,7 +241,7 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
               <div className="flex items-center">
                 <Database className="h-8 w-8 text-purple-500 mr-3" />
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Total Data</p>
+                  <p className="text-sm font-medium text-gray-700">Total Data</p>
                   <h3 className="text-2xl font-bold text-purple-700">
                     {dailyDetails.summary.totalData.toFixed(2)} GB
                   </h3>
@@ -255,7 +255,7 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
               <div className="flex items-center">
                 <Users className="h-8 w-8 text-orange-500 mr-3" />
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Unique Users</p>
+                  <p className="text-sm font-medium text-gray-700">Unique Users</p>
                   <h3 className="text-2xl font-bold text-orange-700">
                     {dailyDetails.userBreakdown.length}
                   </h3>
@@ -418,7 +418,7 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
                 <div className="flex items-center">
                   <DollarSign className="h-8 w-8 text-green-500 mr-3" />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Total Sales (30 days)</p>
+                    <p className="text-sm font-medium text-gray-700">Total Sales (30 days)</p>
                     <h3 className="text-2xl font-bold text-green-700">
                       {formatCurrency(dailySummary.grandTotal.totalSales)}
                     </h3>
@@ -432,7 +432,7 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
                 <div className="flex items-center">
                   <Package className="h-8 w-8 text-blue-500 mr-3" />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Total Orders</p>
+                    <p className="text-sm font-medium text-gray-700">Total Orders</p>
                     <h3 className="text-2xl font-bold text-blue-700">
                       {dailySummary.grandTotal.totalOrders}
                     </h3>
@@ -446,7 +446,7 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
                 <div className="flex items-center">
                   <Database className="h-8 w-8 text-purple-500 mr-3" />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Total Data</p>
+                    <p className="text-sm font-medium text-gray-700">Total Data</p>
                     <h3 className="text-2xl font-bold text-purple-700">
                       {dailySummary.grandTotal.totalData.toFixed(2)} GB
                     </h3>
@@ -460,7 +460,7 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
                 <div className="flex items-center">
                   <TrendingUp className="h-8 w-8 text-orange-500 mr-3" />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Days with Sales</p>
+                    <p className="text-sm font-medium text-gray-700">Days with Sales</p>
                     <h3 className="text-2xl font-bold text-orange-700">
                       {dailySummary.grandTotal.daysWithSales}
                     </h3>

@@ -166,7 +166,7 @@ export default function UserPricingAssignment({ profileId, onClose }: UserPricin
       </div>
       
       <div className="relative mb-4">
-        <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+        <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-600" />
         <Input
           placeholder="Search users by name or email..."
           value={searchTerm}
@@ -195,7 +195,7 @@ export default function UserPricingAssignment({ profileId, onClose }: UserPricin
               </TableRow>
             ) : filteredUsers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8 text-gray-500">
+                <TableCell colSpan={4} className="text-center py-8 text-gray-700">
                   No users found matching your search.
                 </TableCell>
               </TableRow>

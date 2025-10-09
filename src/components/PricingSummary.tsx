@@ -52,7 +52,7 @@ export default function PricingSummary({
   }, [dataSizeGB, pricingData, onPriceCalculated]);
   
   if (loading) {
-    return <div className={`text-sm text-gray-500 ${className}`}>Loading pricing...</div>;
+    return <div className={`text-sm text-gray-700 ${className}`}>Loading pricing...</div>;
   }
   
   if (!pricingData || !pricingData.hasProfile) {

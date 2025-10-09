@@ -269,7 +269,7 @@ export default function BillingApp() {
                   onChange={handleDateChange}
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base text-gray-900 bg-white"
                 />
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-700" />
               </div>
               
               <button 
@@ -294,7 +294,7 @@ export default function BillingApp() {
               <button 
                 onClick={goToToday}
                 disabled={isToday(selectedDate)}
-                className={`px-4 py-2 ${!isToday(selectedDate) ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 text-gray-500 cursor-not-allowed'} rounded-md font-medium transition-colors`}
+                className={`px-4 py-2 ${!isToday(selectedDate) ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 text-gray-700 cursor-not-allowed'} rounded-md font-medium transition-colors`}
               >
                 Today
               </button>
@@ -398,13 +398,13 @@ export default function BillingApp() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Entries</th>
-                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Total Data</th>
-                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Pricing Profile</th>
-                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">Time</th>
+                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">Order ID</th>
+                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">Status</th>
+                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">Entries</th>
+                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">Total Data</th>
+                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">Pricing Profile</th>
+                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">Amount</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -520,7 +520,7 @@ export default function BillingApp() {
                       setEntriesCurrentPage(1); // Reset to first page on search
                     }}
                   />
-                  <Search className="absolute left-2 sm:left-3 top-2.5 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                  <Search className="absolute left-2 sm:left-3 top-2.5 h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
                 </div>
               </div>
 
@@ -539,14 +539,14 @@ export default function BillingApp() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {getPaginatedEntries().length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-2 sm:px-4 py-6 sm:py-8 text-center text-gray-500 text-xs sm:text-sm">
+                        <td colSpan={5} className="px-2 sm:px-4 py-6 sm:py-8 text-center text-gray-700 text-xs sm:text-sm">
                           {entriesSearchText ? 'No entries match your search' : 'No entries found'}
                         </td>
                       </tr>
                     ) : (
                       getPaginatedEntries().map((entry: any, index: number) => (
                         <tr key={`${entry.number}-${index}`} className="hover:bg-gray-50">
-                          <td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-500">
+                          <td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700">
                             {(entriesCurrentPage - 1) * entriesPerPage + index + 1}
                           </td>
                           <td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-gray-900 break-all">{entry.number}</td>
@@ -588,7 +588,7 @@ export default function BillingApp() {
                     
                     <div className="px-4 text-sm text-gray-700">
                       Page {entriesCurrentPage} of {Math.ceil(getFilteredEntries().length / entriesPerPage)}
-                      <span className="ml-2 text-xs text-gray-500">
+                      <span className="ml-2 text-xs text-gray-700">
                         ({getFilteredEntries().length} entries)
                       </span>
                     </div>
@@ -596,7 +596,7 @@ export default function BillingApp() {
                     <button
                       onClick={() => handleEntriesPageChange(entriesCurrentPage + 1)}
                       disabled={entriesCurrentPage === Math.ceil(getFilteredEntries().length / entriesPerPage)}
-                      className={`px-3 py-1 rounded border ${entriesCurrentPage === Math.ceil(getFilteredEntries().length / entriesPerPage) ? 'text-gray-300 border-gray-200' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
+                      className={`px-3 py-1 rounded border ${entriesCurrentPage === Math.ceil(getFilteredEntries().length / entriesPerPage) ? 'text-gray-500 border-gray-200' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
                     >
                       <ChevronRight className="h-4 w-4" />
                     </button>

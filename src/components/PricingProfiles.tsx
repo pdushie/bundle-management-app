@@ -625,9 +625,9 @@ export default function PricingProfiles() {
         {!loading && profiles.length === 0 && (
           <Card className="col-span-full bg-gray-50 border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <AlertCircle className="h-12 w-12 text-gray-400 mb-4" />
+              <AlertCircle className="h-12 w-12 text-gray-600 mb-4" />
               <h3 className="text-lg font-semibold">No Pricing Profiles</h3>
-              <p className="text-sm text-gray-500 text-center max-w-md mt-1 mb-4">
+              <p className="text-sm text-gray-700 text-center max-w-md mt-1 mb-4">
                 Create your first pricing profile to assign to users and calculate order costs.
               </p>
               <Button onClick={handleOpenCreate}>
@@ -712,7 +712,7 @@ export default function PricingProfiles() {
                           />
                         </div>
                         <div className="relative col-span-5">
-                          <div className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 flex items-center justify-center text-xs sm:text-sm font-medium">
+                          <div className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-700 flex items-center justify-center text-xs sm:text-sm font-medium">
                             GHS
                           </div>
                           <Input
@@ -779,7 +779,7 @@ export default function PricingProfiles() {
                     {importError && (
                       <p className="text-sm text-red-500 mt-2">{importError}</p>
                     )}
-                    <p className="text-xs sm:text-sm text-gray-500 mt-3 bg-blue-50 p-3 rounded-md">
+                    <p className="text-xs sm:text-sm text-gray-700 mt-3 bg-blue-50 p-3 rounded-md">
                       Excel format: Column A = Data GB, Column B = Price (GHS)
                     </p>
                   </div>
@@ -797,7 +797,7 @@ export default function PricingProfiles() {
                   checked={isActive}
                   onCheckedChange={setIsActive}
                 />
-                <Label htmlFor="isActive" className="text-sm text-gray-500">
+                <Label htmlFor="isActive" className="text-sm text-gray-700">
                   {isActive ? 'Profile is active' : 'Profile is inactive'}
                 </Label>
               </div>
@@ -860,7 +860,7 @@ export default function PricingProfiles() {
                 </Table>
               </div>
             ) : (
-              <div className="text-center py-4 text-gray-500 bg-gray-50 rounded">
+              <div className="text-center py-4 text-gray-700 bg-gray-50 rounded">
                 No users assigned to this profile yet
               </div>
             )}
@@ -883,7 +883,7 @@ export default function PricingProfiles() {
             {loadingUsers ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-700 mx-auto"></div>
-                <p className="text-sm text-gray-500 mt-2">Loading users...</p>
+                <p className="text-sm text-gray-700 mt-2">Loading users...</p>
               </div>
             ) : (
               <div className="max-h-60 overflow-y-auto">
@@ -921,7 +921,7 @@ export default function PricingProfiles() {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center py-4 text-gray-500">
+                        <TableCell colSpan={4} className="text-center py-4 text-gray-700">
                           No users found
                         </TableCell>
                       </TableRow>

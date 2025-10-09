@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 // Create a history viewing component that displays order processing history
 import React, { useState, useEffect } from "react";
@@ -153,7 +153,7 @@ export default function HistoryViewer() {
                 </div>
                 <div className="text-xs text-blue-600">
                   <span>Phone Entries: {phoneEntriesCount}</span>
-                  <span className="mx-1">•</span>
+                  <span className="mx-1">�</span>
                   <span>Processed Orders: {processedOrderEntriesCount}</span>
                 </div>
               </div>
@@ -167,7 +167,7 @@ export default function HistoryViewer() {
             {/* Search */}
             <div className="relative flex-1">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-gray-500" />
+                <Search className="h-4 w-4 text-gray-700" />
               </div>
               <input
                 type="text"
@@ -203,7 +203,7 @@ export default function HistoryViewer() {
               </div>
             ) : filteredHistory.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <Clock className="h-8 w-8 text-gray-500 mb-3" />
+                <Clock className="h-8 w-8 text-gray-700 mb-3" />
                 <p className="text-gray-700">No history entries found</p>
                 {searchTerm || typeFilter !== "all" ? (
                   <p className="text-gray-600 text-sm mt-1">Try adjusting your filters</p>
@@ -449,7 +449,7 @@ export default function HistoryViewer() {
                   <button
                     onClick={() => setCurrentPage(1)}
                     disabled={currentPage === 1}
-                    className={`p-1 rounded border ${currentPage === 1 ? "text-gray-300 border-gray-200" : "text-blue-600 border-blue-300 hover:bg-blue-50"}`}
+                    className={`p-1 rounded border ${currentPage === 1 ? "text-gray-500 border-gray-200" : "text-blue-600 border-blue-300 hover:bg-blue-50"}`}
                   >
                     <span className="sr-only">First page</span>
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -460,7 +460,7 @@ export default function HistoryViewer() {
                   <button
                     onClick={handlePreviousPage}
                     disabled={currentPage === 1}
-                    className={`p-1 rounded border ${currentPage === 1 ? "text-gray-300 border-gray-200" : "text-blue-600 border-blue-300 hover:bg-blue-50"}`}
+                    className={`p-1 rounded border ${currentPage === 1 ? "text-gray-500 border-gray-200" : "text-blue-600 border-blue-300 hover:bg-blue-50"}`}
                   >
                     <span className="sr-only">Previous page</span>
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -500,7 +500,7 @@ export default function HistoryViewer() {
                   <button
                     onClick={handleNextPage}
                     disabled={currentPage === totalPages}
-                    className={`p-1 rounded border ${currentPage === totalPages ? "text-gray-300 border-gray-200" : "text-blue-600 border-blue-300 hover:bg-blue-50"}`}
+                    className={`p-1 rounded border ${currentPage === totalPages ? "text-gray-500 border-gray-200" : "text-blue-600 border-blue-300 hover:bg-blue-50"}`}
                   >
                     <span className="sr-only">Next page</span>
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -511,7 +511,7 @@ export default function HistoryViewer() {
                   <button
                     onClick={() => setCurrentPage(totalPages)}
                     disabled={currentPage === totalPages}
-                    className={`p-1 rounded border ${currentPage === totalPages ? "text-gray-300 border-gray-200" : "text-blue-600 border-blue-300 hover:bg-blue-50"}`}
+                    className={`p-1 rounded border ${currentPage === totalPages ? "text-gray-500 border-gray-200" : "text-blue-600 border-blue-300 hover:bg-blue-50"}`}
                   >
                     <span className="sr-only">Last page</span>
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

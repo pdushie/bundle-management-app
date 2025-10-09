@@ -1026,13 +1026,13 @@ export default function SendOrderApp() {
                 onDrop={handleDrop}
                 className="border-2 border-dashed rounded-lg sm:rounded-xl p-4 sm:p-8 text-center cursor-pointer transition-all duration-300 border-gray-300 hover:border-blue-400 hover:bg-blue-50"
               >
-                <div className="w-10 h-10 sm:w-14 sm:h-14 mx-auto mb-2 sm:mb-4 flex items-center justify-center rounded-full bg-gray-100 text-gray-500">
+                <div className="w-10 h-10 sm:w-14 sm:h-14 mx-auto mb-2 sm:mb-4 flex items-center justify-center rounded-full bg-gray-100 text-gray-700">
                   <Upload className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <p className="text-gray-700 font-medium mb-1 sm:mb-2 text-sm sm:text-base">
                   Drag & drop your order file or click to browse
                 </p>
-              <p className="text-xs sm:text-sm text-gray-500">
+              <p className="text-xs sm:text-sm text-gray-700">
                 Upload an Excel file with phone numbers and GB allocations
               </p>                {/* Template download link */}
                 <button 
@@ -1056,7 +1056,7 @@ export default function SendOrderApp() {
 0554739033 20GB
 0201234567 15GB
 0556789012 2GB`}
-                  className="w-full p-3 sm:p-4 border border-gray-300 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none font-mono text-sm sm:text-base text-gray-900 bg-white shadow-sm hover:shadow-md placeholder:text-gray-500"
+                  className="w-full p-3 sm:p-4 border border-gray-300 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none font-mono text-sm sm:text-base text-gray-900 bg-white shadow-sm hover:shadow-md placeholder:text-gray-700"
                   rows={6}
                   value={manualInputText}
                   onChange={(e) => {
@@ -1365,7 +1365,7 @@ export default function SendOrderApp() {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold">{entry.allocationGB.toFixed(2)} GB</p>
-                      <p className="text-xs sm:text-sm text-gray-500">{(entry.allocationGB * 1024).toFixed(0)} MB</p>
+                      <p className="text-xs sm:text-sm text-gray-700">{(entry.allocationGB * 1024).toFixed(0)} MB</p>
                       {pricingData?.hasProfile && pricingData?.profile && (
                         <p className="text-xs sm:text-sm text-green-600 font-medium mt-1">
                           GHS {calculatePrice(pricingData.profile, entry.allocationGB)?.toFixed(2)}
