@@ -178,7 +178,7 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
           )}
           <div>
             <h2 className="text-2xl font-bold">Data Allocation Dashboard</h2>
-            <p className="text-gray-700">Compare data processing between Bundle Allocator and Order System</p>
+            <p className="text-gray-900">Compare data processing between Bundle Allocator and Order System</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -212,7 +212,7 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
               </PopoverContent>
             </Popover>
             
-            <span className="text-gray-700">to</span>
+            <span className="text-gray-900">to</span>
             
             <Popover open={showToCalendar} onOpenChange={setShowToCalendar}>
               <PopoverTrigger asChild>
@@ -268,11 +268,11 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
                 <div className="flex items-center">
                   <Database className="h-8 w-8 text-blue-500 mr-3" />
                   <div>
-                    <p className="text-sm font-medium text-gray-700">Bundle Allocator Data</p>
+                    <p className="text-sm font-medium text-gray-900">Bundle Allocator Data</p>
                     <h3 className="text-2xl font-bold text-blue-700">
                       {formatDataSize(data.summary.bundleAllocator.totalDataGB)}
                     </h3>
-                    <p className="text-xs text-gray-700">
+                    <p className="text-xs text-gray-900">
                       {data.summary.bundleAllocator.totalOrders} orders
                     </p>
                   </div>
@@ -285,11 +285,11 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
                 <div className="flex items-center">
                   <Package className="h-8 w-8 text-green-500 mr-3" />
                   <div>
-                    <p className="text-sm font-medium text-gray-700">Order System Data</p>
+                    <p className="text-sm font-medium text-gray-900">Order System Data</p>
                     <h3 className="text-2xl font-bold text-green-700">
                       {formatDataSize(data.summary.orderSystem.totalDataGB)}
                     </h3>
-                    <p className="text-xs text-gray-700">
+                    <p className="text-xs text-gray-900">
                       {data.summary.orderSystem.totalOrders} orders
                     </p>
                   </div>
@@ -302,11 +302,11 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
                 <div className="flex items-center">
                   <TrendingUp className="h-8 w-8 text-purple-500 mr-3" />
                   <div>
-                    <p className="text-sm font-medium text-gray-700">Total Data Processed</p>
+                    <p className="text-sm font-medium text-gray-900">Total Data Processed</p>
                     <h3 className="text-2xl font-bold text-purple-700">
                       {formatDataSize(data.summary.combined.totalDataGB)}
                     </h3>
-                    <p className="text-xs text-gray-700">
+                    <p className="text-xs text-gray-900">
                       {data.summary.combined.totalOrders} total orders
                     </p>
                   </div>
@@ -319,11 +319,11 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
                 <div className="flex items-center">
                   <Users className="h-8 w-8 text-orange-500 mr-3" />
                   <div>
-                    <p className="text-sm font-medium text-gray-700">Daily Average</p>
+                    <p className="text-sm font-medium text-gray-900">Daily Average</p>
                     <h3 className="text-2xl font-bold text-orange-700">
                       {formatDataSize(data.summary.combined.avgDailyDataGB)}
                     </h3>
-                    <p className="text-xs text-gray-700">
+                    <p className="text-xs text-gray-900">
                       over {data.summary.combined.totalDays} days
                     </p>
                   </div>
@@ -368,7 +368,7 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="flex items-center justify-center h-full text-gray-700">
+                    <div className="flex items-center justify-center h-full text-gray-900">
                       No data available for the selected date range
                     </div>
                   )}
@@ -525,8 +525,8 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
                 </table>
               </div>
               {data.dailyData.length > 10 && (
-                <div className="mt-4 text-center text-sm text-gray-700">
-                  Showing first 10 days. Total: {data.dailyData.length} days
+                <div className="mt-4 text-center text-sm text-gray-900">
+                  Showing last 10 days. Total: {data.dailyData.length} days
                 </div>
               )}
             </CardContent>

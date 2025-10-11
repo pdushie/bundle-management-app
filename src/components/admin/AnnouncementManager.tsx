@@ -237,7 +237,7 @@ export default function AnnouncementManager() {
     <div className="bg-white rounded-lg shadow-md">
       {/* Header with Add Button */}
       <div className="p-3 sm:p-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
-        <h2 className="text-base sm:text-lg font-medium">System Announcements</h2>
+        <h2 className="text-base sm:text-lg font-medium text-gray-900">System Announcements</h2>
         <button 
           onClick={handleNewAnnouncement}
           className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-md hover:bg-blue-700 flex items-center gap-2 text-sm sm:text-base w-full sm:w-auto justify-center"
@@ -250,9 +250,9 @@ export default function AnnouncementManager() {
       {/* Announcements List */}
       {announcements.length === 0 ? (
         <div className="p-8 text-center">
-          <Info className="h-12 w-12 text-gray-700 mx-auto mb-4" />
+          <Info className="h-12 w-12 text-gray-900 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Announcements</h3>
-          <p className="text-gray-700">Create your first announcement to display messages to users.</p>
+          <p className="text-gray-900">Create your first announcement to display messages to users.</p>
         </div>
       ) : (
         <div className="divide-y divide-gray-200">
@@ -271,12 +271,12 @@ export default function AnnouncementManager() {
                     >
                       {announcement.type.charAt(0).toUpperCase() + announcement.type.slice(1)}
                     </span>
-                    <span className={`text-xs sm:text-sm ${announcement.isActive ? 'text-green-600' : 'text-gray-700'}`}>
+                    <span className={`text-xs sm:text-sm ${announcement.isActive ? 'text-green-600' : 'text-gray-900'}`}>
                       {announcement.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </div>
                   <p className="text-sm sm:text-base text-gray-800 mb-2">{announcement.message}</p>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-700">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-900">
                     <span>From: {formatDate(announcement.startDate)}</span>
                     <span>To: {formatDate(announcement.endDate)}</span>
                   </div>
@@ -291,7 +291,7 @@ export default function AnnouncementManager() {
                     {announcement.isActive ? (
                       <ToggleRight className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                     ) : (
-                      <ToggleLeft className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700" />
+                      <ToggleLeft className="h-4 w-4 sm:h-5 sm:w-5 text-gray-900" />
                     )}
                   </button>
                   <button
@@ -328,7 +328,7 @@ export default function AnnouncementManager() {
                 <div className="space-y-4">
                   {/* Message */}
                   <div>
-                    <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="message" className="block text-sm font-medium text-gray-900 mb-1">
                       Announcement Message*
                     </label>
                     <textarea
@@ -345,7 +345,7 @@ export default function AnnouncementManager() {
                   
                   {/* Type */}
                   <div>
-                    <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="type" className="block text-sm font-medium text-gray-900 mb-1">
                       Announcement Type
                     </label>
                     <select
@@ -365,7 +365,7 @@ export default function AnnouncementManager() {
                   <div className="flex gap-4">
                     {/* Start Date */}
                     <div className="flex-1">
-                      <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="startDate" className="block text-sm font-medium text-gray-900 mb-1">
                         Start Date
                       </label>
                       <input
@@ -380,7 +380,7 @@ export default function AnnouncementManager() {
                     
                     {/* End Date */}
                     <div className="flex-1">
-                      <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="endDate" className="block text-sm font-medium text-gray-900 mb-1">
                         End Date (Optional)
                       </label>
                       <input
@@ -415,7 +415,7 @@ export default function AnnouncementManager() {
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                    className="flex-1 px-4 py-2 text-gray-900 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
                   >
                     Cancel
                   </button>

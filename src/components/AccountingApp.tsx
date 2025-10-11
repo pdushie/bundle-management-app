@@ -317,7 +317,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
           <div className="grid md:grid-cols-3 gap-6">
             {/* User Selection */}
             <div>
-              <label className="text-sm sm:text-base font-medium mb-2 block text-gray-700">Select User</label>
+              <label className="text-sm sm:text-base font-medium mb-2 block text-gray-900">Select User</label>
               <Select 
                 disabled={loadingUsers}
                 value={selectedUserId || undefined}
@@ -344,9 +344,9 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
 
             {/* Date Selection - Simple Input */}
             <div>
-              <label className="text-sm sm:text-base font-medium mb-2 block text-gray-700">Select Date</label>
+              <label className="text-sm sm:text-base font-medium mb-2 block text-gray-900">Select Date</label>
               <div className="flex items-center">
-                <CalendarIcon className="mr-2 h-4 w-4 text-gray-700" />
+                <CalendarIcon className="mr-2 h-4 w-4 text-gray-900" />
                 <input 
                   type="date"
                   value={selectedDate}
@@ -358,7 +358,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
                   }}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
-                <span className="ml-2 text-xs sm:text-sm text-gray-700">(UTC)</span>
+                <span className="ml-2 text-xs sm:text-sm text-gray-900">(UTC)</span>
               </div>
             </div>
 
@@ -399,11 +399,11 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
               
               <div className="bg-blue-50 p-4 rounded-lg mb-6 grid grid-cols-3 gap-4">
                 <div>
-                  <p className="text-sm text-gray-700">Total Orders</p>
+                  <p className="text-sm text-gray-900">Total Orders</p>
                   <p className="text-xl font-bold">{billData.orders.length}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-700">Total Data</p>
+                  <p className="text-sm text-gray-900">Total Data</p>
                   <p className="text-xl font-bold">
                     {billData.totalData > 1024 
                       ? `${(billData.totalData / 1024).toFixed(2)} TB` 
@@ -411,7 +411,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-700">Total Amount</p>
+                  <p className="text-sm text-gray-900">Total Amount</p>
                   <p className="text-xl font-bold text-green-700">
                     GHS {billData.totalAmount.toFixed(2)}
                   </p>
@@ -455,7 +455,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
           
           {billData && (!billData.orders || billData.orders.length === 0) && (
             <div className="mt-8 text-center p-8 border rounded-lg bg-gray-50">
-              <p className="text-gray-700">No orders found for this user on the selected date.</p>
+              <p className="text-gray-900">No orders found for this user on the selected date.</p>
             </div>
           )}
         </CardContent>
