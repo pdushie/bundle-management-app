@@ -142,19 +142,19 @@ export default function HistoryViewer() {
                   <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                   <span>Order Processing History</span>
                 </h2>
-                <p className="text-xs sm:text-sm text-gray-700 mt-1">
+                <p className="text-xs sm:text-sm text-gray-900 mt-1">
                   View detailed history of processed orders and phone numbers
                 </p>
               </div>
               <div className="mt-3 sm:mt-0 bg-blue-100 rounded-lg p-3">
                 <div className="flex items-center mb-1">
                   <Database className="h-4 w-4 text-blue-700 mr-2" />
-                  <span className="text-sm font-bold text-blue-800">Total Database Entries: {totalDatabaseEntries}</span>
+                  <span className="text-sm font-bold text-gray-900">Total Database Entries: {totalDatabaseEntries}</span>
                 </div>
                 <div className="text-xs text-blue-600">
-                  <span>Phone Entries: {phoneEntriesCount}</span>
-                  <span className="mx-1">•</span>
-                  <span>Processed Orders: {processedOrderEntriesCount}</span>
+                  <span className="text-gray-900">Phone Entries: {phoneEntriesCount}</span>
+                  <span className="mx-1 text-gray-900">•</span>
+                  <span className="text-gray-900">Processed Orders: {processedOrderEntriesCount}</span>
                 </div>
               </div>
             </div>
