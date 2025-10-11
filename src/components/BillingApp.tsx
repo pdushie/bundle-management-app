@@ -520,7 +520,7 @@ export default function BillingApp() {
                       setEntriesCurrentPage(1); // Reset to first page on search
                     }}
                   />
-                  <Search className="absolute left-2 sm:left-3 top-2.5 h-4 w-4 sm:h-5 sm:w-5 text-gray-700" />
+                  <Search className="absolute left-2 sm:left-3 top-2.5 h-4 w-4 sm:h-5 sm:w-5 text-gray-900" />
                 </div>
               </div>
 
@@ -529,24 +529,24 @@ export default function BillingApp() {
                 <table className="w-full min-w-[400px] sm:min-w-[600px]">
                   <thead className="bg-gray-50 sticky top-0">
                     <tr>
-                      <th className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">#</th>
-                      <th className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Phone</th>
-                      <th className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Data</th>
-                      <th className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
-                      <th className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Cost</th>
+                      <th className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">#</th>
+                      <th className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Phone</th>
+                      <th className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Data</th>
+                      <th className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Status</th>
+                      <th className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Cost</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {getPaginatedEntries().length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-2 sm:px-4 py-6 sm:py-8 text-center text-gray-700 text-xs sm:text-sm">
+                        <td colSpan={5} className="px-2 sm:px-4 py-6 sm:py-8 text-center text-gray-900 text-xs sm:text-sm">
                           {entriesSearchText ? 'No entries match your search' : 'No entries found'}
                         </td>
                       </tr>
                     ) : (
                       getPaginatedEntries().map((entry: any, index: number) => (
                         <tr key={`${entry.number}-${index}`} className="hover:bg-gray-50">
-                          <td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700">
+                          <td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                             {(entriesCurrentPage - 1) * entriesPerPage + index + 1}
                           </td>
                           <td className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-gray-900 break-all">{entry.number}</td>

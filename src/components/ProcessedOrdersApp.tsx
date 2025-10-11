@@ -409,7 +409,7 @@ export default function ProcessedOrdersApp() {
                       setEntriesCurrentPage(1); // Reset to first page on search
                     }}
                   />
-                  <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-700" />
+                  <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-900" />
                 </div>
               </div>
 
@@ -418,24 +418,24 @@ export default function ProcessedOrdersApp() {
                 <table className="w-full min-w-[600px]">
                   <thead className="bg-gray-50 sticky top-0">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">#</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Phone Number</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Data Allocation</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Cost</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">#</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Phone Number</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Data Allocation</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Cost</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {getPaginatedEntries().length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-4 py-8 text-center text-gray-700">
+                        <td colSpan={5} className="px-4 py-8 text-center text-gray-900">
                           {entriesSearchText ? 'No entries match your search' : 'No entries found'}
                         </td>
                       </tr>
                     ) : (
                       getPaginatedEntries().map((entry, index) => (
                         <tr key={`${entry.number}-${index}`} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-sm text-gray-700">
+                          <td className="px-4 py-3 text-sm text-gray-900">
                             {(entriesCurrentPage - 1) * entriesPerPage + index + 1}
                           </td>
                           <td className="px-4 py-3 text-sm font-medium text-gray-900">{entry.number}</td>
