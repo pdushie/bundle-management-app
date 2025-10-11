@@ -370,23 +370,23 @@ export default function BillingApp() {
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-4 sm:mb-6">
                 <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-blue-600 mb-1">Total Orders</p>
-                  <p className="text-lg sm:text-2xl font-bold">{billingData.orders.length}</p>
+                  <p className="text-xs sm:text-sm text-gray-900 mb-1">Total Orders</p>
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900">{billingData.orders.length}</p>
                 </div>
                 <div className="bg-green-50 border border-green-100 rounded-lg p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-green-600 mb-1">Processed Orders</p>
-                  <p className="text-lg sm:text-2xl font-bold">{billingData.orders.filter((order: any) => order.status === 'processed').length}</p>
-                  <p className="text-xs text-green-500 mt-1">Billable orders</p>
+                  <p className="text-xs sm:text-sm text-gray-900 mb-1">Processed Orders</p>
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900">{billingData.orders.filter((order: any) => order.status === 'processed').length}</p>
+                  <p className="text-xs text-gray-700 mt-1">Billable orders</p>
                 </div>
                 <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-yellow-600 mb-1">Pending Orders</p>
-                  <p className="text-lg sm:text-2xl font-bold">{billingData.orders.filter((order: any) => order.status === 'pending').length}</p>
-                  <p className="text-xs text-yellow-500 mt-1">Not yet billable</p>
+                  <p className="text-xs sm:text-sm text-gray-900 mb-1">Pending Orders</p>
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900">{billingData.orders.filter((order: any) => order.status === 'pending').length}</p>
+                  <p className="text-xs text-gray-700 mt-1">Not yet billable</p>
                 </div>
                 <div className="bg-purple-50 border border-purple-100 rounded-lg p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-purple-600 mb-1">Billable Amount</p>
-                  <p className="text-lg sm:text-2xl font-bold">{formatCurrency(billingData.totalAmount || 0)}</p>
-                  <p className="text-xs text-purple-500 mt-1">
+                  <p className="text-xs sm:text-sm text-gray-900 mb-1">Billable Amount</p>
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900">{formatCurrency(billingData.totalAmount || 0)}</p>
+                  <p className="text-xs text-gray-700 mt-1">
                     Processed orders only
                   </p>
                 </div>
