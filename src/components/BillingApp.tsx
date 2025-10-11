@@ -238,7 +238,7 @@ export default function BillingApp() {
             <DollarSign className="w-8 h-8 text-blue-600" />
             Billing History
           </h1>
-          <p className="text-gray-700 mt-2">
+          <p className="text-gray-900 mt-2">
             View your billing details and history
           </p>
         </div>
@@ -306,7 +306,7 @@ export default function BillingApp() {
                       const dateString = formatDateForInput(selectedDate);
                       window.location.href = `/api/billing/export?date=${dateString}`;
                     }}
-                    className="px-4 py-2 border border-gray-300 rounded-md font-medium flex items-center gap-2 hover:bg-gray-50 transition-colors"
+                    className="px-4 py-2 border border-gray-300 rounded-md font-medium flex items-center gap-2 hover:bg-gray-50 transition-colors text-gray-900"
                   >
                     <Download className="w-4 h-4" />
                     Export CSV
@@ -335,7 +335,7 @@ export default function BillingApp() {
                         alert('Failed to download PDF. Please try again.');
                       }
                     }}
-                    className="px-4 py-2 border border-gray-300 rounded-md font-medium flex items-center gap-2 hover:bg-gray-50 transition-colors"
+                    className="px-4 py-2 border border-gray-300 rounded-md font-medium flex items-center gap-2 hover:bg-gray-50 transition-colors text-gray-900"
                     style={{ marginLeft: '8px' }}
                   >
                     <Download className="w-4 h-4" />
@@ -349,7 +349,7 @@ export default function BillingApp() {
 
         {/* Billing Summary Card */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-900">
             <DollarSign className="w-6 h-6 text-green-600" />
             Billing Summary for {getFormattedDate(selectedDate)}
           </h2>
@@ -393,18 +393,18 @@ export default function BillingApp() {
               </div>
 
               {/* Orders Table */}
-              <h3 className="font-medium text-gray-700 mb-2 sm:mb-3 text-sm sm:text-base">Orders</h3>
+              <h3 className="font-medium text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Orders</h3>
               <div className="overflow-x-auto rounded-lg border border-gray-200">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">Time</th>
-                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">Order ID</th>
-                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">Entries</th>
-                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">Total Data</th>
-                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">Pricing Profile</th>
-                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">Amount</th>
+                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-900 uppercase tracking-wider">Time</th>
+                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-900 uppercase tracking-wider">Order ID</th>
+                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-900 uppercase tracking-wider">Status</th>
+                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-900 uppercase tracking-wider">Entries</th>
+                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-900 uppercase tracking-wider">Total Data</th>
+                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-900 uppercase tracking-wider">Pricing Profile</th>
+                      <th scope="col" className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-900 uppercase tracking-wider">Amount</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -415,7 +415,7 @@ export default function BillingApp() {
                         onClick={() => openOrderDetails(order)}
                         title="Click to view order entries and costs"
                       >
-                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700">{order.time}</td>
+                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">{order.time}</td>
                         <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 font-medium">
                           <div className="flex items-center gap-1 sm:gap-2">
                             <Eye className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
@@ -436,17 +436,17 @@ export default function BillingApp() {
                             <span className="text-xs">{order.status || 'Unknown'}</span>
                           </span>
                         </td>
-                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700">{order.totalCount}</td>
-                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700">
+                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">{order.totalCount}</td>
+                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">
                           {order.totalData > 1024 
                             ? `${(order.totalData / 1024).toFixed(2)} TB` 
                             : `${order.totalData.toFixed(2)} GB`}
                         </td>
-                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-700">
+                        <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">
                           {order.pricingProfileName || "Default"}
                         </td>
                         <td className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium">
-                          <span className={order.status === 'processed' ? 'text-green-600' : 'text-gray-700'}>
+                          <span className={order.status === 'processed' ? 'text-green-600' : 'text-gray-900'}>
                             {formatCurrency(order.estimatedCost || 0)}
                           </span>
                           {order.status === "pending" && <span className="text-xs text-yellow-600 block">Not billable yet</span>}
