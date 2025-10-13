@@ -372,7 +372,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
                 {loading ? (
                   <><Loader2 className="mr-2 h-4 w-4 animate-spin text-white" /> <span className="text-white">Generating...</span></>
                 ) : (
-                  <span className="text-white">Generate Bill</span>
+                  <span className="text-gray-900">Generate Bill</span>
                 )}
               </Button>
             </div>
