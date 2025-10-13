@@ -177,7 +177,7 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
             </Button>
           )}
           <div>
-            <h2 className="text-2xl font-bold">Data Allocation Dashboard</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Data Allocation Dashboard</h2>
             <p className="text-gray-900">Compare data processing between Bundle Allocator and Order System</p>
           </div>
         </div>
@@ -186,7 +186,7 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
           <div className="flex items-center gap-2">
             <Popover open={showFromCalendar} onOpenChange={setShowFromCalendar}>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
+                <Button variant="outline" className="flex items-center gap-2 text-gray-900 hover:text-gray-900">
                   <CalendarIcon className="h-4 w-4" />
                   {format(dateRange.from, 'MMM dd, yyyy')}
                 </Button>
@@ -216,7 +216,7 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
             
             <Popover open={showToCalendar} onOpenChange={setShowToCalendar}>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
+                <Button variant="outline" className="flex items-center gap-2 text-gray-900 hover:text-gray-900">
                   <CalendarIcon className="h-4 w-4" />
                   {format(dateRange.to, 'MMM dd, yyyy')}
                 </Button>
@@ -247,6 +247,7 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
             variant="outline" 
             size="sm" 
             onClick={loadDataAllocationStats}
+            className="text-gray-900 hover:text-gray-900"
           >
             <RefreshCw className="h-4 w-4" />
           </Button>
@@ -337,11 +338,11 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
             {/* Daily Data Allocation Bar Chart */}
             <Card className="relative">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-gray-900">
                   <BarChart3 className="h-5 w-5" />
                   Daily Data Allocation
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-gray-900">
                   Comparison of data processed daily by each system
                 </CardDescription>
               </CardHeader>
@@ -379,11 +380,11 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
             {/* System Distribution Pie Chart */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-gray-900">
                   <PieChart className="h-5 w-5" />
                   System Distribution
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-gray-900">
                   Total data allocation by processing system
                 </CardDescription>
               </CardHeader>
@@ -432,8 +433,8 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
           {/* Detailed Statistics Table */}
           <Card>
             <CardHeader>
-              <CardTitle>System Performance Comparison</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-gray-900">System Performance Comparison</CardTitle>
+              <CardDescription className="text-gray-900">
                 Detailed breakdown of processing statistics by system
               </CardDescription>
             </CardHeader>
@@ -442,38 +443,38 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left p-3">System</th>
-                      <th className="text-right p-3">Total Data</th>
-                      <th className="text-right p-3">Total Orders</th>
-                      <th className="text-right p-3">Total Entries</th>
-                      <th className="text-right p-3">Avg Daily Data</th>
-                      <th className="text-right p-3">Active Days</th>
+                      <th className="text-left p-3 text-gray-900 font-medium">System</th>
+                      <th className="text-right p-3 text-gray-900 font-medium">Total Data</th>
+                      <th className="text-right p-3 text-gray-900 font-medium">Total Orders</th>
+                      <th className="text-right p-3 text-gray-900 font-medium">Total Entries</th>
+                      <th className="text-right p-3 text-gray-900 font-medium">Avg Daily Data</th>
+                      <th className="text-right p-3 text-gray-900 font-medium">Active Days</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr className="border-b">
                       <td className="p-3 font-medium text-blue-700">Bundle Allocator</td>
-                      <td className="p-3 text-right">{formatDataSize(data.summary.bundleAllocator.totalDataGB)}</td>
-                      <td className="p-3 text-right">{data.summary.bundleAllocator.totalOrders.toLocaleString()}</td>
-                      <td className="p-3 text-right">{data.summary.bundleAllocator.totalEntries.toLocaleString()}</td>
-                      <td className="p-3 text-right">{formatDataSize(data.summary.bundleAllocator.avgDailyDataGB)}</td>
-                      <td className="p-3 text-right">{data.summary.bundleAllocator.daysActive}</td>
+                      <td className="p-3 text-right text-gray-900">{formatDataSize(data.summary.bundleAllocator.totalDataGB)}</td>
+                      <td className="p-3 text-right text-gray-900">{data.summary.bundleAllocator.totalOrders.toLocaleString()}</td>
+                      <td className="p-3 text-right text-gray-900">{data.summary.bundleAllocator.totalEntries.toLocaleString()}</td>
+                      <td className="p-3 text-right text-gray-900">{formatDataSize(data.summary.bundleAllocator.avgDailyDataGB)}</td>
+                      <td className="p-3 text-right text-gray-900">{data.summary.bundleAllocator.daysActive}</td>
                     </tr>
                     <tr className="border-b">
                       <td className="p-3 font-medium text-green-700">Order System</td>
-                      <td className="p-3 text-right">{formatDataSize(data.summary.orderSystem.totalDataGB)}</td>
-                      <td className="p-3 text-right">{data.summary.orderSystem.totalOrders.toLocaleString()}</td>
-                      <td className="p-3 text-right">{data.summary.orderSystem.totalEntries.toLocaleString()}</td>
-                      <td className="p-3 text-right">{formatDataSize(data.summary.orderSystem.avgDailyDataGB)}</td>
-                      <td className="p-3 text-right">{data.summary.orderSystem.daysActive}</td>
+                      <td className="p-3 text-right text-gray-900">{formatDataSize(data.summary.orderSystem.totalDataGB)}</td>
+                      <td className="p-3 text-right text-gray-900">{data.summary.orderSystem.totalOrders.toLocaleString()}</td>
+                      <td className="p-3 text-right text-gray-900">{data.summary.orderSystem.totalEntries.toLocaleString()}</td>
+                      <td className="p-3 text-right text-gray-900">{formatDataSize(data.summary.orderSystem.avgDailyDataGB)}</td>
+                      <td className="p-3 text-right text-gray-900">{data.summary.orderSystem.daysActive}</td>
                     </tr>
                     <tr className="bg-gray-50 font-bold">
                       <td className="p-3 text-purple-700">Combined Total</td>
-                      <td className="p-3 text-right">{formatDataSize(data.summary.combined.totalDataGB)}</td>
-                      <td className="p-3 text-right">{data.summary.combined.totalOrders.toLocaleString()}</td>
-                      <td className="p-3 text-right">{data.summary.combined.totalEntries.toLocaleString()}</td>
-                      <td className="p-3 text-right">{formatDataSize(data.summary.combined.avgDailyDataGB)}</td>
-                      <td className="p-3 text-right">{data.summary.combined.totalDays}</td>
+                      <td className="p-3 text-right text-gray-900">{formatDataSize(data.summary.combined.totalDataGB)}</td>
+                      <td className="p-3 text-right text-gray-900">{data.summary.combined.totalOrders.toLocaleString()}</td>
+                      <td className="p-3 text-right text-gray-900">{data.summary.combined.totalEntries.toLocaleString()}</td>
+                      <td className="p-3 text-right text-gray-900">{formatDataSize(data.summary.combined.avgDailyDataGB)}</td>
+                      <td className="p-3 text-right text-gray-900">{data.summary.combined.totalDays}</td>
                     </tr>
                   </tbody>
                 </table>

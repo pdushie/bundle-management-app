@@ -366,14 +366,14 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
             </Button>
           )}
           <div>
-            <h2 className="text-2xl font-bold">Daily Sales Overview</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Daily Sales Overview</h2>
             <p className="text-gray-900">Track sales performance by date</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button variant="outline" className="flex items-center gap-2 text-gray-900 hover:text-gray-900">
                 <CalendarIcon className="h-4 w-4" />
                 View Specific Date
               </Button>
@@ -473,8 +473,8 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
           {/* Daily Sales Table */}
           <Card>
             <CardHeader>
-              <CardTitle>Daily Sales Breakdown</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-gray-900">Daily Sales Breakdown</CardTitle>
+              <CardDescription className="text-gray-900">
                 Sales data for the last 30 days (click on any date to view details)
               </CardDescription>
             </CardHeader>
@@ -483,23 +483,23 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left p-3">Date</th>
-                      <th className="text-right p-3">Orders</th>
-                      <th className="text-right p-3">Users</th>
-                      <th className="text-right p-3">Data (GB)</th>
-                      <th className="text-right p-3">Sales</th>
-                      <th className="text-center p-3">Action</th>
+                      <th className="text-left p-3 text-gray-900 font-medium">Date</th>
+                      <th className="text-right p-3 text-gray-900 font-medium">Orders</th>
+                      <th className="text-right p-3 text-gray-900 font-medium">Users</th>
+                      <th className="text-right p-3 text-gray-900 font-medium">Data (GB)</th>
+                      <th className="text-right p-3 text-gray-900 font-medium">Sales</th>
+                      <th className="text-center p-3 text-gray-900 font-medium">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {dailySummary.dailySales.map((day) => (
                       <tr key={day.date} className="border-b hover:bg-gray-50">
-                        <td className="p-3 font-medium">
+                        <td className="p-3 font-medium text-gray-900">
                           {format(new Date(day.date), 'MMM d, yyyy')}
                         </td>
-                        <td className="p-3 text-right">{day.totalOrders}</td>
-                        <td className="p-3 text-right">{day.uniqueUsers}</td>
-                        <td className="p-3 text-right">{day.totalData.toFixed(2)}</td>
+                        <td className="p-3 text-right text-gray-900">{day.totalOrders}</td>
+                        <td className="p-3 text-right text-gray-900">{day.uniqueUsers}</td>
+                        <td className="p-3 text-right text-gray-900">{day.totalData.toFixed(2)}</td>
                         <td className="p-3 text-right font-bold text-green-700">
                           {formatCurrency(day.totalSales)}
                         </td>
@@ -508,6 +508,7 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
                             variant="outline" 
                             size="sm"
                             onClick={() => loadDailyDetails(day.date)}
+                            className="text-gray-900 hover:text-gray-900"
                           >
                             View Details
                           </Button>
