@@ -298,8 +298,8 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
         <CardHeader className="bg-blue-50">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-2xl">User Billing</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-2xl text-gray-900">User Billing</CardTitle>
+              <CardDescription className="text-gray-900">
                 Generate bills for specific users on a particular date
               </CardDescription>
             </div>
@@ -325,11 +325,11 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
               >
                 <SelectTrigger className="w-full">
                   {loadingUsers ? (
-                    <div className="flex items-center">
+                    <div className="flex items-center text-gray-900">
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Loading...
                     </div>
                   ) : (
-                    <SelectValue placeholder="Select a user" />
+                    <SelectValue placeholder="Select a user" className="text-gray-900" />
                   )}
                 </SelectTrigger>
                 <SelectContent>
@@ -370,9 +370,9 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
                 className="w-full"
               >
                 {loading ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</>
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin text-white" /> <span className="text-white">Generating...</span></>
                 ) : (
-                  'Generate Bill'
+                  <span className="text-white">Generate Bill</span>
                 )}
               </Button>
             </div>
@@ -382,15 +382,15 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
           {billData && billData.orders && billData.orders.length > 0 && (
             <div className="mt-8">
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold">
+                <h3 className="text-xl font-bold text-gray-900">
                   Bill for {billData.userName} - {selectedDate}
                 </h3>
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={exportBillAsCsv}>
+                  <Button variant="outline" onClick={exportBillAsCsv} className="text-gray-900 hover:text-gray-900">
                     <Download className="mr-2 h-4 w-4" />
                     Export CSV
                   </Button>
-                  <Button variant="outline" onClick={handleDownloadPDF}>
+                  <Button variant="outline" onClick={handleDownloadPDF} className="text-gray-900 hover:text-gray-900">
                     <FileText className="mr-2 h-4 w-4" />
                     Download PDF
                   </Button>
@@ -400,11 +400,11 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
               <div className="bg-blue-50 p-4 rounded-lg mb-6 grid grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm text-gray-900">Total Orders</p>
-                  <p className="text-xl font-bold">{billData.orders.length}</p>
+                  <p className="text-xl font-bold text-gray-900">{billData.orders.length}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-900">Total Data</p>
-                  <p className="text-xl font-bold">
+                  <p className="text-xl font-bold text-gray-900">
                     {billData.totalData > 1024 
                       ? `${(billData.totalData / 1024).toFixed(2)} TB` 
                       : `${billData.totalData.toFixed(2)} GB`}
