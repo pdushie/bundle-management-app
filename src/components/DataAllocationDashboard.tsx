@@ -348,7 +348,7 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
               <CardContent>
                 <div className="h-80">
                   {!isClient ? (
-                    <div className="flex items-center justify-center h-full text-gray-700">
+                    <div className="flex items-center justify-center h-full text-gray-900">
                       <Loader2 className="h-6 w-6 animate-spin mr-2" />
                       Loading chart...
                     </div>
@@ -390,7 +390,7 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
               <CardContent>
                 <div className="h-[420px]">
                   {!isClient ? (
-                    <div className="flex items-center justify-center h-full text-gray-700">
+                    <div className="flex items-center justify-center h-full text-gray-900">
                       <Loader2 className="h-6 w-6 animate-spin mr-2" />
                       Loading chart...
                     </div>
@@ -420,7 +420,7 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
                       </RechartsPieChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="flex items-center justify-center h-full text-gray-700">
+                    <div className="flex items-center justify-center h-full text-gray-900">
                       No data to display
                     </div>
                   )}

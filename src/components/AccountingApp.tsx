@@ -231,7 +231,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
             className={`px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-2 ${
               activeTab === 'user-billing'
                 ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-700 hover:text-gray-900'
+                : 'text-gray-900 hover:text-blue-600'
             }`}
           >
             <Receipt className="h-4 w-4" />
@@ -242,7 +242,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
             className={`px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-2 ${
               activeTab === 'daily-sales'
                 ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-700 hover:text-gray-900'
+                : 'text-gray-900 hover:text-blue-600'
             }`}
           >
             <TrendingUp className="h-4 w-4" />
@@ -253,7 +253,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
               activeTab === 'dashboard'
                 ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-700 hover:text-gray-900'
+                : 'text-gray-900 hover:text-blue-600'
             }`}
           >
             <BarChart3 className="h-4 w-4" />
@@ -264,7 +264,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
               activeTab === 'categorizer'
                 ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-700 hover:text-gray-900'
+                : 'text-gray-900 hover:text-blue-600'
             }`}
           >
             <Package2 className="h-4 w-4" />
@@ -275,7 +275,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
               activeTab === 'user-packages'
                 ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-700 hover:text-gray-900'
+                : 'text-gray-900 hover:text-blue-600'
             }`}
           >
             <User className="h-4 w-4" />
@@ -356,7 +356,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
                     const val = e.target.value;
                     setSelectedDate(val);
                   }}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium text-gray-900 placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
                 <span className="ml-2 text-xs sm:text-sm text-gray-900">(UTC)</span>
               </div>

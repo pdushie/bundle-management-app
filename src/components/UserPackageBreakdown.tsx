@@ -286,7 +286,7 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
                     <h3 className="text-lg font-bold text-blue-700">
                       {data.userName}
                     </h3>
-                    <p className="text-xs text-gray-700">
+                    <p className="text-xs text-gray-900">
                       {format(new Date(data.date), 'MMM d, yyyy')}
                     </p>
                   </div>
@@ -303,7 +303,7 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
                     <h3 className="text-2xl font-bold text-green-700">
                       {data.summary.totalPackages}
                     </h3>
-                    <p className="text-xs text-gray-700">
+                    <p className="text-xs text-gray-900">
                       {data.summary.totalQuantity} total items
                     </p>
                   </div>
@@ -393,7 +393,7 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
                             {formatCurrency(pkg.totalCost)}
                           </td>
                           <td className="p-3 text-right">
-                            <span className="text-sm text-gray-700">
+                            <span className="text-sm text-gray-900">
                               {pkg.orderIds.length} order{pkg.orderIds.length !== 1 ? 's' : ''}
                             </span>
                           </td>
@@ -424,9 +424,9 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
           ) : (
             <Card>
               <CardContent className="p-8 text-center">
-                <Package2 className="h-12 w-12 text-gray-700 mx-auto mb-4" />
+                <Package2 className="h-12 w-12 text-gray-900 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No Packages Found</h3>
-                <p className="text-gray-700">
+                <p className="text-gray-900">
                   {selectedUserName} did not purchase any data packages on {format(new Date(selectedDate), 'MMMM d, yyyy')}.
                 </p>
               </CardContent>

@@ -393,7 +393,7 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
                     </ResponsiveContainer>
                   ) : (
                     <div className="flex items-center justify-center h-full text-gray-900">
-                      No package data available for the selected date range
+                      No data available for the selected date range
                     </div>
                   )}
                 </div>
@@ -546,7 +546,7 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
                             {user.categories.slice(0, 3).map((cat) => (
                               <span 
                                 key={cat.packageSize}
-                                className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs sm:text-sm"
+                                className="px-2 py-1 bg-gray-100 text-gray-900 rounded text-xs sm:text-sm"
                               >
                                 {cat.packageSize} ({cat.quantity})
                               </span>
