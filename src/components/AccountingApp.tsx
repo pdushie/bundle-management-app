@@ -356,7 +356,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
                     const val = e.target.value;
                     setSelectedDate(val);
                   }}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium text-gray-900 placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium text-gray-900 placeholder:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
                 <span className="ml-2 text-xs sm:text-sm text-gray-900">(UTC)</span>
               </div>
@@ -422,30 +422,30 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left">Order ID</th>
-                      <th className="px-4 py-3 text-left">Time</th>
-                      <th className="px-4 py-3 text-left">Data (GB)</th>
-                      <th className="px-4 py-3 text-left">Entries</th>
-                      <th className="px-4 py-3 text-right">Amount (GHS)</th>
+                      <th className="px-4 py-3 text-left text-gray-900 font-medium">Order ID</th>
+                      <th className="px-4 py-3 text-left text-gray-900 font-medium">Time</th>
+                      <th className="px-4 py-3 text-left text-gray-900 font-medium">Data (GB)</th>
+                      <th className="px-4 py-3 text-left text-gray-900 font-medium">Entries</th>
+                      <th className="px-4 py-3 text-right text-gray-900 font-medium">Amount (GHS)</th>
                     </tr>
                   </thead>
                   <tbody>
                     {billData.orders.map((order) => (
                       <tr key={order.id} className="border-t border-gray-200">
-                        <td className="px-4 py-3 font-mono text-xs">{order.id.substring(0, 8)}...</td>
-                        <td className="px-4 py-3">{order.time}</td>
-                        <td className="px-4 py-3">{order.totalData.toFixed(2)}</td>
-                        <td className="px-4 py-3">{order.totalCount}</td>
-                        <td className="px-4 py-3 text-right font-medium">
+                        <td className="px-4 py-3 font-mono text-xs text-gray-900">{order.id.substring(0, 8)}...</td>
+                        <td className="px-4 py-3 text-gray-900">{order.time}</td>
+                        <td className="px-4 py-3 text-gray-900">{order.totalData.toFixed(2)}</td>
+                        <td className="px-4 py-3 text-gray-900">{order.totalCount}</td>
+                        <td className="px-4 py-3 text-right font-medium text-gray-900">
                           {order.estimatedCost.toFixed(2)}
                         </td>
                       </tr>
                     ))}
                     <tr className="bg-gray-50 font-bold">
-                      <td className="px-4 py-3" colSpan={2}>Total</td>
-                      <td className="px-4 py-3">{billData.totalData.toFixed(2)}</td>
+                      <td className="px-4 py-3 text-gray-900" colSpan={2}>Total</td>
+                      <td className="px-4 py-3 text-gray-900">{billData.totalData.toFixed(2)}</td>
                       <td className="px-4 py-3"></td>
-                      <td className="px-4 py-3 text-right">{billData.totalAmount.toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right text-gray-900">{billData.totalAmount.toFixed(2)}</td>
                     </tr>
                   </tbody>
                 </table>
