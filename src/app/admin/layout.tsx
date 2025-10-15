@@ -104,7 +104,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 className={`px-3 py-4 text-sm font-medium ${
                   isActive('/admin')
                     ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-700 hover:text-blue-600'
+                    : 'text-gray-900 hover:text-blue-600'
                 }`}
               >
                 <span className="flex items-center gap-2">
@@ -120,7 +120,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               className={`px-3 py-4 text-sm font-medium ${
                 isActive('/admin/announcements')
                   ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-700 hover:text-blue-600'
+                  : 'text-gray-900 hover:text-blue-600'
               }`}
             >
               <span className="flex items-center gap-2">
@@ -135,7 +135,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               className={`px-3 py-4 text-sm font-medium ${
                 isActive('/admin/chat')
                   ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-700 hover:text-blue-600'
+                  : 'text-gray-900 hover:text-blue-600'
               }`}
             >
               <span className="flex items-center gap-2 relative">

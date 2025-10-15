@@ -270,7 +270,7 @@ function HistoryManager({
               <select
                 value={selectedDate}
                 onChange={(e) => handleDateChange(e.target.value)}
-                className="w-full sm:w-auto px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full sm:w-auto px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-900"
               >
                 <option value="">All Dates</option>
                 {availableDates.map(date => (
@@ -441,6 +441,14 @@ function HistoryManager({
                           formatter={(value, name) => {
                             return [value.toLocaleString(), name];
                           }}
+                          contentStyle={{
+                            backgroundColor: 'white',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                            color: '#111827'
+                          }}
+                          labelStyle={{ color: '#111827', fontWeight: 'bold' }}
                         />
                         <Line
                           type="monotone"
@@ -492,6 +500,14 @@ function HistoryManager({
                             const numValue = Number(value);
                             return [`${numValue.toFixed(2)} TB`, name];
                           }}
+                          contentStyle={{
+                            backgroundColor: 'white',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                            color: '#111827'
+                          }}
+                          labelStyle={{ color: '#111827', fontWeight: 'bold' }}
                         />
                         <Line
                           type="monotone"
@@ -1853,14 +1869,16 @@ function BundleCategorizerApp({
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#ADD8E6',
-                        border: 'none',
+                        backgroundColor: 'white',
+                        border: '1px solid #e5e7eb',
                         borderRadius: '8px',
-                        color: 'black',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                        color: '#111827',
                         fontSize: '14px'
                       }}
                       formatter={(value) => [value, 'Count']}
                       labelFormatter={(label) => `Allocation: ${label}`}
+                      labelStyle={{ color: '#111827', fontWeight: 'bold' }}
                     />
                     <Legend />
                     <Bar

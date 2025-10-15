@@ -210,7 +210,7 @@ export default function ProcessedOrdersApp() {
                   <input
                     type="text"
                     placeholder="Filter orders..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder:text-gray-900"
                     value={filterText}
                     onChange={(e) => {
                       setFilterText(e.target.value);
@@ -402,7 +402,7 @@ export default function ProcessedOrdersApp() {
                   <input
                     type="text"
                     placeholder="Search entries by phone number, allocation, or status..."
-                    className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
+                    className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder:text-gray-900"
                     value={entriesSearchText}
                     onChange={(e) => {
                       setEntriesSearchText(e.target.value);

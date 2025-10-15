@@ -179,7 +179,7 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
             </Button>
           )}
           <div>
-            <h2 className="text-2xl font-bold">User Package Breakdown</h2>
+            <h2 className="text-2xl font-bold text-gray-900">User Package Breakdown</h2>
             <p className="text-gray-900">View data packages purchased by a specific user on a given date</p>
           </div>
         </div>
@@ -187,6 +187,7 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
           variant="outline" 
           size="sm" 
           onClick={handleRefresh}
+          className="text-gray-900 hover:text-gray-900"
         >
           <RefreshCw className="h-4 w-4" />
         </Button>
@@ -201,11 +202,11 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
       {/* User and Date Selection */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-gray-900">
             <Search className="h-5 w-5" />
             Search Criteria
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-gray-900">
             Select a user and date to view their package purchases. Recent data is more likely to be available.
           </CardDescription>
         </CardHeader>
@@ -219,13 +220,13 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
                 value={selectedUserId || undefined}
                 onValueChange={setSelectedUserId}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full text-gray-900">
                   {loadingUsers ? (
-                    <div className="flex items-center">
+                    <div className="flex items-center text-gray-900">
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Loading...
                     </div>
                   ) : (
-                    <SelectValue placeholder="Select a user" />
+                    <SelectValue placeholder="Select a user" className="text-gray-900 placeholder:text-gray-900" />
                   )}
                 </SelectTrigger>
                 <SelectContent>
@@ -248,9 +249,9 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
                   value={selectedDate}
                   max={getTodayUTC()}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium text-gray-900 placeholder:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
-                <span className="ml-2 text-xs text-gray-900">(UTC)</span>
+                <span className="ml-2 text-sm font-medium text-gray-900">(UTC)</span>
               </div>
             </div>
 
@@ -259,7 +260,7 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
               <Button 
                 onClick={loadUserPackageBreakdown} 
                 disabled={isLoading || !selectedUserId || !selectedDate}
-                className="w-full"
+                className="w-full text-gray-900"
               >
                 {isLoading ? (
                   <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading...</>
@@ -350,8 +351,8 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
           {data.packages.length > 0 ? (
             <Card>
               <CardHeader>
-                <CardTitle>Package Breakdown for {selectedUserName} on {format(new Date(data.date), 'MMMM d, yyyy')}</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-gray-900">Package Breakdown for {selectedUserName} on {format(new Date(data.date), 'MMMM d, yyyy')}</CardTitle>
+                <CardDescription className="text-gray-900">
                   Detailed breakdown of data packages purchased
                 </CardDescription>
               </CardHeader>
@@ -360,17 +361,17 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
                   <table className="w-full">
                     <thead>
                       <tr className="border-b">
-                        <th className="text-left p-3">Package Size</th>
-                        <th className="text-right p-3">Quantity</th>
-                        <th className="text-right p-3">Total Data</th>
-                        <th className="text-right p-3">Total Cost</th>
-                        <th className="text-right p-3">Orders</th>
+                        <th className="text-left p-3 text-gray-900 font-semibold">Package Size</th>
+                        <th className="text-right p-3 text-gray-900 font-semibold">Quantity</th>
+                        <th className="text-right p-3 text-gray-900 font-semibold">Total Data</th>
+                        <th className="text-right p-3 text-gray-900 font-semibold">Total Cost</th>
+                        <th className="text-right p-3 text-gray-900 font-semibold">Orders</th>
                       </tr>
                     </thead>
                     <tbody>
                       {data.packages.map((pkg, index) => (
                         <tr key={pkg.packageSize} className="border-b hover:bg-gray-50">
-                          <td className="p-3 font-medium">
+                          <td className="p-3 font-medium text-gray-900">
                             <div className="flex items-center gap-2">
                               <div 
                                 className="w-3 h-3 rounded-full"
@@ -402,7 +403,7 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
                     </tbody>
                     <tfoot>
                       <tr className="bg-gray-50 font-bold border-t-2">
-                        <td className="p-3">TOTAL</td>
+                        <td className="p-3 text-gray-900">TOTAL</td>
                         <td className="p-3 text-right text-blue-700">
                           {data.summary.totalQuantity}
                         </td>
@@ -412,7 +413,7 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
                         <td className="p-3 text-right text-green-700">
                           {formatCurrency(data.summary.totalCost)}
                         </td>
-                        <td className="p-3 text-right">
+                        <td className="p-3 text-right text-gray-900">
                           {data.summary.totalOrders}
                         </td>
                       </tr>

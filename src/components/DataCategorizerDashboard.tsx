@@ -179,7 +179,8 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="space-y-4">
+        {/* Header with title and back button */}
         <div className="flex items-center gap-4">
           {onBack && (
             <Button 
@@ -192,18 +193,20 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
             </Button>
           )}
           <div>
-            <h2 className="text-lg sm:text-2xl font-bold">Data Package Categorizer</h2>
+            <h2 className="text-lg sm:text-2xl font-bold text-gray-900">Data Package Categorizer</h2>
             <p className="text-sm sm:text-base text-gray-900">Analyze data allocation purchases by package size and user patterns</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        
+        {/* Date Range Controls */}
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Date Range Selector */}
           <div className="flex items-center gap-2">
             <Popover open={showFromCalendar} onOpenChange={setShowFromCalendar}>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
-                  <CalendarIcon className="h-4 w-4" />
-                  {format(dateRange.from, 'MMM dd, yyyy')}
+                <Button variant="outline" className="flex items-center gap-2 text-gray-900 hover:text-gray-900 w-auto min-w-0 px-3 py-2">
+                  <CalendarIcon className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">{format(dateRange.from, 'MMM dd, yyyy')}</span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent 
@@ -231,9 +234,9 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
             
             <Popover open={showToCalendar} onOpenChange={setShowToCalendar}>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
-                  <CalendarIcon className="h-4 w-4" />
-                  {format(dateRange.to, 'MMM dd, yyyy')}
+                <Button variant="outline" className="flex items-center gap-2 text-gray-900 hover:text-gray-900 w-auto min-w-0 px-3 py-2">
+                  <CalendarIcon className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">{format(dateRange.to, 'MMM dd, yyyy')}</span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent 
@@ -262,6 +265,7 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
             variant="outline" 
             size="sm" 
             onClick={loadCategorizerStats}
+            className="text-gray-900 hover:text-gray-900"
           >
             <RefreshCw className="h-4 w-4" />
           </Button>
@@ -352,11 +356,11 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
             {/* Package Category Bar Chart */}
             <Card className="relative">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-gray-900">
                   <BarChart3 className="h-5 w-5" />
                   Package Category Distribution
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-gray-900">
                   Quantity of packages purchased by size category
                 </CardDescription>
               </CardHeader>
@@ -385,6 +389,13 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
                             if (name === 'avgPrice') return [formatCurrency(value), 'Avg Price'];
                             return [value.toLocaleString(), name];
                           }}
+                          contentStyle={{
+                            backgroundColor: 'white',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            color: '#111827'
+                          }}
+                          labelStyle={{ color: '#111827' }}
                         />
                         <Legend />
                         <Bar dataKey="quantity" fill="#3b82f6" name="Total Quantity" />
@@ -403,11 +414,11 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
             {/* Category Distribution Pie Chart */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-gray-900">
                   <PieChart className="h-5 w-5" />
                   Market Share by Package Size
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-gray-900">
                   Percentage distribution of package purchases
                 </CardDescription>
               </CardHeader>
@@ -437,6 +448,13 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
                         </Pie>
                         <Tooltip 
                           formatter={(value: number) => [value.toLocaleString(), 'Purchases']}
+                          contentStyle={{
+                            backgroundColor: 'white',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            color: '#111827'
+                          }}
+                          labelStyle={{ color: '#111827' }}
                         />
                       </RechartsPieChart>
                     </ResponsiveContainer>
@@ -453,8 +471,8 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
           {/* Package Categories Table */}
           <Card>
             <CardHeader>
-              <CardTitle>Detailed Package Analysis</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-gray-900">Detailed Package Analysis</CardTitle>
+              <CardDescription className="text-gray-900">
                 Comprehensive breakdown of data package purchases by category
               </CardDescription>
             </CardHeader>
@@ -463,13 +481,13 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left p-3">Package Size</th>
-                      <th className="text-right p-3">Total Quantity</th>
-                      <th className="text-right p-3">Unique Orders</th>
-                      <th className="text-right p-3">Unique Users</th>
-                      <th className="text-right p-3">Total Value</th>
-                      <th className="text-right p-3">Avg Price</th>
-                      <th className="text-right p-3">Market Share</th>
+                      <th className="text-left p-3 text-gray-900 font-semibold">Package Size</th>
+                      <th className="text-right p-3 text-gray-900 font-semibold">Total Quantity</th>
+                      <th className="text-right p-3 text-gray-900 font-semibold">Unique Orders</th>
+                      <th className="text-right p-3 text-gray-900 font-semibold">Unique Users</th>
+                      <th className="text-right p-3 text-gray-900 font-semibold">Total Value</th>
+                      <th className="text-right p-3 text-gray-900 font-semibold">Avg Price</th>
+                      <th className="text-right p-3 text-gray-900 font-semibold">Market Share</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -479,16 +497,16 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
                       
                       return (
                         <tr key={category.packageSize} className="border-b hover:bg-gray-50">
-                          <td className="p-3 font-medium">{category.packageSize}</td>
+                          <td className="p-3 font-medium text-gray-900">{category.packageSize}</td>
                           <td className="p-3 text-right font-bold text-blue-700">
                             {category.totalQuantity.toLocaleString()}
                           </td>
-                          <td className="p-3 text-right">{category.totalOrders.toLocaleString()}</td>
-                          <td className="p-3 text-right">{category.uniqueUsers.toLocaleString()}</td>
+                          <td className="p-3 text-right text-gray-900">{category.totalOrders.toLocaleString()}</td>
+                          <td className="p-3 text-right text-gray-900">{category.uniqueUsers.toLocaleString()}</td>
                           <td className="p-3 text-right text-green-700">
                             {formatCurrency(category.totalValue)}
                           </td>
-                          <td className="p-3 text-right">{formatCurrency(category.avgPrice)}</td>
+                          <td className="p-3 text-right text-gray-900">{formatCurrency(category.avgPrice)}</td>
                           <td className="p-3 text-right">
                             <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
                               {marketShare.toFixed(1)}%
@@ -506,8 +524,8 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
           {/* Top Users Table */}
           <Card>
             <CardHeader>
-              <CardTitle>Top Users by Data Allocation</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-gray-900">Top Users by Data Allocation</CardTitle>
+              <CardDescription className="text-gray-900">
                 Users ranked by total data allocation volume
               </CardDescription>
             </CardHeader>
@@ -516,11 +534,11 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left p-3">User</th>
-                      <th className="text-right p-3">Total Orders</th>
-                      <th className="text-right p-3">Total Data</th>
-                      <th className="text-right p-3">Total Value</th>
-                      <th className="text-left p-3">Favorite Categories</th>
+                      <th className="text-left p-3 text-gray-900 font-semibold">User</th>
+                      <th className="text-right p-3 text-gray-900 font-semibold">Total Orders</th>
+                      <th className="text-right p-3 text-gray-900 font-semibold">Total Data</th>
+                      <th className="text-right p-3 text-gray-900 font-semibold">Total Value</th>
+                      <th className="text-left p-3 text-gray-900 font-semibold">Favorite Categories</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -528,11 +546,11 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
                       <tr key={`${user.userId}-${user.userEmail}-${index}`} className="border-b hover:bg-gray-50">
                         <td className="p-3">
                           <div>
-                            <div className="font-medium">{user.userName}</div>
+                            <div className="font-medium text-gray-900">{user.userName}</div>
                             <div className="text-sm text-gray-900">{user.userEmail}</div>
                           </div>
                         </td>
-                        <td className="p-3 text-right font-bold">
+                        <td className="p-3 text-right font-bold text-gray-900">
                           {user.totalOrders}
                         </td>
                         <td className="p-3 text-right text-blue-700">

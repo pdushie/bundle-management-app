@@ -225,61 +225,65 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
 
       {/* Accounting Section Tabs */}
       <div className="mb-6">
-        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+        <div className="flex flex-wrap gap-1 bg-gray-100 p-1 rounded-lg">
           <button
             onClick={() => setActiveTab('user-billing')}
-            className={`px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-2 ${
+            className={`px-2 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 sm:gap-2 flex-shrink-0 ${
               activeTab === 'user-billing'
                 ? 'bg-white text-blue-600 shadow-sm'
                 : 'text-gray-900 hover:text-blue-600'
             }`}
           >
-            <Receipt className="h-4 w-4" />
-            User Billing
+            <Receipt className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">User Billing</span>
+            <span className="sm:hidden">Billing</span>
           </button>
           <button
             onClick={() => setActiveTab('daily-sales')}
-            className={`px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-2 ${
+            className={`px-2 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 sm:gap-2 flex-shrink-0 ${
               activeTab === 'daily-sales'
                 ? 'bg-white text-blue-600 shadow-sm'
                 : 'text-gray-900 hover:text-blue-600'
             }`}
           >
-            <TrendingUp className="h-4 w-4" />
-            Daily Sales
+            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Daily Sales</span>
+            <span className="sm:hidden">Sales</span>
           </button>
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+            className={`px-2 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 sm:gap-2 flex-shrink-0 ${
               activeTab === 'dashboard'
                 ? 'bg-white text-blue-600 shadow-sm'
                 : 'text-gray-900 hover:text-blue-600'
             }`}
           >
-            <BarChart3 className="h-4 w-4" />
+            <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
             Dashboard
           </button>
           <button
             onClick={() => setActiveTab('categorizer')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+            className={`px-2 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 sm:gap-2 flex-shrink-0 ${
               activeTab === 'categorizer'
                 ? 'bg-white text-blue-600 shadow-sm'
                 : 'text-gray-900 hover:text-blue-600'
             }`}
           >
-            <Package2 className="h-4 w-4" />
-            Package Categorizer
+            <Package2 className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Package Categorizer</span>
+            <span className="sm:hidden">Categorizer</span>
           </button>
           <button
             onClick={() => setActiveTab('user-packages')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+            className={`px-2 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 sm:gap-2 flex-shrink-0 ${
               activeTab === 'user-packages'
                 ? 'bg-white text-blue-600 shadow-sm'
                 : 'text-gray-900 hover:text-blue-600'
             }`}
           >
-            <User className="h-4 w-4" />
-            User Packages
+            <User className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">User Packages</span>
+            <span className="sm:hidden">Packages</span>
           </button>
         </div>
       </div>
@@ -323,13 +327,13 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
                 value={selectedUserId || undefined}
                 onValueChange={setSelectedUserId}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full text-gray-900">
                   {loadingUsers ? (
                     <div className="flex items-center text-gray-900">
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Loading...
                     </div>
                   ) : (
-                    <SelectValue placeholder="Select a user" className="text-gray-900" />
+                    <SelectValue placeholder="Select a user" className="text-gray-900 placeholder:text-gray-900" />
                   )}
                 </SelectTrigger>
                 <SelectContent>

@@ -164,7 +164,8 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="space-y-4">
+        {/* Header with title and back button */}
         <div className="flex items-center gap-4">
           {onBack && (
             <Button 
@@ -181,16 +182,20 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
             <p className="text-gray-900">Compare data processing between Bundle Allocator and Order System</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        
+        {/* Date Range Controls */}
+        <div className="flex flex-row items-center gap-3 flex-wrap">
           {/* Date Range Selector */}
-          <div className="flex items-center gap-2">
-            <Popover open={showFromCalendar} onOpenChange={setShowFromCalendar}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2 text-gray-900 hover:text-gray-900">
-                  <CalendarIcon className="h-4 w-4" />
-                  {format(dateRange.from, 'MMM dd, yyyy')}
-                </Button>
-              </PopoverTrigger>
+          <div className="flex flex-row items-center gap-2">
+            <div className="flex items-center gap-1">
+              <label className="text-xs font-medium text-gray-700">From:</label>
+              <Popover open={showFromCalendar} onOpenChange={setShowFromCalendar}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="flex items-center gap-2 text-gray-900 hover:text-gray-900 justify-start px-3 py-2">
+                    <CalendarIcon className="h-4 w-4 flex-shrink-0" />
+                    <span className="truncate">{format(dateRange.from, 'MMM dd, yyyy')}</span>
+                  </Button>
+                </PopoverTrigger>
               <PopoverContent 
                 className="w-auto p-0 z-30 bg-white border border-gray-200 shadow-lg rounded-md" 
                 side="bottom" 
@@ -211,36 +216,38 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
                 />
               </PopoverContent>
             </Popover>
+            </div>
             
-            <span className="text-gray-900">to</span>
-            
-            <Popover open={showToCalendar} onOpenChange={setShowToCalendar}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2 text-gray-900 hover:text-gray-900">
-                  <CalendarIcon className="h-4 w-4" />
-                  {format(dateRange.to, 'MMM dd, yyyy')}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent 
-                className="w-auto p-0 z-30 bg-white border border-gray-200 shadow-lg rounded-md" 
-                side="bottom" 
-                align="center" 
-                sideOffset={12}
-                avoidCollisions={false}
-              >
-                <Calendar
-                  mode="single"
-                  selected={dateRange.to}
-                  onSelect={(date) => {
-                    if (date) {
-                      setDateRange(prev => ({ ...prev, to: date }));
-                      setShowToCalendar(false);
-                    }
-                  }}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <div className="flex items-center gap-1">
+              <label className="text-xs font-medium text-gray-700">To:</label>
+              <Popover open={showToCalendar} onOpenChange={setShowToCalendar}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="flex items-center gap-2 text-gray-900 hover:text-gray-900 justify-start px-3 py-2">
+                    <CalendarIcon className="h-4 w-4 flex-shrink-0" />
+                    <span className="truncate">{format(dateRange.to, 'MMM dd, yyyy')}</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent 
+                  className="w-auto p-0 z-30 bg-white border border-gray-200 shadow-lg rounded-md" 
+                  side="bottom" 
+                  align="center" 
+                  sideOffset={12}
+                  avoidCollisions={false}
+                >
+                  <Calendar
+                    mode="single"
+                    selected={dateRange.to}
+                    onSelect={(date) => {
+                      if (date) {
+                        setDateRange(prev => ({ ...prev, to: date }));
+                        setShowToCalendar(false);
+                      }
+                    }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
           
           <Button 
@@ -362,6 +369,14 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
                         <Tooltip 
                           formatter={(value: number, name: string) => [formatDataSize(value), name]}
                           labelFormatter={(label) => `Date: ${label}`}
+                          contentStyle={{
+                            backgroundColor: 'white',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                            color: '#111827'
+                          }}
+                          labelStyle={{ color: '#111827', fontWeight: 'bold' }}
                         />
                         <Legend />
                         <Bar dataKey="Bundle Allocator" fill="#3b82f6" />
@@ -417,6 +432,14 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
                         </Pie>
                         <Tooltip 
                           formatter={(value: number, name: string) => [formatDataSize(value), name]}
+                          contentStyle={{
+                            backgroundColor: 'white',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                            color: '#111827'
+                          }}
+                          labelStyle={{ color: '#111827', fontWeight: 'bold' }}
                         />
                       </RechartsPieChart>
                     </ResponsiveContainer>
@@ -485,8 +508,8 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
           {/* Daily Data Table */}
           <Card>
             <CardHeader>
-              <CardTitle>Daily Data Breakdown</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-gray-900">Daily Data Breakdown</CardTitle>
+              <CardDescription className="text-gray-900">
                 Day-by-day comparison of data allocation by system
               </CardDescription>
             </CardHeader>
@@ -495,17 +518,17 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left p-3">Date</th>
-                      <th className="text-right p-3">Bundle Allocator</th>
-                      <th className="text-right p-3">Order System</th>
-                      <th className="text-right p-3">Total Data</th>
-                      <th className="text-right p-3">Total Orders</th>
+                      <th className="text-left p-3 text-gray-900 font-medium">Date</th>
+                      <th className="text-right p-3 text-gray-900 font-medium">Bundle Allocator</th>
+                      <th className="text-right p-3 text-gray-900 font-medium">Order System</th>
+                      <th className="text-right p-3 text-gray-900 font-medium">Total Data</th>
+                      <th className="text-right p-3 text-gray-900 font-medium">Total Orders</th>
                     </tr>
                   </thead>
                   <tbody>
                     {data.dailyData.slice(0, 10).map((day) => (
                       <tr key={day.date} className="border-b hover:bg-gray-50">
-                        <td className="p-3 font-medium">
+                        <td className="p-3 font-medium text-gray-900">
                           {format(new Date(day.date), 'MMM d, yyyy')}
                         </td>
                         <td className="p-3 text-right text-blue-700">
@@ -514,10 +537,10 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
                         <td className="p-3 text-right text-green-700">
                           {formatDataSize(day.orderSystem.totalDataGB)}
                         </td>
-                        <td className="p-3 text-right font-bold">
+                        <td className="p-3 text-right font-bold text-gray-900">
                           {formatDataSize(day.totalDataGB)}
                         </td>
-                        <td className="p-3 text-right">
+                        <td className="p-3 text-right text-gray-900">
                           {day.totalOrders}
                         </td>
                       </tr>
