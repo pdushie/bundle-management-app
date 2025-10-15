@@ -59,8 +59,8 @@ export default withAuth(
       authorized: ({ token, req }) => {
         const { pathname } = req.nextUrl;
         
-        // Allow public routes
-        if (pathname.startsWith('/auth/') || pathname === '/') {
+        // Allow public routes (only auth pages)
+        if (pathname.startsWith('/auth/')) {
           return true;
         }
 

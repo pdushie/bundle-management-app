@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Upload, FileText, Check, Download, Phone, Database, AlertCircle, BarChart, History, Calendar, Eye, Trash2, LogOut, User, Shield, Send, FileBox, CheckCircle, DollarSign, Calculator } from "lucide-react";
 import { X } from "lucide-react";
 import { orderTrackingUtils } from "@/lib/orderTracking";
@@ -2379,18 +2380,22 @@ function AppContent() {
     );
   }
 
-  // If not authenticated, redirect will be handled by middleware
+  const router = useRouter();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (status !== "loading" && !session) {
+      router.push('/auth/signin');
+    }
+  }, [status, session, router]);
+
+  // If not authenticated, show loading while redirecting
   if (!session) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center px-4">
         <div className="text-center">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
-            <Database className="w-8 h-8 sm:w-10 sm:h-10" />
-          </div>
-          <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Access Required</h3>
-          <p className="text-sm sm:text-base text-gray-700 max-w-md mx-auto">
-            Please sign in to access the Data Processing Portal
-          </p>
+          <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-700 text-sm sm:text-base">Redirecting to login...</p>
         </div>
       </div>
     );
