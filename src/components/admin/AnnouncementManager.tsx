@@ -40,6 +40,11 @@ export default function AnnouncementManager() {
         const response = await fetch("/api/admin/announcements");
         if (!response.ok) throw new Error("Failed to fetch announcements");
         
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Invalid response format from server');
+        }
+        
         const data = await response.json();
         setAnnouncements(data.announcements || []);
       } catch (error) {
@@ -184,6 +189,11 @@ export default function AnnouncementManager() {
       });
 
       if (!response.ok) throw new Error(`Failed to ${editingAnnouncement ? "update" : "create"} announcement`);
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Invalid response format from server');
+      }
       
       const data = await response.json();
       

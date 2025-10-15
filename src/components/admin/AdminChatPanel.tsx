@@ -104,6 +104,11 @@ export default function AdminChatPanel() {
         throw new Error("Failed to fetch messages");
       }
       
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Invalid response format from server');
+      }
+      
       const data = await response.json();
       
       if (data.success && data.messages) {
@@ -142,6 +147,11 @@ export default function AdminChatPanel() {
       
       if (!response.ok) {
         throw new Error("Failed to send message");
+      }
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Invalid response format from server');
       }
       
       const data = await response.json();

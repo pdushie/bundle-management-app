@@ -39,8 +39,13 @@ export default function UserManagement() {
     try {
       const response = await fetch("/api/admin/users");
       if (response.ok) {
-        const data = await response.json();
-        setUsers(data.users);
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+          setUsers(data.users || []);
+        } else {
+          console.error('Invalid response format from server');
+        }
       }
     } catch (error) {
       console.error("Failed to fetch users:", error);

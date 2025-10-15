@@ -32,9 +32,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         const response = await fetch('/api/chat/unread');
         
         if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            setUnreadCount(data.unreadCount);
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            if (data.success) {
+              setUnreadCount(data.unreadCount);
+            }
           }
         }
       } catch (error) {

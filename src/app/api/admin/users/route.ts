@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/session-security";
 import { Pool } from "pg";
 
 const pool = new Pool({
@@ -10,10 +9,16 @@ const pool = new Pool({
 
 // Get all users for user management portal
 export async function GET() {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user || (session.user.role !== "superadmin" && session.user.role !== "admin")) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    // Use secure session validation with role checking
+    const session = await requireAdmin();
+    
+    console.log(`Admin user ${session.user.id} (${session.user.role}) accessing user list`);
+  } catch (error) {
+    console.error("Unauthorized access attempt to user list:", error);
+    return NextResponse.json({ 
+      error: error instanceof Error ? error.message : "Unauthorized access" 
+    }, { status: 401 });
   }
 
   const client = await pool.connect();

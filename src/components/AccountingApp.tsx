@@ -69,8 +69,13 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
       setLoadingUsers(true);
       const response = await fetch('/api/admin/users');
       if (response.ok) {
-        const data = await response.json();
-        setUsers(data.users);
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+          setUsers(data.users);
+        } else {
+          setErrorMessage('Invalid response format from server');
+        }
       } else {
         setErrorMessage('Failed to load users');
       }
@@ -96,6 +101,10 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
       const response = await fetch(`/api/admin/accounting/user-bill?userId=${selectedUserId}&date=${selectedDate}`);
       
       if (response.ok) {
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Invalid response format from server');
+        }
         const data = await response.json();
         console.log('Bill data received:', data);
         console.log('Username from API:', data.userName);
@@ -119,8 +128,17 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
           setErrorMessage('No orders found for this user on the selected date');
         }
       } else {
-        const errorData = await response.json();
-        setErrorMessage(errorData.error || 'Failed to fetch bill data');
+        try {
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const errorData = await response.json();
+            setErrorMessage(errorData.error || 'Failed to fetch bill data');
+          } else {
+            setErrorMessage(`Server error: ${response.status} ${response.statusText}`);
+          }
+        } catch (parseError) {
+          setErrorMessage(`Server error: ${response.status} ${response.statusText}`);
+        }
       }
     } catch (error) {
       console.error('Error fetching bill data:', error);

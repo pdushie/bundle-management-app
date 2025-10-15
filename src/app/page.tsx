@@ -2495,17 +2495,20 @@ function AppContent() {
       try {
         const response = await fetch('/api/history/load');
         if (response.ok) {
-          const data = await response.json();
-          setHistory(data.historyEntries || []);
-          
-          // Set total entries data
-          setTotalDatabaseEntries(data.totalEntries || 0);
-          setPhoneEntriesCount(data.phoneEntriesCount || 0);
-          setProcessedOrderEntriesCount(data.processedOrderEntriesCount || 0);
-          
-          console.log('Total database entries:', data.totalEntries);
-          console.log('Phone entries count:', data.phoneEntriesCount);
-          console.log('Processed order entries count:', data.processedOrderEntriesCount);
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            setHistory(data.historyEntries || []);
+            
+            // Set total entries data
+            setTotalDatabaseEntries(data.totalEntries || 0);
+            setPhoneEntriesCount(data.phoneEntriesCount || 0);
+            setProcessedOrderEntriesCount(data.processedOrderEntriesCount || 0);
+            
+            console.log('Total database entries:', data.totalEntries);
+            console.log('Phone entries count:', data.phoneEntriesCount);
+            console.log('Processed order entries count:', data.processedOrderEntriesCount);
+          }
         }
       } catch (error) {
         console.error('Failed to load history from database:', error);

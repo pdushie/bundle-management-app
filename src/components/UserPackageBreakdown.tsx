@@ -88,8 +88,13 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
       setLoadingUsers(true);
       const response = await fetch('/api/admin/users');
       if (response.ok) {
-        const data = await response.json();
-        setUsers(data.users || []);
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+          setUsers(data.users || []);
+        } else {
+          setError('Invalid response format from server');
+        }
       } else {
         setError('Failed to load users');
       }
@@ -122,6 +127,11 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
         const errorText = await response.text();
         console.error('API Error:', errorText);
         throw new Error(`Failed to load user package breakdown: ${response.status}`);
+      }
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Invalid response format from server');
       }
       
       const responseData = await response.json();

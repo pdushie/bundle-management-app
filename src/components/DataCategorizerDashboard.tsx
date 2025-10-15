@@ -125,6 +125,11 @@ export default function DataCategorizerDashboard({ onBack }: DataCategorizerDash
         throw new Error(`Failed to load data categorizer statistics: ${response.status}`);
       }
       
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Invalid response format from server');
+      }
+      
       const responseData = await response.json();
       console.log('Received categorizer data:', responseData);
       setData(responseData);

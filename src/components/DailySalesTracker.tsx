@@ -107,6 +107,11 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
         throw new Error('Failed to load daily sales summary');
       }
       
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Invalid response format from server');
+      }
+      
       const data = await response.json();
       setDailySummary(data);
     } catch (error) {
@@ -126,6 +131,11 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
       
       if (!response.ok) {
         throw new Error('Failed to load daily sales details');
+      }
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Invalid response format from server');
       }
       
       const data = await response.json();

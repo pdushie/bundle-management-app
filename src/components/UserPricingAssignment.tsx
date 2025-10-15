@@ -81,8 +81,13 @@ export default function UserPricingAssignment({ profileId, onClose }: UserPricin
       setIsLoading(true);
       const response = await fetch('/api/admin/users');
       if (response.ok) {
-        const data = await response.json();
-        setAllUsers(data.users || []);
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+          setAllUsers(data.users || []);
+        } else {
+          throw new Error('Invalid response format from server');
+        }
       }
     } catch (error) {
       console.error('Failed to fetch users:', error);

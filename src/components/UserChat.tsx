@@ -60,6 +60,11 @@ export default function UserChat() {
         throw new Error("Failed to fetch messages");
       }
       
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Invalid response format from server');
+      }
+      
       const data = await response.json();
       
       if (data.success && data.messages) {

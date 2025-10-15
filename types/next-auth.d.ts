@@ -9,6 +9,8 @@ declare module "next-auth" {
       /** The user's role. */
       role?: string
     } & DefaultSession["user"]
+    /** Session signature for security validation */
+    signature?: string
   }
 
   /**
@@ -26,5 +28,11 @@ declare module "next-auth/jwt" {
   interface JWT {
     /** The user's role. */
     role?: string
+    /** Timestamp when role was last verified */
+    roleVerifiedAt?: number
+    /** Security hash for tamper detection */
+    sec?: string
+    /** Flag indicating invalid token */
+    invalid?: boolean
   }
 }

@@ -1,28 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
+import { getSecureServerSession } from '@/lib/session-security';
 import { getCurrentTime } from '@/lib/timeService';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    console.log('=== Debug Session Route ===');
     
-    // Log session details on the server
-    console.log('Debug Session:', JSON.stringify(session, null, 2));
+    // Get raw session
+    const rawSession = await getServerSession(authOptions);
+    console.log('Raw session:', JSON.stringify(rawSession, null, 2));
     
-    return NextResponse.json({ 
-      user: session?.user || null,
-      status: session ? 'authenticated' : 'unauthenticated',
+    // Get secure session
+    const secureSession = await getSecureServerSession();
+    console.log('Secure session:', JSON.stringify(secureSession, null, 2));
+    
+    return NextResponse.json({
+      success: true,
+      rawSession: rawSession ? {
+        user: rawSession.user,
+        expires: rawSession.expires,
+        hasSignature: !!(rawSession as any).signature,
+        signature: (rawSession as any).signature
+      } : null,
+      secureSession: secureSession ? {
+        user: secureSession.user,
+        expires: secureSession.expires,
+        hasSignature: !!secureSession.signature
+      } : null,
       debug: {
         time: (await getCurrentTime()).toISOString(),
-        hasSession: !!session,
+        hasRawSession: !!rawSession,
+        hasSecureSession: !!secureSession,
       }
     });
+    
   } catch (error) {
-    console.error('Error in debug session:', error);
-    return NextResponse.json(
-      { error: 'Failed to get session debug info' },
-      { status: 500 }
-    );
+    console.error('Debug session error:', error);
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }

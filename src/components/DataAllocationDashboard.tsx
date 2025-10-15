@@ -112,6 +112,11 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
         throw new Error(`Failed to load data allocation statistics: ${response.status}`);
       }
       
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Invalid response format from server');
+      }
+      
       const responseData = await response.json();
       console.log('Received data:', responseData);
       setData(responseData);
