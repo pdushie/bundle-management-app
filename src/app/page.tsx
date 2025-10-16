@@ -420,7 +420,7 @@ function HistoryManager({
                   </div>
                   <div className="h-48 sm:h-64">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={dailySummaries.slice(-30)}>
+                      <LineChart data={dailySummaries.slice(0, 30)}>
                         <XAxis
                           dataKey="date"
                           tick={{ fontSize: 10 }}
@@ -478,7 +478,7 @@ function HistoryManager({
                   </div>
                   <div className="h-48 sm:h-64">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={dailySummaries.slice(-30)}>
+                      <LineChart data={dailySummaries.slice(0, 30)}>
                         <XAxis
                           dataKey="date"
                           tick={{ fontSize: 10 }}
