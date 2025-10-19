@@ -91,12 +91,13 @@ export const config = {
     /*
      * Match all request paths except:
      * - api/auth (NextAuth API routes)
+     * - api/announcements (public announcements endpoint)
      * - auth/signin (custom login page)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico
      * - public assets
      */
-    '/((?!api/auth|auth/signin|_next/static|_next/image|favicon.ico|public).*)',
+    '/((?!api/auth|api/announcements|auth/signin|_next/static|_next/image|favicon.ico|public).*)',
   ]
 };

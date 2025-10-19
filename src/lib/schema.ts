@@ -12,6 +12,9 @@ export const users = pgTable("users", {
   status: varchar("status").default("pending"), // 'pending', 'approved', 'rejected'
   isActive: boolean("is_active").default(true).notNull(), // Whether user account is enabled/disabled
   requestMessage: text("request_message"), // User's reason for requesting access
+  emailVerified: boolean("email_verified").default(false).notNull(), // Whether email is verified
+  verificationToken: varchar("verification_token"), // Email verification token
+  verificationTokenExpires: timestamp("verification_token_expires"), // When verification token expires
   approvedBy: text("approved_by"), // Changed to text to match actual database
   approvedAt: timestamp("approved_at", { withTimezone: true }), // Added timezone
   rejectedBy: varchar("rejected_by"), 

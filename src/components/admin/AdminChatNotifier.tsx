@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Bell } from 'lucide-react';
 
 export default function AdminChatNotifier() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const pathname = usePathname();
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [hasNewMessages, setHasNewMessages] = useState<boolean>(false);
@@ -20,8 +20,14 @@ export default function AdminChatNotifier() {
 
   // Check for new messages regularly
   useEffect(() => {
-    // Skip if not admin/superadmin or already on chat page
-    if (!session?.user || 
+    // Skip if session is still loading
+    if (status === 'loading') {
+      return;
+    }
+
+    // Skip if not authenticated or not admin/superadmin or already on chat page
+    if (status !== 'authenticated' || 
+        !session?.user || 
         (session.user.role !== 'admin' && session.user.role !== 'superadmin') ||
         isOnChatPage) {
       return;
@@ -33,10 +39,27 @@ export default function AdminChatNotifier() {
       
       setIsLoading(true);
       try {
-        const response = await fetch('/api/chat/unread');
+        const response = await fetch('/api/chat/unread', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache'
+          },
+          // Add timeout to prevent hanging requests
+          signal: AbortSignal.timeout(10000) // 10 second timeout
+        });
         
         if (!response.ok) {
-          console.error("Failed to fetch unread messages count:", response.status);
+          // Only log error if it's not a 401/403 (authentication/authorization)
+          if (response.status !== 401 && response.status !== 403) {
+            console.error("Failed to fetch unread messages count:", response.status);
+          }
+          return;
+        }
+        
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          console.error("Invalid response type from chat unread endpoint");
           return;
         }
         
@@ -55,7 +78,11 @@ export default function AdminChatNotifier() {
           setUnreadCount(data.unreadCount);
         }
       } catch (error) {
-        console.error("Error checking for new messages:", error);
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.error("Chat unread request timed out");
+        } else {
+          console.error("Error checking for new messages:", error);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -84,10 +111,12 @@ export default function AdminChatNotifier() {
       clearInterval(intervalId);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [session, unreadCount, isOnChatPage, notificationSound, isLoading]);
+  }, [session, status, unreadCount, isOnChatPage, notificationSound, isLoading]);
 
-  // Don't render anything for non-admins or if on chat page already
-  if (!session?.user || 
+  // Don't render anything if loading, not authenticated, non-admins, or if on chat page already
+  if (status === 'loading' ||
+      status !== 'authenticated' ||
+      !session?.user || 
       (session.user.role !== 'admin' && session.user.role !== 'superadmin') ||
       isOnChatPage || 
       unreadCount === 0) {

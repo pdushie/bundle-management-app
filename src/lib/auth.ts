@@ -124,6 +124,7 @@ export const authOptions: NextAuthOptions = {
   },
   providers: [
     CredentialsProvider({
+      id: "credentials",
       name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
@@ -147,6 +148,11 @@ export const authOptions: NextAuthOptions = {
           }
 
           const user = result.rows[0];
+          
+          // Check email verification first
+          if (!user.email_verified) {
+            throw new Error('Please verify your email address before signing in. Check your email for the verification link.');
+          }
           
           // Check account status
           if (user.status === 'pending') {
@@ -176,6 +182,60 @@ export const authOptions: NextAuthOptions = {
           }
 
           console.log('User authenticated:', { 
+            id: user.id, 
+            email: user.email, 
+            name: user.name, 
+            role: user.role 
+          });
+          
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role || 'user',
+          };
+        } finally {
+          client.release();
+        }
+      },
+    }),
+    CredentialsProvider({
+      id: "otp",
+      name: "otp",
+      credentials: {
+        userId: { label: "User ID", type: "text" },
+        otpCode: { label: "OTP Code", type: "text" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.userId || !credentials?.otpCode) {
+          return null;
+        }
+
+        const { OTPService } = await import('./otpService');
+        
+        // Verify and consume OTP (final verification)
+        const result = await OTPService.verifyAndConsumeOTP(credentials.userId, credentials.otpCode);
+        
+        if (!result.success) {
+          throw new Error(result.message);
+        }
+
+        // OTP verified, get user data
+        const client = await pool.connect();
+        
+        try {
+          const userResult = await client.query(
+            'SELECT id, email, name, role FROM users WHERE id = $1',
+            [credentials.userId]
+          );
+
+          if (userResult.rows.length === 0) {
+            return null;
+          }
+
+          const user = userResult.rows[0];
+          
+          console.log('OTP User authenticated:', { 
             id: user.id, 
             email: user.email, 
             name: user.name, 

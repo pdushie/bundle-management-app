@@ -21,6 +21,7 @@ interface UserData {
   email: string;
   role: string;
   status: string;
+  email_verified: boolean;
   created_at: string;
 }
 
@@ -320,6 +321,9 @@ export default function UserManagement() {
                   <th scope="col" className="px-6 py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">
                     Status
                   </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    Email
+                  </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                     Created
                   </th>
@@ -331,7 +335,7 @@ export default function UserManagement() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {users.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-10 text-center text-gray-700">
+                    <td colSpan={6} className="px-6 py-10 text-center text-gray-700">
                       No users found
                     </td>
                   </tr>
@@ -357,6 +361,19 @@ export default function UserManagement() {
                     <span className={`px-2 py-1 inline-flex text-xs sm:text-sm leading-5 font-semibold rounded-full ${getStatusBadgeColor(user.status)}`}>
                       {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      {user.email_verified ? (
+                        <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                          ✓ Verified
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                          ⚠ Pending
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                     {new Date(user.created_at).toLocaleDateString()}

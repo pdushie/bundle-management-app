@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Database, Mail, Lock, User, LogIn, UserPlus, MessageCircle } from "lucide-react";
 
 export default function SignIn() {
@@ -17,7 +17,59 @@ export default function SignIn() {
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showResendVerification, setShowResendVerification] = useState(false);
+  const [resendingVerification, setResendingVerification] = useState(false);
+  
+  // Removed OTP state - now handled by dedicated OTP verification page
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Check for verification messages from URL
+  useEffect(() => {
+    const message = searchParams.get('message');
+    if (message === 'verified') {
+      setSuccess('Email verified successfully! Your account is now pending admin approval.');
+    } else if (message === 'already-verified') {
+      setSuccess('Your email is already verified. Your account is pending admin approval.');
+    }
+  }, [searchParams]);
+
+  // OTP timer removed - handled by dedicated verification page
+
+  const handleResendVerification = async () => {
+    if (!formData.email) {
+      setError("Please enter your email address");
+      return;
+    }
+
+    setResendingVerification(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: formData.email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess("Verification email with OTP sent! Please check your email and follow the verification link.");
+        setShowResendVerification(false);
+      } else {
+        setError(data.error || "Failed to resend verification email");
+      }
+    } catch (error) {
+      setError("An error occurred. Please try again.");
+    } finally {
+      setResendingVerification(false);
+    }
+  };
+
+  // handleOTPSubmit removed - now handled by dedicated OTP verification page
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,23 +79,47 @@ export default function SignIn() {
 
     try {
       if (isLogin) {
-        // Sign in
-        const result = await signIn("credentials", {
-          email: formData.email,
-          password: formData.password,
-          redirect: false,
+        // Request OTP for login
+        const response = await fetch("/api/auth/otp/request", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password
+          }),
         });
 
-        if (result?.error) {
-          if (result.error.includes('pending approval')) {
+        const data = await response.json();
+
+        if (!response.ok) {
+          if (data.locked) {
+            setError(`Account temporarily locked. Try again in ${data.lockDuration} minutes.`);
+          } else if (data.error.includes('verify your email')) {
+            setError("Please verify your email address before signing in. Check your email for the verification link with OTP (One-Time Password).");
+            setShowResendVerification(true);
+          } else if (data.error.includes('pending approval')) {
             setError("Your account is pending approval. Please wait for admin approval.");
-          } else if (result.error.includes('rejected')) {
+          } else if (data.error.includes('rejected')) {
             setError("Your account was rejected. Please contact support.");
           } else {
-            setError("Invalid email or password");
+            setError(data.error || "Invalid email or password");
           }
         } else {
-          router.push("/");
+          // OTP sent successfully, redirect to verification page
+          const params = new URLSearchParams({
+            userId: data.userId.toString(),
+            email: formData.email
+          });
+          
+          // Include callback URL if present
+          if (searchParams.get('callbackUrl')) {
+            params.set('callbackUrl', searchParams.get('callbackUrl')!);
+          }
+          
+          router.push(`/auth/verify-otp?${params.toString()}`);
+          return;
         }
       } else {
         // Register - validate password confirmation
@@ -64,10 +140,17 @@ export default function SignIn() {
         const data = await response.json();
 
         if (response.ok) {
-          setSuccess("Registration successful! Your account is pending approval. You will be notified once approved.");
+          if (data.requiresVerification) {
+            setSuccess("Registration successful! Please check your email for a verification link with OTP. You must verify your email address before your account can be approved by an administrator.");
+          } else {
+            setSuccess("Registration successful! Your account is pending approval. You will be notified once approved.");
+          }
           setFormData({ name: "", email: "", password: "", confirmPassword: "", requestMessage: "" });
         } else {
           setError(data.error || "Registration failed");
+          if (data.resendAvailable) {
+            setShowResendVerification(true);
+          }
         }
       }
     } catch (error) {
@@ -129,6 +212,28 @@ export default function SignIn() {
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
               {error}
+              {showResendVerification && (
+                <div className="mt-3 pt-3 border-t border-red-200">
+                  <p className="text-sm text-gray-700 mb-2">
+                    Didn't receive the verification email with OTP?
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    disabled={resendingVerification}
+                    className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {resendingVerification ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                        Sending OTP...
+                      </>
+                    ) : (
+                      'Resend Verification Email with OTP'
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -174,6 +279,17 @@ export default function SignIn() {
                 />
               </div>
             </div>
+
+            {!isLogin && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                  <p className="text-sm text-blue-700">
+                    A valid email address is required for verification and receiving OTP.
+                  </p>
+                </div>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -266,6 +382,8 @@ export default function SignIn() {
               )}
             </button>
           </form>
+
+          {/* OTP UI removed - now handled by dedicated verification page */}
         </div>
       </div>
     </div>

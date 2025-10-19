@@ -38,7 +38,16 @@ interface TimeAPIResponse {
  * Fetch current UTC time from external API
  */
 async function fetchExternalTime(): Promise<Date> {
-  // First try our local server endpoint since it's most reliable
+  // Check if we're running server-side (no window object)
+  const isServerSide = typeof window === 'undefined';
+  
+  // If server-side, skip local endpoint and use server time directly
+  if (isServerSide) {
+    // We're already on the server, so just return current server time
+    return new Date();
+  }
+  
+  // Client-side: try our local server endpoint since it's most reliable
   const localEndpoint = '/api/time';
   try {
     const controller = new AbortController();
@@ -68,7 +77,7 @@ async function fetchExternalTime(): Promise<Date> {
 
   // Fallback to external services if local fails
   for (const endpoint of TIME_API_ENDPOINTS) {
-    if (endpoint === '/api/time') continue; // Already tried above
+    if (endpoint === '/api/time') continue; // Skip local endpoint in fallback loop
     
     try {
       const controller = new AbortController();

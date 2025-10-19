@@ -19,7 +19,7 @@ export async function GET() {
   
   try {
     const result = await client.query(`
-      SELECT id, name, email, request_message, created_at
+      SELECT id, name, email, request_message, email_verified, created_at
       FROM users 
       WHERE status = 'pending' 
       ORDER BY created_at ASC

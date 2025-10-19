@@ -381,9 +381,22 @@ export default function AdminDashboard() {
                           </div>
                         )}
                         
-                        <div className="flex items-center gap-2 mt-3 text-xs text-gray-700">
-                          <Calendar className="w-3 h-3" />
-                          Requested {new Date(user.created_at).toLocaleDateString()}
+                        <div className="flex items-center gap-4 mt-3 text-xs text-gray-700">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            Requested {new Date(user.created_at).toLocaleDateString()}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {(user as any).email_verified ? (
+                              <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                                ✓ Email Verified
+                              </span>
+                            ) : (
+                              <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
+                                ⚠ Email Pending
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       

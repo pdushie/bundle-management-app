@@ -45,40 +45,46 @@ export default function AnnouncementBanner() {
       // Update last fetch time
       setLastFetchTime(getCurrentTimestampSync());
       
-      // Try the admin endpoint first with more robust error handling
-      try {
-        const cacheBuster = Date.now();
-        const adminResponse = await fetch(`/api/admin/announcements?activeOnly=true&_=${cacheBuster}`, {
-          method: "GET",
-          headers: {
-            "Accept": "application/json",
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            "Pragma": "no-cache"
-          }
-        });
-        
-        if (adminResponse.ok) {
-          const contentType = adminResponse.headers.get("content-type");
-          if (contentType && contentType.includes("application/json")) {
-            const data = await adminResponse.json();
-            if (data.announcements && data.announcements.length > 0) {
-              console.log("Admin announcements data received:", data);
-              // Filter out inactive announcements immediately on client side
-              const activeAnnouncements = data.announcements.filter((ann: Announcement) => ann.isActive === true);
-              setAnnouncements(activeAnnouncements);
-              return; // Successfully got announcements from admin endpoint
+      // Try the admin endpoint first only if user is authenticated and has admin role
+      const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'superadmin';
+      
+      if (session && isAdmin) {
+        try {
+          const cacheBuster = Date.now();
+          const adminResponse = await fetch(`/api/admin/announcements?activeOnly=true&_=${cacheBuster}`, {
+            method: "GET",
+            headers: {
+              "Accept": "application/json",
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              "Pragma": "no-cache"
             }
+          });
+          
+          if (adminResponse.ok) {
+            const contentType = adminResponse.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+              const data = await adminResponse.json();
+              if (data.announcements && data.announcements.length > 0) {
+                console.log("Admin announcements data received:", data);
+                // Filter out inactive announcements immediately on client side
+                const activeAnnouncements = data.announcements.filter((ann: Announcement) => ann.isActive === true);
+                setAnnouncements(activeAnnouncements);
+                return; // Successfully got announcements from admin endpoint
+              }
+            } else {
+              console.log("Admin endpoint returned non-JSON response:", contentType);
+            }
+          } else if (adminResponse.status === 401 || adminResponse.status === 403) {
+            console.log("Admin endpoint authentication failed, falling back to public endpoint");
           } else {
-            console.log("Admin endpoint returned non-JSON response:", contentType);
+            console.log("Admin endpoint failed:", adminResponse.status, adminResponse.statusText);
           }
-        } else {
-          console.log("Admin endpoint failed:", adminResponse.status, adminResponse.statusText);
+        } catch (adminError) {
+          console.error("Error with admin announcements endpoint:", adminError);
         }
-      } catch (adminError) {
-        console.error("Error with admin announcements endpoint:", adminError);
       }
       
-      // If admin endpoint fails, try the public endpoint
+      // Try the public endpoint (always available, no authentication required)
       try {
         const cacheBuster = Date.now();
         const publicResponse = await fetch(`/api/announcements?_=${cacheBuster}`, {
@@ -87,27 +93,39 @@ export default function AnnouncementBanner() {
             "Accept": "application/json",
             "Cache-Control": "no-cache, no-store, must-revalidate",
             "Pragma": "no-cache"
-          }
+          },
+          // Add timeout to prevent hanging requests
+          signal: AbortSignal.timeout(10000) // 10 second timeout
         });
         
         if (publicResponse.ok) {
           const contentType = publicResponse.headers.get("content-type");
           if (contentType && contentType.includes("application/json")) {
             const data = await publicResponse.json();
-            if (data.announcements && data.announcements.length > 0) {
+            if (data.announcements && Array.isArray(data.announcements)) {
               console.log("Public announcements data received:", data);
               // Filter out inactive announcements immediately on client side
-              const activeAnnouncements = data.announcements.filter((ann: Announcement) => ann.isActive === true);
+              const activeAnnouncements = data.announcements.filter((ann: Announcement) => ann && ann.isActive === true);
               setAnnouncements(activeAnnouncements);
+            } else {
+              console.log("No valid announcements received from public endpoint");
+              setAnnouncements([]);
             }
           } else {
             console.log("Public endpoint returned non-JSON response:", contentType);
+            setAnnouncements([]);
           }
         } else {
           console.error("Public endpoint failed:", publicResponse.status, publicResponse.statusText);
+          setAnnouncements([]);
         }
       } catch (publicError) {
-        console.error("Error with public announcements endpoint:", publicError);
+        if (publicError instanceof Error && publicError.name === 'AbortError') {
+          console.error("Public announcements request timed out");
+        } else {
+          console.error("Error with public announcements endpoint:", publicError);
+        }
+        setAnnouncements([]);
       }
       
     } catch (error) {
@@ -165,7 +183,7 @@ export default function AnnouncementBanner() {
     // - Users (focused): 10 seconds
     // - Users (unfocused): 20 seconds (balanced between responsiveness and server load)
     let pollingInterval;
-    if (isAdmin) {
+    if (isAdmin && session) {
       pollingInterval = isWindowFocused ? 2000 : 5000;
     } else {
       pollingInterval = isWindowFocused ? 10000 : 20000;
