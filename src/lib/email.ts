@@ -71,7 +71,7 @@ export async function sendWelcomeEmail({ to, name }: { to: string; name: string 
     const { data, error } = await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL || 'Clickyfied4u <noreply@clickyfied4u.com>',
       to: [to],
-      subject: 'Welcome to Clickyf!',
+      subject: 'Welcome to Clickyfied4u!',
       html: emailHtml,
     });
 
