@@ -27,9 +27,9 @@ export const VerificationEmail: React.FC<VerificationEmailProps> = ({
       <Body style={main}>
         <Container style={container}>
           <Section style={header}>
-            <Text style={logo}>Bundle Management</Text>
+            <Text style={logo}>Clickyfied4u</Text>
             <Heading style={title}>Verify Your Email Address</Heading>
-            <Text style={subtitle}>Welcome to Bundle Management, {name}!</Text>
+            <Text style={subtitle}>Welcome to Clickyfied4u, {name}!</Text>
           </Section>
           
           <Section style={content}>
@@ -61,7 +61,7 @@ export const VerificationEmail: React.FC<VerificationEmailProps> = ({
           
           <Section style={footer}>
             <Text style={footerText}>
-              This email was sent by Bundle Management System.
+              This email was sent by Clickyfied4u.
             </Text>
             <Text style={footerText}>
               If you have any questions, please contact our support team.

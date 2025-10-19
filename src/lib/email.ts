@@ -28,7 +28,7 @@ export async function sendVerificationEmail({ to, name, verificationUrl }: Verif
     const emailHtml = await render(React.createElement(VerificationEmail, { name, verificationUrl }));
     
     const { data, error } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'Bundle Management <noreply@yourdomain.com>',
+      from: process.env.RESEND_FROM_EMAIL || 'Clickyfied4u Admin <noreply@clickyfied4u.com>',
       to: [to],
       subject: 'Verify your email address',
       html: emailHtml,
