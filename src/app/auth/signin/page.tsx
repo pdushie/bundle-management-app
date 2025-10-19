@@ -57,7 +57,7 @@ export default function SignIn() {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess("Verification email with OTP sent! Please check your email and follow the verification link.");
+        setSuccess("Verification email sent! Please check your email and follow the verification link.");
         setShowResendVerification(false);
       } else {
         setError(data.error || "Failed to resend verification email");
@@ -215,7 +215,7 @@ export default function SignIn() {
               {showResendVerification && (
                 <div className="mt-3 pt-3 border-t border-red-200">
                   <p className="text-sm text-gray-700 mb-2">
-                    Didn't receive the verification email with OTP?
+                    Didn't receive the verification email?
                   </p>
                   <button
                     type="button"
@@ -229,7 +229,7 @@ export default function SignIn() {
                         Sending OTP...
                       </>
                     ) : (
-                      'Resend Verification Email with OTP'
+                      'Resend Verification Email'
                     )}
                   </button>
                 </div>
