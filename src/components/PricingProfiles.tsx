@@ -101,16 +101,30 @@ export default function PricingProfiles() {
       const res = await fetch('/api/admin/pricing-profiles');
       
       if (!res.ok) {
-        throw new Error('Failed to fetch pricing profiles');
+        const errorText = await res.text();
+        throw new Error(`Failed to fetch pricing profiles: ${res.status} ${res.statusText}`);
       }
       
       const data = await res.json();
-      setProfiles(data.profiles || []);
+      const validProfiles = (data.profiles || []).filter((profile: any) => {
+        if (!profile) {
+          return false;
+        }
+        if (!profile.id) {
+          return false;
+        }
+        if (!profile.name) {
+          return false;
+        }
+        return true;
+      });
+      setProfiles(validProfiles);
     } catch (error) {
-      console.error('Error fetching pricing profiles:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
       toast({
         title: 'Error',
-        description: 'Failed to load pricing profiles. Please try again.',
+        description: `Failed to load pricing profiles: ${errorMessage}`,
         variant: 'destructive'
       });
     } finally {
@@ -123,7 +137,18 @@ export default function PricingProfiles() {
       const res = await fetch(`/api/admin/pricing-profiles/${profileId}`);
       
       if (!res.ok) {
-        throw new Error('Failed to fetch profile details');
+        console.warn(`Failed to fetch profile ${profileId} details: ${res.status} ${res.statusText}`);
+        
+        // Only show toast for non-auth errors to avoid disrupting the edit flow
+        if (res.status !== 401 && res.status !== 403) {
+          toast({
+            title: 'Warning',
+            description: 'Could not load full profile details. Basic editing is still available.',
+            variant: 'default'
+          });
+        }
+        
+        return null;
       }
       
       const data = await res.json();
@@ -133,11 +158,18 @@ export default function PricingProfiles() {
       return data;
     } catch (error) {
       console.error(`Error fetching profile ${profileId} details:`, error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load profile details. Please try again.',
-        variant: 'destructive'
-      });
+      
+      // Don't show error toast for network errors that might be temporary
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        // Silent fail for network errors
+      } else {
+        toast({
+          title: 'Warning',
+          description: 'Could not load full profile details. Basic editing is still available.',
+          variant: 'default'
+        });
+      }
+      
       return null;
     }
   };
@@ -181,26 +213,69 @@ export default function PricingProfiles() {
     setDialogOpen(true);
   };
 
-  const handleOpenEdit = async (profile: PricingProfile) => {
-    setIsEditing(true);
-    const data = await fetchProfileDetails(profile.id);
+  const handleOpenEdit = async (e: React.MouseEvent, profile: PricingProfile) => {
+    e.preventDefault();
+    e.stopPropagation();
     
-    if (data && data.profile) {
-      setName(data.profile.name);
-      setDescription(data.profile.description || '');
-      setBasePrice(data.profile.basePrice);
-      setDataPricePerGB(data.profile.dataPricePerGB || '');
-      setMinimumCharge(data.profile.minimumCharge);
-      setIsActive(data.profile.isActive);
-      setIsTiered(data.profile.isTiered);
-      setPricingTiers(data.profile.tiers?.length ? data.profile.tiers : [{ dataGB: '1', price: '10.00' }]);
-      setExcelFile(null);
-      setImportError('');
-      setDialogOpen(true);
+    if (!profile) {
+      const errorMsg = 'Profile parameter is null or undefined';
+      toast({
+        title: 'Error',
+        description: 'Unable to load profile data. Please try again.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    if (!profile.name) {
+      const errorMsg = `Profile ${profile.id || 'unknown'} has no name property`;
+      toast({
+        title: 'Error',
+        description: 'Profile data is corrupted. Please refresh and try again.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    setIsEditing(true);
+    setCurrentProfile(profile);
+    
+    // Set initial values from the profile data we already have
+    setName(profile.name || '');
+    setDescription(profile.description || '');
+    setBasePrice(profile.basePrice || '0.00');
+    setDataPricePerGB(profile.dataPricePerGB || '');
+    setMinimumCharge(profile.minimumCharge || '0.00');
+    setIsActive(profile.isActive ?? true);
+    setIsTiered(profile.isTiered ?? true);
+    setExcelFile(null);
+    setImportError('');
+    
+    // Always open the dialog first
+    setDialogOpen(true);
+    
+    // Try to fetch detailed profile data with tiers in the background
+    try {
+      const data = await fetchProfileDetails(profile.id);
+      
+      if (data && data.profile && data.profile.tiers) {
+        // Update with detailed tier information if available
+        setPricingTiers(data.profile.tiers.length ? data.profile.tiers : [{ dataGB: '1', price: '10.00' }]);
+      } else {
+        // Use default tiers if no detailed data available
+        setPricingTiers([{ dataGB: '1', price: '10.00' }]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch detailed profile data, using defaults:', error);
+      // Use default tiers if fetch fails
+      setPricingTiers([{ dataGB: '1', price: '10.00' }]);
     }
   };
 
-  const handleOpenUsers = async (profile: PricingProfile) => {
+  const handleOpenUsers = async (e: React.MouseEvent, profile: PricingProfile) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     const data = await fetchProfileDetails(profile.id);
     
     if (data) {
@@ -328,7 +403,10 @@ export default function PricingProfiles() {
     }
   };
 
-  const handleDeleteProfile = async (profileId: number) => {
+  const handleDeleteProfile = async (e: React.MouseEvent, profileId: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (!confirm('Are you sure you want to delete this pricing profile? This action cannot be undone.')) {
       return;
     }
@@ -370,8 +448,8 @@ export default function PricingProfiles() {
     }
   };
 
-  const assignUserToProfile = async (userId: number) => {
-    if (!currentProfile) return;
+  const assignUserToProfile = async (userId: number | undefined) => {
+    if (!currentProfile || !userId) return;
     
     try {
       const res = await fetch(`/api/admin/pricing-profiles/${currentProfile.id}/users/${userId}`, {
@@ -400,8 +478,8 @@ export default function PricingProfiles() {
     }
   };
 
-  const removeUserFromProfile = async (userId: number) => {
-    if (!currentProfile) return;
+  const removeUserFromProfile = async (userId: number | undefined) => {
+    if (!currentProfile || !userId) return;
     
     try {
       const res = await fetch(`/api/admin/pricing-profiles/${currentProfile.id}/users/${userId}`, {
@@ -431,8 +509,9 @@ export default function PricingProfiles() {
   };
 
   // Helper function to check if a user is assigned to the current profile
-  const isUserAssigned = (userId: number) => {
-    return profileUsers.some(user => user.id === userId);
+  const isUserAssigned = (userId: number | undefined) => {
+    if (!userId) return false;
+    return profileUsers.some(user => user && user.id === userId);
   };
 
   // Helper function to add pricing tier
@@ -509,7 +588,8 @@ export default function PricingProfiles() {
   };
 
   // Calculate cost for sample data - only using tier prices
-  const calculateSampleCost = (profile: PricingProfile, dataGB: number) => {
+  const calculateSampleCost = (profile: PricingProfile | null, dataGB: number) => {
+    if (!profile) return '0.00';
     // We only use tiered pricing now
     if (profile.tiers && profile.tiers.length > 0) {
       // Find the closest tier for the data amount
@@ -549,38 +629,38 @@ export default function PricingProfiles() {
       </div>
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {profiles.map(profile => (
-          <Card key={profile.id} className={`${!profile.isActive ? 'bg-gray-50 border-dashed' : ''}`}>
+        {profiles.filter(profile => profile && profile.id && profile.name !== undefined).map(profile => (
+          <Card key={profile?.id} className={`${!profile?.isActive ? 'bg-gray-50 border-dashed' : ''}`}>
             <CardHeader className="pb-2">
               <div className="flex justify-between items-start">
                 <CardTitle className="text-xl">
-                  {profile.name}
-                  {!profile.isActive && (
+                  {profile?.name || 'Unnamed Profile'}
+                  {!profile?.isActive && (
                     <span className="ml-2 text-xs sm:text-sm bg-gray-200 text-gray-700 px-2 py-1 rounded-full">
                       Inactive
                     </span>
                   )}
                 </CardTitle>
                 <div className="flex space-x-1">
-                  <Button variant="ghost" size="icon" onClick={() => handleOpenUsers(profile)}>
+                  <Button variant="ghost" size="icon" onClick={(e) => handleOpenUsers(e, profile)}>
                     <Users className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(profile)}>
+                  <Button variant="ghost" size="icon" onClick={(e) => handleOpenEdit(e, profile)}>
                     <Pencil className="h-4 w-4" />
                   </Button>
                   <Button 
                     variant="ghost" 
                     size="icon"
                     className="text-red-500"
-                    onClick={() => handleDeleteProfile(profile.id)}
+                    onClick={(e) => handleDeleteProfile(e, profile?.id)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
-              {profile.description && (
+              {profile?.description && (
                 <CardDescription className="line-clamp-2">
-                  {profile.description}
+                  {profile?.description}
                 </CardDescription>
               )}
             </CardHeader>
@@ -590,10 +670,10 @@ export default function PricingProfiles() {
                   <span className="text-muted-foreground">Pricing Type:</span>
                   <span className="font-medium">Tiered</span>
                 </div>
-                {profile.tiers && profile.tiers.length > 0 && (
+                {profile?.tiers && profile?.tiers.length > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Pricing Tiers:</span>
-                    <span className="font-medium">{profile.tiers.length} tiers</span>
+                    <span className="font-medium">{profile?.tiers?.length} tiers</span>
                   </div>
                 )}
                 <div className="pt-2 mt-2 border-t border-gray-100">
@@ -839,17 +919,17 @@ export default function PricingProfiles() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {profileUsers.map(user => (
-                      <TableRow key={user.id}>
-                        <TableCell>{user.name}</TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell className="capitalize">{user.role}</TableCell>
+                    {profileUsers.filter(user => user && user.id).map(user => (
+                      <TableRow key={user?.id}>
+                        <TableCell>{user?.name || 'Unknown'}</TableCell>
+                        <TableCell>{user?.email || 'No email'}</TableCell>
+                        <TableCell className="capitalize">{user?.role || 'user'}</TableCell>
                         <TableCell>
                           <Button 
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-red-500"
-                            onClick={() => removeUserFromProfile(user.id)}
+                            onClick={() => removeUserFromProfile(user?.id)}
                           >
                             <X className="h-4 w-4" />
                           </Button>
@@ -898,20 +978,20 @@ export default function PricingProfiles() {
                   </TableHeader>
                   <TableBody>
                     {allUsers.length > 0 ? (
-                      allUsers.map(user => (
-                        <TableRow key={user.id}>
-                          <TableCell>{user.name}</TableCell>
-                          <TableCell>{user.email}</TableCell>
-                          <TableCell className="capitalize">{user.role}</TableCell>
+                      allUsers.filter(user => user && user.id).map(user => (
+                        <TableRow key={user?.id}>
+                          <TableCell>{user?.name || 'Unknown'}</TableCell>
+                          <TableCell>{user?.email || 'No email'}</TableCell>
+                          <TableCell className="capitalize">{user?.role || 'user'}</TableCell>
                           <TableCell>
-                            {isUserAssigned(user.id) ? (
+                            {isUserAssigned(user?.id) ? (
                               <Check className="h-4 w-4 text-green-500 mx-auto" />
                             ) : (
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 className="h-8 px-2 text-xs"
-                                onClick={() => assignUserToProfile(user.id)}
+                                onClick={() => assignUserToProfile(user?.id)}
                               >
                                 Assign
                               </Button>

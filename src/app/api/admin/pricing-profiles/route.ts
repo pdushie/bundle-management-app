@@ -44,10 +44,20 @@ export async function GET(req: NextRequest) {
     });
     
     // Add tiers to each profile
-    const profilesWithTiers = profiles.map(profile => ({
-      ...profile,
-      tiers: tiersByProfile[profile.id] || []
-    }));
+    const profilesWithTiers = profiles.map(profile => {
+      // Add validation to ensure profile has required fields
+      if (!profile || !profile.id || !profile.name) {
+        console.error('Invalid profile found:', profile);
+        return null;
+      }
+      
+      return {
+        ...profile,
+        tiers: tiersByProfile[profile.id] || []
+      };
+    }).filter(Boolean); // Remove null profiles
+    
+    console.log('Profiles being returned:', profilesWithTiers.length, 'valid profiles');
     
     return NextResponse.json({ profiles: profilesWithTiers });
   } catch (error) {

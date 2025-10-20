@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { Users, Check, X, Clock, MessageCircle, Shield, Calendar, ArrowLeft, Database, User, LogOut, DollarSign } from "lucide-react";
 import UserManagement from "@/components/UserManagement";
 import PricingProfiles from "@/components/PricingProfiles";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 interface PendingUser {
   id: string;
@@ -434,7 +435,9 @@ export default function AdminDashboard() {
           <UserManagement />
         ) : (
           // Pricing Profiles Tab Content
-          <PricingProfiles />
+          <ErrorBoundary>
+            <PricingProfiles />
+          </ErrorBoundary>
         )}
       </div>
 
