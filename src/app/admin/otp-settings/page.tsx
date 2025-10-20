@@ -5,10 +5,16 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Shield, ShieldCheck, ShieldAlert, Settings, Mail, Key } from 'lucide-react';
 
+interface OTPStatus {
+  enabled: boolean;
+  message: string;
+  requiresEmailService: boolean;
+}
+
 export default function AdminOTPSettings() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [otpStatus, setOtpStatus] = useState(null);
+  const [otpStatus, setOtpStatus] = useState<OTPStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [message, setMessage] = useState('');
