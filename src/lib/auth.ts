@@ -67,7 +67,7 @@ async function verifyUserRole(userId: string): Promise<string | null> {
 
 // Build providers array conditionally based on OTP configuration
 function buildProviders() {
-  const providers = [
+  const providers: any[] = [
     CredentialsProvider({
       id: "credentials",
       name: "credentials",
