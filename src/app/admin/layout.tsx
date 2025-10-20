@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Users, Bell, ArrowLeft, Shield, MessageSquare } from 'lucide-react';
+import { Users, Bell, ArrowLeft, Shield, MessageSquare, Settings } from 'lucide-react';
 import AdminChatNotifier from '@/components/admin/AdminChatNotifier';
+import AdminOTPStatusIndicator from '@/components/admin/AdminOTPStatusIndicator';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -57,9 +58,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     return () => clearInterval(intervalId);
   }, [session]);
   
-  // Redirect non-admin users attempting to access admin-only pages
-  if (pathname !== '/admin/announcements' && pathname !== '/admin/chat' && userRole === 'admin') {
-    // For admin users, redirect to announcements page if they try to access other admin pages
+  // Redirect non-superadmin users attempting to access superadmin-only pages
+  if ((pathname !== '/admin/announcements' && pathname !== '/admin/chat') && userRole === 'admin') {
+    // For admin users, redirect to announcements page if they try to access superadmin pages
     if (typeof window !== 'undefined') {
       window.location.href = '/admin/announcements';
     }
@@ -82,8 +83,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </div>
             </div>
 
-            {/* Right side - Back to app button */}
-            <div>
+            {/* Right side - OTP Status and Back to app button */}
+            <div className="flex items-center gap-3">
+              {/* OTP Status Indicator - visible to both admin and superadmin */}
+              <AdminOTPStatusIndicator />
+              
               <Link
                 href="/"
                 className="flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-200 transition-all duration-200"
@@ -113,6 +117,23 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 <span className="flex items-center gap-2">
                   <Users className="w-4 h-4" />
                   User Management
+                </span>
+              </Link>
+            )}
+            
+            {/* Only show OTP Settings link to superadmins */}
+            {userRole === 'superadmin' && (
+              <Link
+                href="/admin/otp-settings"
+                className={`px-3 py-4 text-sm font-medium ${
+                  isActive('/admin/otp-settings')
+                    ? 'text-blue-600 border-b-2 border-blue-600'
+                    : 'text-gray-900 hover:text-blue-600'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <Settings className="w-4 h-4" />
+                  OTP Settings
                 </span>
               </Link>
             )}

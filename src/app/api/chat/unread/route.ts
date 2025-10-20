@@ -22,6 +22,8 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    console.log(`API access: /api/chat/unread by user ${session.user.id} (${session.user.role})`);
+
     // Get count of all unread messages from users
     const unreadCountResult = await neonClient`
       SELECT COUNT(*) as count

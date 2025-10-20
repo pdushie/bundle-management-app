@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Database, Mail, Lock, User, LogIn, UserPlus, MessageCircle, ShieldAlert } from "lucide-react";
+import { Database, Mail, Lock, User, LogIn, UserPlus, MessageCircle } from "lucide-react";
 
 export default function SignIn() {
   const [isLogin, setIsLogin] = useState(true);
@@ -19,28 +19,10 @@ export default function SignIn() {
   const [success, setSuccess] = useState("");
   const [showResendVerification, setShowResendVerification] = useState(false);
   const [resendingVerification, setResendingVerification] = useState(false);
-  const [isOTPEnabled, setIsOTPEnabled] = useState(true);
   
   // Removed OTP state - now handled by dedicated OTP verification page
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  // Check OTP status on component mount
-  useEffect(() => {
-    const checkOTPStatus = async () => {
-      try {
-        const response = await fetch('/api/auth/otp/status');
-        const data = await response.json();
-        setIsOTPEnabled(data.enabled);
-      } catch (error) {
-        console.error('Error checking OTP status:', error);
-        // Default to enabled if check fails
-        setIsOTPEnabled(true);
-      }
-    };
-
-    checkOTPStatus();
-  }, []);
 
   // Check for verification messages from URL
   useEffect(() => {
@@ -244,21 +226,6 @@ export default function SignIn() {
               Request Access
             </button>
           </div>
-          
-          {/* OTP Status Indicator */}
-          {!isOTPEnabled && (
-            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <div className="flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4 text-yellow-600" />
-                <p className="text-sm text-yellow-700 font-medium">
-                  Two-factor authentication is temporarily disabled
-                </p>
-              </div>
-              <p className="text-xs text-yellow-600 mt-1">
-                You can sign in with email and password only
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Form */}

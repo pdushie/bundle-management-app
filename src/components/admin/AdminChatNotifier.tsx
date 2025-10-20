@@ -38,6 +38,11 @@ export default function AdminChatNotifier() {
       if (isLoading) return;
       
       setIsLoading(true);
+      
+      // Create an AbortController for timeout (more compatible than AbortSignal.timeout)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
       try {
         const response = await fetch('/api/chat/unread', {
           method: 'GET',
@@ -45,9 +50,10 @@ export default function AdminChatNotifier() {
             'Accept': 'application/json',
             'Cache-Control': 'no-cache'
           },
-          // Add timeout to prevent hanging requests
-          signal: AbortSignal.timeout(10000) // 10 second timeout
+          signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
         
         if (!response.ok) {
           // Only log error if it's not a 401/403 (authentication/authorization)
@@ -78,8 +84,12 @@ export default function AdminChatNotifier() {
           setUnreadCount(data.unreadCount);
         }
       } catch (error) {
+        clearTimeout(timeoutId);
+        
         if (error instanceof Error && error.name === 'AbortError') {
-          console.error("Chat unread request timed out");
+          console.warn("Chat unread request timed out");
+        } else if (error instanceof TypeError && error.message === 'Failed to fetch') {
+          console.warn("Network error fetching chat unread count - server may be starting up");
         } else {
           console.error("Error checking for new messages:", error);
         }

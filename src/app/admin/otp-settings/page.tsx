@@ -20,10 +20,10 @@ export default function AdminOTPSettings() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    // Check if user is admin
+    // Check if user is superadmin only
     if (status === 'loading') return;
     
-    if (!session || (session.user?.role !== 'admin' && session.user?.role !== 'superadmin')) {
+    if (!session || session.user?.role !== 'superadmin') {
       router.push('/');
       return;
     }
@@ -75,37 +75,34 @@ export default function AdminOTPSettings() {
 
   if (status === 'loading' || isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+      <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
-  if (!session || (session.user?.role !== 'admin' && session.user?.role !== 'superadmin')) {
+  if (!session || session.user?.role !== 'superadmin') {
     return null;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-6">
-          <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg">
-                <Settings className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">OTP Settings</h1>
-                <p className="text-sm text-gray-700">Manage two-factor authentication settings</p>
-              </div>
-            </div>
+    <div>
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg">
+            <Settings className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">OTP Settings</h1>
+            <p className="text-sm text-gray-700">Manage two-factor authentication settings</p>
           </div>
         </div>
+      </div>
 
-        {/* Main Content */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-          <div className="p-6">
+      {/* Main Content */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="p-6">
             {/* Current Status */}
             <div className="mb-8">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -115,26 +112,26 @@ export default function AdminOTPSettings() {
               
               {otpStatus && (
                 <div className={`p-4 rounded-lg border-2 ${
-                  otpStatus.enabled 
+                  (otpStatus as OTPStatus).enabled 
                     ? 'bg-green-50 border-green-200' 
                     : 'bg-yellow-50 border-yellow-200'
                 }`}>
                   <div className="flex items-center gap-3">
-                    {otpStatus.enabled ? (
+                    {(otpStatus as OTPStatus).enabled ? (
                       <ShieldCheck className="w-6 h-6 text-green-600" />
                     ) : (
                       <ShieldAlert className="w-6 h-6 text-yellow-600" />
                     )}
                     <div>
                       <p className={`font-medium ${
-                        otpStatus.enabled ? 'text-green-800' : 'text-yellow-800'
+                        (otpStatus as OTPStatus).enabled ? 'text-green-800' : 'text-yellow-800'
                       }`}>
-                        {otpStatus.message}
+                        {(otpStatus as OTPStatus).message}
                       </p>
                       <p className={`text-sm ${
-                        otpStatus.enabled ? 'text-green-600' : 'text-yellow-600'
+                        (otpStatus as OTPStatus).enabled ? 'text-green-600' : 'text-yellow-600'
                       }`}>
-                        {otpStatus.enabled 
+                        {(otpStatus as OTPStatus).enabled 
                           ? 'Users must verify OTP codes sent to their email during login'
                           : 'Users can sign in with email and password only'
                         }
@@ -157,14 +154,14 @@ export default function AdminOTPSettings() {
                   onClick={toggleOTP}
                   disabled={isUpdating}
                   className={`w-full flex items-center justify-center gap-3 px-6 py-4 rounded-lg font-medium transition-all duration-200 ${
-                    otpStatus?.enabled
+                    (otpStatus as OTPStatus)?.enabled
                       ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white'
                       : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {isUpdating ? (
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  ) : otpStatus?.enabled ? (
+                  ) : (otpStatus as OTPStatus)?.enabled ? (
                     <>
                       <ShieldAlert className="w-5 h-5" />
                       Disable OTP Authentication
@@ -204,7 +201,6 @@ export default function AdminOTPSettings() {
                   </ul>
                 </div>
               </div>
-            </div>
           </div>
         </div>
       </div>
