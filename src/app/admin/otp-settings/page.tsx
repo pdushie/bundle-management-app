@@ -7,8 +7,10 @@ import { Shield, ShieldCheck, ShieldAlert, Settings, Mail, Key } from 'lucide-re
 
 interface OTPStatus {
   enabled: boolean;
-  message: string;
-  requiresEmailService: boolean;
+  message?: string;
+  requiresEmailService?: boolean;
+  source?: string;
+  canToggle?: boolean;
 }
 
 export default function AdminOTPSettings() {
@@ -33,7 +35,7 @@ export default function AdminOTPSettings() {
 
   const fetchOTPStatus = async () => {
     try {
-      const response = await fetch('/api/auth/otp/status');
+      const response = await fetch('/api/admin/otp/toggle');
       const data = await response.json();
       setOtpStatus(data);
     } catch (error) {
@@ -112,30 +114,35 @@ export default function AdminOTPSettings() {
               
               {otpStatus && (
                 <div className={`p-4 rounded-lg border-2 ${
-                  (otpStatus as OTPStatus).enabled 
+                  otpStatus.enabled 
                     ? 'bg-green-50 border-green-200' 
                     : 'bg-yellow-50 border-yellow-200'
                 }`}>
                   <div className="flex items-center gap-3">
-                    {(otpStatus as OTPStatus).enabled ? (
+                    {otpStatus.enabled ? (
                       <ShieldCheck className="w-6 h-6 text-green-600" />
                     ) : (
                       <ShieldAlert className="w-6 h-6 text-yellow-600" />
                     )}
                     <div>
                       <p className={`font-medium ${
-                        (otpStatus as OTPStatus).enabled ? 'text-green-800' : 'text-yellow-800'
+                        otpStatus.enabled ? 'text-green-800' : 'text-yellow-800'
                       }`}>
-                        {(otpStatus as OTPStatus).message}
+                        OTP Authentication is {otpStatus.enabled ? 'ENABLED' : 'DISABLED'}
                       </p>
                       <p className={`text-sm ${
-                        (otpStatus as OTPStatus).enabled ? 'text-green-600' : 'text-yellow-600'
+                        otpStatus.enabled ? 'text-green-600' : 'text-yellow-600'
                       }`}>
-                        {(otpStatus as OTPStatus).enabled 
+                        {otpStatus.enabled 
                           ? 'Users must verify OTP codes sent to their email during login'
                           : 'Users can sign in with email and password only'
                         }
                       </p>
+                      {otpStatus.source === 'vercel' && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Source: Vercel Environment Variable
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -150,29 +157,48 @@ export default function AdminOTPSettings() {
               </h2>
               
               <div className="space-y-4">
-                <button
-                  onClick={toggleOTP}
-                  disabled={isUpdating}
-                  className={`w-full flex items-center justify-center gap-3 px-6 py-4 rounded-lg font-medium transition-all duration-200 ${
-                    (otpStatus as OTPStatus)?.enabled
-                      ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white'
-                      : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  {isUpdating ? (
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  ) : (otpStatus as OTPStatus)?.enabled ? (
-                    <>
-                      <ShieldAlert className="w-5 h-5" />
-                      Disable OTP Authentication
-                    </>
-                  ) : (
-                    <>
-                      <ShieldCheck className="w-5 h-5" />
-                      Enable OTP Authentication
-                    </>
-                  )}
-                </button>
+                {otpStatus?.canToggle === false ? (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <ShieldAlert className="w-5 h-5 text-amber-600 mt-0.5" />
+                      <div className="text-sm text-amber-700">
+                        <p className="font-medium mb-2">Production Environment Detected</p>
+                        <p className="mb-2">OTP settings cannot be changed directly in production. Current status is managed via environment variables.</p>
+                        <p className="font-medium">To change OTP settings:</p>
+                        <ol className="list-decimal list-inside mt-1 space-y-1">
+                          <li>Go to your Vercel Dashboard</li>
+                          <li>Navigate to Project Settings → Environment Variables</li>
+                          <li>Update the <code className="bg-amber-100 px-1 rounded">ENABLE_OTP</code> variable</li>
+                          <li>Redeploy your application</li>
+                        </ol>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={toggleOTP}
+                    disabled={isUpdating}
+                    className={`w-full flex items-center justify-center gap-3 px-6 py-4 rounded-lg font-medium transition-all duration-200 ${
+                      otpStatus?.enabled
+                        ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white'
+                        : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    {isUpdating ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    ) : otpStatus?.enabled ? (
+                      <>
+                        <ShieldAlert className="w-5 h-5" />
+                        Disable OTP Authentication
+                      </>
+                    ) : (
+                      <>
+                        <ShieldCheck className="w-5 h-5" />
+                        Enable OTP Authentication
+                      </>
+                    )}
+                  </button>
+                )}
 
                 {/* Message */}
                 {message && (

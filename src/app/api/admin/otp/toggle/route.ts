@@ -15,7 +15,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Read current .env.local file
+    // Check if we're running on Vercel (serverless environment)
+    const isVercel = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+    
+    if (isVercel) {
+      return NextResponse.json(
+        { 
+          error: 'OTP settings cannot be changed in production environment',
+          message: 'Please update the ENABLE_OTP environment variable in your Vercel dashboard',
+          currentValue: process.env.ENABLE_OTP || 'true'
+        },
+        { status: 400 }
+      );
+    }
+
+    // Read current .env.local file (local development only)
     const envPath = path.join(process.cwd(), '.env.local');
     let envContent = '';
     
@@ -69,6 +83,27 @@ export async function POST(request: NextRequest) {
     
   } catch (error) {
     console.error('Error toggling OTP:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET() {
+  try {
+    // Get current OTP status from environment variable
+    const enableOTP = process.env.ENABLE_OTP;
+    const isEnabled = enableOTP ? enableOTP.toLowerCase() === 'true' : true; // Default to true if not set
+    
+    return NextResponse.json({
+      enabled: isEnabled,
+      source: process.env.VERCEL === '1' ? 'vercel' : 'local',
+      canToggle: process.env.VERCEL !== '1' && process.env.NODE_ENV !== 'production'
+    });
+    
+  } catch (error) {
+    console.error('Error getting OTP status:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
