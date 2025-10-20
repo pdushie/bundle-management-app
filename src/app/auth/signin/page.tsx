@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Database, Mail, Lock, User, LogIn, UserPlus, MessageCircle } from "lucide-react";
+import { Database, Mail, Lock, User, LogIn, UserPlus, MessageCircle, ShieldAlert } from "lucide-react";
 
 export default function SignIn() {
   const [isLogin, setIsLogin] = useState(true);
@@ -19,10 +19,28 @@ export default function SignIn() {
   const [success, setSuccess] = useState("");
   const [showResendVerification, setShowResendVerification] = useState(false);
   const [resendingVerification, setResendingVerification] = useState(false);
+  const [isOTPEnabled, setIsOTPEnabled] = useState(true);
   
   // Removed OTP state - now handled by dedicated OTP verification page
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Check OTP status on component mount
+  useEffect(() => {
+    const checkOTPStatus = async () => {
+      try {
+        const response = await fetch('/api/auth/otp/status');
+        const data = await response.json();
+        setIsOTPEnabled(data.enabled);
+      } catch (error) {
+        console.error('Error checking OTP status:', error);
+        // Default to enabled if check fails
+        setIsOTPEnabled(true);
+      }
+    };
+
+    checkOTPStatus();
+  }, []);
 
   // Check for verification messages from URL
   useEffect(() => {
@@ -79,47 +97,68 @@ export default function SignIn() {
 
     try {
       if (isLogin) {
-        // Request OTP for login
-        const response = await fetch("/api/auth/otp/request", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
+        // Check if OTP is enabled
+        const otpCheckResponse = await fetch("/api/auth/otp/status");
+        const otpStatus = await otpCheckResponse.json();
+        
+        if (!otpStatus.enabled) {
+          // OTP is disabled, use regular credentials authentication
+          const result = await signIn("credentials", {
             email: formData.email,
-            password: formData.password
-          }),
-        });
+            password: formData.password,
+            redirect: false,
+          });
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          if (data.locked) {
-            setError(`Account temporarily locked. Try again in ${data.lockDuration} minutes.`);
-          } else if (data.error.includes('verify your email')) {
-            setError("Please verify your email address before signing in. Check your email for the verification link with OTP (One-Time Password).");
-            setShowResendVerification(true);
-          } else if (data.error.includes('pending approval')) {
-            setError("Your account is pending approval. Please wait for admin approval.");
-          } else if (data.error.includes('rejected')) {
-            setError("Your account was rejected. Please contact support.");
-          } else {
-            setError(data.error || "Invalid email or password");
+          if (result?.error) {
+            setError(result.error);
+          } else if (result?.ok) {
+            // Success - redirect to dashboard
+            router.push("/");
+            return;
           }
         } else {
-          // OTP sent successfully, redirect to verification page
-          const params = new URLSearchParams({
-            userId: data.userId.toString(),
-            email: formData.email
+          // OTP is enabled, request OTP for login
+          const response = await fetch("/api/auth/otp/request", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: formData.email,
+              password: formData.password
+            }),
           });
-          
-          // Include callback URL if present
-          if (searchParams.get('callbackUrl')) {
-            params.set('callbackUrl', searchParams.get('callbackUrl')!);
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            if (data.locked) {
+              setError(`Account temporarily locked. Try again in ${data.lockDuration} minutes.`);
+            } else if (data.error.includes('verify your email')) {
+              setError("Please verify your email address before signing in. Check your email for the verification link with OTP (One-Time Password).");
+              setShowResendVerification(true);
+            } else if (data.error.includes('pending approval')) {
+              setError("Your account is pending approval. Please wait for admin approval.");
+            } else if (data.error.includes('rejected')) {
+              setError("Your account was rejected. Please contact support.");
+            } else {
+              setError(data.error || "Invalid email or password");
+            }
+          } else {
+            // OTP sent successfully, redirect to verification page
+            const params = new URLSearchParams({
+              userId: data.userId.toString(),
+              email: formData.email
+            });
+            
+            // Include callback URL if present
+            if (searchParams.get('callbackUrl')) {
+              params.set('callbackUrl', searchParams.get('callbackUrl')!);
+            }
+            
+            router.push(`/auth/verify-otp?${params.toString()}`);
+            return;
           }
-          
-          router.push(`/auth/verify-otp?${params.toString()}`);
-          return;
         }
       } else {
         // Register - validate password confirmation
@@ -205,6 +244,21 @@ export default function SignIn() {
               Request Access
             </button>
           </div>
+          
+          {/* OTP Status Indicator */}
+          {!isOTPEnabled && (
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-yellow-600" />
+                <p className="text-sm text-yellow-700 font-medium">
+                  Two-factor authentication is temporarily disabled
+                </p>
+              </div>
+              <p className="text-xs text-yellow-600 mt-1">
+                You can sign in with email and password only
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Form */}

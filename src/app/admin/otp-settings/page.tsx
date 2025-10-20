@@ -1,0 +1,207 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { Shield, ShieldCheck, ShieldAlert, Settings, Mail, Key } from 'lucide-react';
+
+export default function AdminOTPSettings() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [otpStatus, setOtpStatus] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    // Check if user is admin
+    if (status === 'loading') return;
+    
+    if (!session || (session.user?.role !== 'admin' && session.user?.role !== 'superadmin')) {
+      router.push('/');
+      return;
+    }
+
+    fetchOTPStatus();
+  }, [session, status, router]);
+
+  const fetchOTPStatus = async () => {
+    try {
+      const response = await fetch('/api/auth/otp/status');
+      const data = await response.json();
+      setOtpStatus(data);
+    } catch (error) {
+      console.error('Error fetching OTP status:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const toggleOTP = async () => {
+    setIsUpdating(true);
+    setMessage('');
+
+    try {
+      const response = await fetch('/api/admin/otp/toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage(data.message);
+        await fetchOTPStatus(); // Refresh status
+        
+        // Auto-hide message after 3 seconds
+        setTimeout(() => setMessage(''), 3000);
+      } else {
+        setMessage(data.error || 'Failed to toggle OTP settings');
+      }
+    } catch (error) {
+      setMessage('An error occurred while updating OTP settings');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  if (status === 'loading' || isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!session || (session.user?.role !== 'admin' && session.user?.role !== 'superadmin')) {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-6">
+          <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg">
+                <Settings className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">OTP Settings</h1>
+                <p className="text-sm text-gray-700">Manage two-factor authentication settings</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+          <div className="p-6">
+            {/* Current Status */}
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Shield className="w-5 h-5" />
+                Current OTP Status
+              </h2>
+              
+              {otpStatus && (
+                <div className={`p-4 rounded-lg border-2 ${
+                  otpStatus.enabled 
+                    ? 'bg-green-50 border-green-200' 
+                    : 'bg-yellow-50 border-yellow-200'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    {otpStatus.enabled ? (
+                      <ShieldCheck className="w-6 h-6 text-green-600" />
+                    ) : (
+                      <ShieldAlert className="w-6 h-6 text-yellow-600" />
+                    )}
+                    <div>
+                      <p className={`font-medium ${
+                        otpStatus.enabled ? 'text-green-800' : 'text-yellow-800'
+                      }`}>
+                        {otpStatus.message}
+                      </p>
+                      <p className={`text-sm ${
+                        otpStatus.enabled ? 'text-green-600' : 'text-yellow-600'
+                      }`}>
+                        {otpStatus.enabled 
+                          ? 'Users must verify OTP codes sent to their email during login'
+                          : 'Users can sign in with email and password only'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Controls */}
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Key className="w-5 h-5" />
+                OTP Controls
+              </h2>
+              
+              <div className="space-y-4">
+                <button
+                  onClick={toggleOTP}
+                  disabled={isUpdating}
+                  className={`w-full flex items-center justify-center gap-3 px-6 py-4 rounded-lg font-medium transition-all duration-200 ${
+                    otpStatus?.enabled
+                      ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white'
+                      : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {isUpdating ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  ) : otpStatus?.enabled ? (
+                    <>
+                      <ShieldAlert className="w-5 h-5" />
+                      Disable OTP Authentication
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-5 h-5" />
+                      Enable OTP Authentication
+                    </>
+                  )}
+                </button>
+
+                {/* Message */}
+                {message && (
+                  <div className={`p-4 rounded-lg ${
+                    message.includes('error') || message.includes('Failed')
+                      ? 'bg-red-50 border border-red-200 text-red-700'
+                      : 'bg-blue-50 border border-blue-200 text-blue-700'
+                  }`}>
+                    {message}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Information */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <Mail className="w-5 h-5 text-blue-600 mt-0.5" />
+                <div className="text-sm text-blue-700">
+                  <p className="font-medium mb-2">Important Notes:</p>
+                  <ul className="space-y-1 list-disc list-inside">
+                    <li><strong>When enabled:</strong> All users must verify OTP codes sent to their email during login</li>
+                    <li><strong>When disabled:</strong> Users can sign in with email and password only (emergency fallback)</li>
+                    <li><strong>Use case:</strong> Disable OTP temporarily when email service is down to maintain system availability</li>
+                    <li><strong>Security:</strong> Enable OTP as soon as email service is restored for maximum security</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -3,6 +3,7 @@ import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 import { OTPService } from '@/lib/otpService';
 import { sendOTPEmail } from '@/lib/email';
+import { OTPConfig } from '@/lib/otpConfig';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -11,6 +12,14 @@ const pool = new Pool({
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if OTP is enabled
+    if (!OTPConfig.isEnabled()) {
+      return NextResponse.json(
+        { error: 'OTP authentication is currently disabled. Please use regular sign-in.' },
+        { status: 400 }
+      );
+    }
+
     const { email, password } = await request.json();
 
     if (!email || !password) {

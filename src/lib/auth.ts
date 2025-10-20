@@ -4,6 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { getServerSession } from 'next-auth/next'
 import { Pool } from 'pg';
 import bcrypt from "bcryptjs";
+import { OTPConfig } from './otpConfig';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -64,65 +65,9 @@ async function verifyUserRole(userId: string): Promise<string | null> {
   }
 }
 
-export const authOptions: NextAuthOptions = {
-  session: {
-    strategy: "jwt",
-    maxAge: 2 * 60 * 60, // 2 hours
-    updateAge: 30 * 60, // Update session every 30 minutes on activity
-  },
-  secret: process.env.NEXTAUTH_SECRET,
-  
-  // Enable JWT encryption for additional security
-  jwt: {
-    secret: process.env.NEXTAUTH_SECRET,
-    maxAge: 2 * 60 * 60, // 2 hours
-    // Add encryption options
-    encode: async (params) => {
-      // Use default NextAuth JWT encoding with encryption
-      const { encode } = await import('next-auth/jwt');
-      return encode({
-        ...params,
-        secret: process.env.NEXTAUTH_SECRET!,
-        // Add additional security headers
-        token: {
-          ...params.token,
-          // Add timestamp for additional validation
-          iat: Math.floor(Date.now() / 1000),
-          // Add a security hash based on user ID and role
-          sec: params.token?.id ? 
-            require('crypto').createHash('sha256')
-              .update(`${params.token.id}:${params.token.role}:${process.env.NEXTAUTH_SECRET}`)
-              .digest('hex').substring(0, 16) : undefined
-        }
-      });
-    },
-    decode: async (params) => {
-      const { decode } = await import('next-auth/jwt');
-      const token = await decode({
-        ...params,
-        secret: process.env.NEXTAUTH_SECRET!
-      });
-      
-      // Verify the security hash if token exists
-      if (token?.id && token?.role && token?.sec) {
-        const expectedHash = require('crypto').createHash('sha256')
-          .update(`${token.id}:${token.role}:${process.env.NEXTAUTH_SECRET}`)
-          .digest('hex').substring(0, 16);
-          
-        if (token.sec !== expectedHash) {
-          console.error('JWT security hash mismatch - possible tampering detected');
-          return null;
-        }
-      }
-      
-      return token;
-    }
-  },
-  pages: {
-    signIn: "/auth/signin",
-    error: "/auth/error",
-  },
-  providers: [
+// Build providers array conditionally based on OTP configuration
+function buildProviders() {
+  const providers = [
     CredentialsProvider({
       id: "credentials",
       name: "credentials",
@@ -198,62 +143,131 @@ export const authOptions: NextAuthOptions = {
           client.release();
         }
       },
-    }),
-    CredentialsProvider({
-      id: "otp",
-      name: "otp",
-      credentials: {
-        userId: { label: "User ID", type: "text" },
-        otpCode: { label: "OTP Code", type: "text" }
-      },
-      async authorize(credentials) {
-        if (!credentials?.userId || !credentials?.otpCode) {
-          return null;
-        }
+    })
+  ];
 
-        const { OTPService } = await import('./otpService');
-        
-        // Verify and consume OTP (final verification)
-        const result = await OTPService.verifyAndConsumeOTP(credentials.userId, credentials.otpCode);
-        
-        if (!result.success) {
-          throw new Error(result.message);
-        }
-
-        // OTP verified, get user data
-        const client = await pool.connect();
-        
-        try {
-          const userResult = await client.query(
-            'SELECT id, email, name, role FROM users WHERE id = $1',
-            [credentials.userId]
-          );
-
-          if (userResult.rows.length === 0) {
+  // Only add OTP provider if OTP is enabled
+  if (OTPConfig.isEnabled()) {
+    providers.push(
+      CredentialsProvider({
+        id: "otp",
+        name: "otp",
+        credentials: {
+          userId: { label: "User ID", type: "text" },
+          otpCode: { label: "OTP Code", type: "text" }
+        },
+        async authorize(credentials) {
+          if (!credentials?.userId || !credentials?.otpCode) {
             return null;
           }
 
-          const user = userResult.rows[0];
+          const { OTPService } = await import('./otpService');
           
-          console.log('OTP User authenticated:', { 
-            id: user.id, 
-            email: user.email, 
-            name: user.name, 
-            role: user.role 
-          });
+          // Verify and consume OTP (final verification)
+          const result = await OTPService.verifyAndConsumeOTP(credentials.userId, credentials.otpCode);
           
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role || 'user',
-          };
-        } finally {
-          client.release();
+          if (!result.success) {
+            throw new Error(result.message);
+          }
+
+          // OTP verified, get user data
+          const client = await pool.connect();
+          
+          try {
+            const userResult = await client.query(
+              'SELECT id, email, name, role FROM users WHERE id = $1',
+              [credentials.userId]
+            );
+
+            if (userResult.rows.length === 0) {
+              return null;
+            }
+
+            const user = userResult.rows[0];
+            
+            console.log('OTP User authenticated:', { 
+              id: user.id, 
+              email: user.email, 
+              name: user.name, 
+              role: user.role 
+            });
+            
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: user.role || 'user',
+            };
+          } finally {
+            client.release();
+          }
+        },
+      })
+    );
+  }
+
+  return providers;
+}
+
+export const authOptions: NextAuthOptions = {
+  session: {
+    strategy: "jwt",
+    maxAge: 2 * 60 * 60, // 2 hours
+    updateAge: 30 * 60, // Update session every 30 minutes on activity
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+  
+  // Enable JWT encryption for additional security
+  jwt: {
+    secret: process.env.NEXTAUTH_SECRET,
+    maxAge: 2 * 60 * 60, // 2 hours
+    // Add encryption options
+    encode: async (params) => {
+      // Use default NextAuth JWT encoding with encryption
+      const { encode } = await import('next-auth/jwt');
+      return encode({
+        ...params,
+        secret: process.env.NEXTAUTH_SECRET!,
+        // Add additional security headers
+        token: {
+          ...params.token,
+          // Add timestamp for additional validation
+          iat: Math.floor(Date.now() / 1000),
+          // Add a security hash based on user ID and role
+          sec: params.token?.id ? 
+            require('crypto').createHash('sha256')
+              .update(`${params.token.id}:${params.token.role}:${process.env.NEXTAUTH_SECRET}`)
+              .digest('hex').substring(0, 16) : undefined
         }
-      },
-    }),
-  ],
+      });
+    },
+    decode: async (params) => {
+      const { decode } = await import('next-auth/jwt');
+      const token = await decode({
+        ...params,
+        secret: process.env.NEXTAUTH_SECRET!
+      });
+      
+      // Verify the security hash if token exists
+      if (token?.id && token?.role && token?.sec) {
+        const expectedHash = require('crypto').createHash('sha256')
+          .update(`${token.id}:${token.role}:${process.env.NEXTAUTH_SECRET}`)
+          .digest('hex').substring(0, 16);
+          
+        if (token.sec !== expectedHash) {
+          console.error('JWT security hash mismatch - possible tampering detected');
+          return null;
+        }
+      }
+      
+      return token;
+    }
+  },
+  pages: {
+    signIn: "/auth/signin",
+    error: "/auth/error",
+  },
+  providers: buildProviders(),
   callbacks: {
     async jwt({ token, user, trigger }) {
       // On initial sign in

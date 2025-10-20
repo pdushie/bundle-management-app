@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { OTPService } from '@/lib/otpService';
+import { OTPConfig } from '@/lib/otpConfig';
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if OTP is enabled
+    if (!OTPConfig.isEnabled()) {
+      return NextResponse.json(
+        { error: 'OTP authentication is currently disabled.' },
+        { status: 400 }
+      );
+    }
+
     const body = await request.json();
     console.log('OTP Verify Request Body:', body);
     
