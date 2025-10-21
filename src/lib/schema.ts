@@ -20,6 +20,7 @@ export const users = pgTable("users", {
   rejectedBy: varchar("rejected_by"), 
   rejectedAt: timestamp("rejected_at"),
   rejectionReason: text("rejection_reason"), // Admin's reason for rejection
+  minimumOrderEntries: integer("minimum_order_entries").default(1).notNull(), // Minimum number of entries required in an order
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(), // Added missing field
 });

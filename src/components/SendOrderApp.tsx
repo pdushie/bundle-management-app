@@ -9,6 +9,7 @@ import { useSession } from "next-auth/react";
 import { notifyOrderSent, notifyCountUpdated } from "../lib/orderNotifications";
 import { getCurrentUserPricing, calculatePrice } from "../lib/pricingClient";
 import { getCurrentTimeSync, getCurrentDateStringSync, getCurrentTimeStringSync, getCurrentTimestampSync } from "../lib/timeService";
+import { validateOrderPricing, hasPricingForAllocation } from "../lib/entryCostCalculator";
 
 type OrderStatus = "idle" | "preparing" | "sending" | "success" | "error";
 
@@ -65,6 +66,7 @@ export default function SendOrderApp() {
   const [pricingData, setPricingData] = useState<any>(null);
   const [totalCost, setTotalCost] = useState<number | null>(null);
   const [loadingPricing, setLoadingPricing] = useState<boolean>(false);
+  const [minimumOrderEntries, setMinimumOrderEntries] = useState<number>(1);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const invalidEntryRefs = useRef<(HTMLDivElement | null)[]>([]);
   
@@ -87,7 +89,7 @@ export default function SendOrderApp() {
     }
   }, []);
   
-  // Fetch the user's pricing profile
+  // Fetch the user's pricing profile and minimum entries requirement
   useEffect(() => {
     async function loadUserPricing() {
       try {
@@ -102,8 +104,23 @@ export default function SendOrderApp() {
       }
     }
     
+    async function loadUserSettings() {
+      try {
+        const response = await fetch('/api/user/settings');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setMinimumOrderEntries(data.settings.minimumOrderEntries || 1);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load user settings:', error);
+      }
+    }
+    
     if (session?.user) {
       loadUserPricing();
+      loadUserSettings();
     }
   }, [session?.user]);
 
@@ -206,66 +223,97 @@ export default function SendOrderApp() {
     try {
       setIsProcessing(true);
       
-      const lines = text
+      const rawLines = text
         .split(/\r?\n/)
         .map((line) => line.trim())
         .filter((line) => line !== "");
+      
+      // Enhanced parsing to handle both single-line and multi-line formats
+      const processedEntries: Array<{phoneRaw: string, allocRaw: string, allocGB: number}> = [];
+      
+      // First, try to parse as single-line format (phone and data on same line)
+      // Then handle multi-line format (phone on one line, data on next line)
+      for (let i = 0; i < rawLines.length; i++) {
+        const line = rawLines[i];
+        const parts = line.trim().split(/\s+/);
+        
+        // Check if this line has both phone and allocation (single-line format)
+        if (parts.length >= 2) {
+          const phoneRaw = parts[0];
+          const allocRaw = parts[parts.length - 1].replace(/gb$/i, "").trim();
+          
+          // Validate allocation format
+          if (/^\d+(\.\d+)?$/.test(allocRaw)) {
+            const allocGB = parseFloat(allocRaw);
+            
+            // Check for phone number misinterpretation bug
+            if (!(allocGB >= 10000000 && allocGB <= 999999999 && allocRaw.startsWith('0') && allocRaw.length === 10)) {
+              if (!isNaN(allocGB) && allocGB > 0) {
+                processedEntries.push({ phoneRaw, allocRaw, allocGB });
+                console.log(`Single-line format: Phone="${phoneRaw}", Data="${allocRaw}"`);
+                continue;
+              }
+            }
+          }
+        }
+        
+        // Check if this could be a phone number for multi-line format
+        if (parts.length === 1) {
+          const possiblePhone = parts[0];
+          
+          // Check if this looks like a phone number (starts with 0, contains only digits, reasonable length)
+          if (/^0\d{8,9}$/.test(possiblePhone) && i + 1 < rawLines.length) {
+            const nextLine = rawLines[i + 1].trim();
+            const nextParts = nextLine.split(/\s+/);
+            
+            // Check if next line could be data allocation
+            if (nextParts.length === 1) {
+              const possibleAlloc = nextParts[0].replace(/gb$/i, "").trim();
+              
+              if (/^\d+(\.\d+)?$/.test(possibleAlloc)) {
+                const allocGB = parseFloat(possibleAlloc);
+                
+                // Make sure it's not a phone number misinterpreted as allocation
+                if (!(allocGB >= 10000000 && allocGB <= 999999999 && possibleAlloc.startsWith('0') && possibleAlloc.length === 10)) {
+                  if (!isNaN(allocGB) && allocGB > 0) {
+                    processedEntries.push({ 
+                      phoneRaw: possiblePhone, 
+                      allocRaw: possibleAlloc, 
+                      allocGB 
+                    });
+                    console.log(`Multi-line format: Phone="${possiblePhone}", Data="${possibleAlloc}"`);
+                    i++; // Skip the next line since we've processed it
+                    continue;
+                  }
+                }
+              }
+            }
+          }
+        }
+        
+        console.log(`Skipping line "${line}" - unrecognized format`);
+      }
       
       // First pass: collect all phone number + allocation combinations and identify duplicates
       const phoneAllocCombinations = new Set<string>();
       const duplicates = new Set<string>();
       let fixedNumbers = 0;
       
-      lines.forEach((line) => {
-        // Extract data using a more robust approach that handles any characters between phone and data
-        // Enhanced parsing logic to properly separate phone number from data allocation
-        // Phone number must be exactly 10 digits starting with 0, followed by whitespace and allocation
-        const parts = line.trim().split(/\s+/);
+      processedEntries.forEach(({phoneRaw, allocRaw, allocGB}) => {
+        const validation = validateNumber(phoneRaw);
+        const finalPhoneNumber = validation.correctedNumber;
         
-        if (parts.length < 2) {
-          console.log(`Manual input: Skipping line "${line}" - must contain both phone number and data allocation separated by space`);
-          return; // Skip lines that don't have both phone and allocation
+        if (validation.wasFixed) {
+          fixedNumbers++;
         }
         
-        const phoneRaw = parts[0]; // First part must be phone number
-        const allocRaw = parts[parts.length - 1].replace(/gb$/i, "").trim(); // Last part is allocation (remove GB suffix)
+        // Create unique key combining phone number AND allocation
+        const uniqueKey = `${finalPhoneNumber}-${allocGB}`;
         
-        console.log(`Parsed from line "${line}": Phone="${phoneRaw}", Data="${allocRaw}"`);
-        
-        // Check if allocation is a valid number format
-        if (!/^\d+(\.\d+)?$/.test(allocRaw)) {
-          console.log(`Manual input: Invalid allocation format '${allocRaw}' - must be a number`);
-          return; // Skip this entry entirely by returning from the forEach callback
-        }
-        
-        const allocGB = parseFloat(allocRaw);
-        
-        // Critical bug fix: Check if this looks like a phone number being interpreted as allocation
-        // Phone numbers in Kenya start with 0 and are 10 digits, so when parsed as float they become 
-        // very large numbers (e.g., "0249651750" becomes 249651750 GB = 243800.54 TB)
-        if (allocGB >= 10000000 && allocGB <= 999999999 && allocRaw.startsWith('0') && allocRaw.length === 10) {
-          console.log(`Manual input: CRITICAL BUG DETECTED - '${allocRaw}' looks like a phone number (${allocGB} GB = ${(allocGB/1024).toFixed(2)} TB), not data allocation. Skipping this line: "${line}"`);
-          console.log(`This suggests the line format is incorrect. Expected format: "phone_number data_allocation" (e.g., "0777123456 5GB")`);
-          return; // Skip this entry entirely
-        }
-        
-        // Additional check to ensure it's a positive number
-        if (!isNaN(allocGB) && allocGB > 0) {
-          const validation = validateNumber(phoneRaw);
-          const finalPhoneNumber = validation.correctedNumber;
-          
-          if (validation.wasFixed) {
-            fixedNumbers++;
-          }
-          
-          // Create unique key combining phone number AND allocation
-          const uniqueKey = `${finalPhoneNumber}-${allocGB}`;
-          
-          if (phoneAllocCombinations.has(uniqueKey)) {
-            duplicates.add(uniqueKey);
-          } else {
-            phoneAllocCombinations.add(uniqueKey);
-          }
+        if (phoneAllocCombinations.has(uniqueKey)) {
+          duplicates.add(uniqueKey);
+        } else {
+          phoneAllocCombinations.add(uniqueKey);
         }
       });
       
@@ -275,83 +323,42 @@ export default function SendOrderApp() {
       const seenCombinations = new Set<string>();
       let totalDuplicates = 0;
       
-      lines.forEach((line) => {
-        // Use the same enhanced parsing approach as in the first pass
-        const parts = line.trim().split(/\s+/);
+      processedEntries.forEach(({phoneRaw, allocRaw, allocGB}) => {
+        // Use comprehensive validation that checks both phone number AND data allocation
+        const entryValidation = validateEntry(phoneRaw, allocGB);
+        console.log(`Manual input: Entry validation for ${phoneRaw} with ${allocGB}GB:`, entryValidation);
         
-        if (parts.length < 2) {
-          console.log(`Manual input: Skipping line "${line}" - must contain both phone number and data allocation separated by space`);
-          return; // Skip lines that don't have both phone and allocation
-        }
+        const uniqueKey = `${entryValidation.phoneValidation.correctedNumber}-${allocGB}`;
         
-        const phoneRaw = parts[0]; // First part must be phone number
-        const allocRaw = parts[parts.length - 1].replace(/gb$/i, "").trim(); // Last part is allocation (remove GB suffix)
-        
-        // Log for debugging
-        console.log(`Processing line: "${line}", extracted phone: "${phoneRaw}", allocation: "${allocRaw}"`);
-        
-        // Validation will be done by validateNumber function
-        // We'll still log the issue here for debugging purposes
-        const containsNonDigits = /[^\d]/.test(phoneRaw);
-        if (containsNonDigits) {
-          console.log(`Manual input: Phone number ${phoneRaw} contains non-numeric characters - will be handled by validation`);
-        }
-        
-        // Check if allocation is a valid number format (allow decimals)
-        if (!/^\d+(\.\d+)?$/.test(allocRaw)) {
-          console.log(`Manual input: Invalid allocation format '${allocRaw}' - must be a number`);
-          return; // Skip this entry entirely by returning from the forEach callback
-        }
-        
-        const allocGB = parseFloat(allocRaw);
-        
-        // Critical bug fix: Check if this looks like a phone number being interpreted as allocation
-        // Phone numbers in Kenya start with 0 and are 10 digits, so when parsed as float they become 
-        // very large numbers (e.g., "0249651750" becomes 249651750 GB = 243800.54 TB)
-        if (allocGB >= 10000000 && allocGB <= 999999999 && allocRaw.startsWith('0') && allocRaw.length === 10) {
-          console.log(`Manual input: CRITICAL BUG DETECTED - '${allocRaw}' looks like a phone number (${allocGB} GB = ${(allocGB/1024).toFixed(2)} TB), not data allocation. Skipping this line: "${line}"`);
-          console.log(`This suggests the line format is incorrect. Expected format: "phone_number data_allocation" (e.g., "0777123456 5GB")`);
-          return; // Skip this entry entirely
-        }
-        
-        // Additional check to ensure it's a positive number
-        if (!isNaN(allocGB) && allocGB > 0) {
-          // Use comprehensive validation that checks both phone number AND data allocation
-          const entryValidation = validateEntry(phoneRaw, allocGB);
-          console.log(`Manual input: Entry validation for ${phoneRaw} with ${allocGB}GB:`, entryValidation);
+        // Only add if this is the first occurrence of this combination
+        if (!seenCombinations.has(uniqueKey)) {
+          seenCombinations.add(uniqueKey);
           
-          const uniqueKey = `${entryValidation.phoneValidation.correctedNumber}-${allocGB}`;
+          // Double check validity here with regex
+          const isValidNumber = /^0\d{9}$/.test(entryValidation.phoneValidation.correctedNumber);
           
-          // Only add if this is the first occurrence of this combination
-          if (!seenCombinations.has(uniqueKey)) {
-            seenCombinations.add(uniqueKey);
-            
-            // Double check validity here with regex
-            const isValidNumber = /^0\d{9}$/.test(entryValidation.phoneValidation.correctedNumber);
-            
-            // Final validation combines all checks: phone number format, validation function, AND data allocation
-            const finalValid = isValidNumber && entryValidation.isValid;
-            console.log(`Final validation for ${entryValidation.phoneValidation.correctedNumber}: regex=${isValidNumber}, entry validation=${entryValidation.isValid}, final=${finalValid}`);
-            
-            const entry = {
-              number: entryValidation.phoneValidation.correctedNumber,
-              allocationGB: allocGB,
-              status: "pending" as "pending",
-              isValid: finalValid, // Use comprehensive validation that requires both phone AND allocation
-              wasFixed: entryValidation.phoneValidation.wasFixed,
-              isDuplicate: false // No entries are marked as duplicate since we remove them
-            };
-            
-            parsed.push(entry);
-            
-            // Log validation details
-            if (!finalValid) {
-              console.log(`Entry marked invalid: ${entryValidation.reason}`);
-            }
-          } else {
-            // Count duplicates that are removed
-            totalDuplicates++;
+          // Final validation combines all checks: phone number format, validation function, AND data allocation
+          const finalValid = isValidNumber && entryValidation.isValid;
+          console.log(`Final validation for ${entryValidation.phoneValidation.correctedNumber}: regex=${isValidNumber}, entry validation=${entryValidation.isValid}, final=${finalValid}`);
+          
+          const entry = {
+            number: entryValidation.phoneValidation.correctedNumber,
+            allocationGB: allocGB,
+            status: "pending" as "pending",
+            isValid: finalValid, // Use comprehensive validation that requires both phone AND allocation
+            wasFixed: entryValidation.phoneValidation.wasFixed,
+            isDuplicate: false // No entries are marked as duplicate since we remove them
+          };
+          
+          parsed.push(entry);
+          
+          // Log validation details
+          if (!finalValid) {
+            console.log(`Entry marked invalid: ${entryValidation.reason}`);
           }
+        } else {
+          // Count duplicates that are removed
+          totalDuplicates++;
         }
       });
       
@@ -728,6 +735,25 @@ export default function SendOrderApp() {
   const handleSendOrder = async () => {
     if (orderEntries.length === 0) return;
     
+    // Check if user has a pricing profile assigned
+    if (!pricingData?.hasProfile) {
+      window.alert('Cannot send order: No pricing profile assigned to your account.\n\nPlease contact your administrator to assign a pricing profile before placing orders.');
+      return;
+    }
+    
+    // Validate that all entries have pricing available in the user's profile
+    if (pricingData?.profile?.tiers) {
+      const pricingValidation = validateOrderPricing(orderEntries, pricingData.profile.tiers);
+      if (!pricingValidation.isValid) {
+        const invalidItems = pricingValidation.invalidEntries
+          .map(entry => `${entry.number} (${entry.allocationGB}GB)`)
+          .join(', ');
+        
+        window.alert(`Cannot send order: Some entries have no pricing available in your pricing profile.\n\nEntries without pricing: ${invalidItems}\n\nPlease remove these entries or contact your administrator to add pricing for these data allocations.`);
+        return;
+      }
+    }
+    
     // Double-check for any invalid entries before proceeding - use both checks
     const invalidEntries = orderEntries.filter(entry => {
       // Check both the flag and the regex pattern
@@ -748,6 +774,12 @@ export default function SendOrderApp() {
       // Show detailed message with the invalid numbers
       const invalidNumbers = invalidEntries.map(e => e.number).join(", ");
       window.alert(`Cannot proceed with invalid entries. Please fix these ${invalidEntries.length} invalid entries first:\n\nEach entry must have BOTH:\n• Valid 10-digit phone number (starting with 0)\n• Valid data allocation (greater than 0)\n\nInvalid entries: ${invalidNumbers}`);
+      return;
+    }
+    
+    // Check minimum entries requirement
+    if (orderEntries.length < minimumOrderEntries) {
+      window.alert(`Cannot send order: Minimum ${minimumOrderEntries} entries required.\n\nYou currently have ${orderEntries.length} entries.\nPlease add ${minimumOrderEntries - orderEntries.length} more entries to meet the minimum requirement.`);
       return;
     }
     
@@ -1052,10 +1084,18 @@ export default function SendOrderApp() {
             {inputMethod === "manual" && (
               <div className="relative">
                 <textarea
-                  placeholder={`Paste Phone numbers and data allocation as shown in the example below, one entry per line:\n
+                  placeholder={`Paste Phone numbers and data allocation in either format:
+
+Single-line format (phone and data on same line):
 0554739033 20GB
 0201234567 15GB
-0556789012 2GB`}
+
+Multi-line format (phone on one line, data on next):
+0244987337
+2gb
+
+0556789012
+4gb`}
                   className="w-full p-3 sm:p-4 border border-gray-300 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none font-mono text-sm sm:text-base text-gray-900 bg-white shadow-sm hover:shadow-md placeholder:text-gray-700"
                   rows={6}
                   value={manualInputText}
@@ -1120,6 +1160,20 @@ export default function SendOrderApp() {
                     </p>
                   </div>
                 )}
+                
+                {/* Minimum entries requirement indicator */}
+                {minimumOrderEntries > 1 && (
+                  <div className="mt-1 flex items-center gap-2">
+                    <div className={`w-3.5 h-3.5 rounded-full ${
+                      orderEntries.length >= minimumOrderEntries ? 'bg-green-500' : 'bg-orange-500'
+                    }`} />
+                    <p className={`text-sm font-medium ${
+                      orderEntries.length >= minimumOrderEntries ? 'text-green-700' : 'text-orange-700'
+                    }`}>
+                      Minimum {minimumOrderEntries} entries required ({orderEntries.length}/{minimumOrderEntries})
+                    </p>
+                  </div>
+                )}
               </div>
               
               {/* Action buttons */}
@@ -1142,8 +1196,28 @@ export default function SendOrderApp() {
                   </button>
                   <button
                     onClick={handleSendOrder}
-                    disabled={orderEntries.length === 0 || invalidCount > 0}
-                    title={invalidCount > 0 ? `Please fix ${invalidCount} invalid entries before sending` : ""}
+                    disabled={
+                      orderEntries.length === 0 || 
+                      invalidCount > 0 || 
+                      !pricingData?.hasProfile ||
+                      orderEntries.length < minimumOrderEntries ||
+                      (pricingData?.profile?.tiers && orderEntries.some(entry => 
+                        !hasPricingForAllocation(entry.allocationGB, pricingData.profile.tiers || [])
+                      ))
+                    }
+                    title={
+                      !pricingData?.hasProfile 
+                        ? "No pricing profile assigned - contact administrator" 
+                        : invalidCount > 0 
+                        ? `Please fix ${invalidCount} invalid entries before sending` 
+                        : orderEntries.length < minimumOrderEntries
+                        ? `Minimum ${minimumOrderEntries} entries required (you have ${orderEntries.length})`
+                        : pricingData?.profile?.tiers && orderEntries.some(entry => 
+                            !hasPricingForAllocation(entry.allocationGB, pricingData.profile.tiers || [])
+                          )
+                        ? "Some entries have no pricing available in your profile"
+                        : ""
+                    }
                     className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Send className="w-4 h-4" />
@@ -1180,10 +1254,42 @@ export default function SendOrderApp() {
                   </span>
                 </div>
               )}
+              
+              {/* Warning message for missing pricing profile */}
+              {!loadingPricing && !pricingData?.hasProfile && status !== "sending" && status !== "success" && (
+                <div className="flex items-center gap-2 bg-orange-100 px-3 py-1.5 rounded-full">
+                  <AlertCircle className="w-4 h-4 text-orange-600" />
+                  <span className="text-orange-700 text-sm font-medium">
+                    No pricing profile assigned - contact administrator to enable order submission
+                  </span>
+                </div>
+              )}
+              
+              {/* Warning message for minimum entries requirement not met */}
+              {minimumOrderEntries > 1 && orderEntries.length > 0 && orderEntries.length < minimumOrderEntries && status !== "sending" && status !== "success" && (
+                <div className="flex items-center gap-2 bg-orange-100 px-3 py-1.5 rounded-full">
+                  <AlertCircle className="w-4 h-4 text-orange-600" />
+                  <span className="text-orange-700 text-sm font-medium">
+                    Need {minimumOrderEntries - orderEntries.length} more {minimumOrderEntries - orderEntries.length === 1 ? 'entry' : 'entries'} to meet minimum requirement of {minimumOrderEntries}
+                  </span>
+                </div>
+              )}
+              
+              {/* Warning message for entries without pricing */}
+              {pricingData?.hasProfile && pricingData?.profile?.tiers && 
+               orderEntries.some(entry => !hasPricingForAllocation(entry.allocationGB, pricingData.profile.tiers || [])) && 
+               status !== "sending" && status !== "success" && (
+                <div className="flex items-center gap-2 bg-orange-100 px-3 py-1.5 rounded-full">
+                  <AlertCircle className="w-4 h-4 text-orange-600" />
+                  <span className="text-orange-700 text-sm font-medium">
+                    {orderEntries.filter(entry => !hasPricingForAllocation(entry.allocationGB, pricingData.profile.tiers || [])).length} entries have no pricing available
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 p-3 sm:p-6">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 p-3 sm:p-6">
               <div className="bg-green-50 rounded-lg p-2 sm:p-3 text-center">
                 <p className="text-xs sm:text-sm text-green-700 font-medium mb-1">
                   {status === "sending" || status === "success" ? "Successful" : "Valid"}
@@ -1230,6 +1336,16 @@ export default function SendOrderApp() {
                 <p className="text-xs sm:text-sm text-cyan-700 font-medium mb-1">Auto-fixed</p>
                 <p className="text-xl font-bold text-cyan-700">{fixedCount}</p>
               </div>
+              {pricingData?.hasProfile && pricingData?.profile?.tiers && (
+                <div className="bg-orange-50 rounded-lg p-2 sm:p-3 text-center">
+                  <p className="text-xs sm:text-sm text-orange-700 font-medium mb-1">No Pricing</p>
+                  <p className="text-xl font-bold text-orange-700">
+                    {orderEntries.filter(entry => 
+                      !hasPricingForAllocation(entry.allocationGB, pricingData.profile.tiers || [])
+                    ).length}
+                  </p>
+                </div>
+              )}
             </div>
             
             {/* Pricing Summary */}
@@ -1316,6 +1432,8 @@ export default function SendOrderApp() {
                         ? "bg-yellow-50 border-yellow-200"
                         : entry.wasFixed
                         ? "bg-cyan-50 border-cyan-200"
+                        : pricingData?.profile?.tiers && !hasPricingForAllocation(entry.allocationGB, pricingData.profile.tiers)
+                        ? "bg-orange-50 border-orange-200"
                         : "bg-white border-gray-200"
                     }`}
                   >
@@ -1364,12 +1482,31 @@ export default function SendOrderApp() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-bold">{entry.allocationGB.toFixed(2)} GB</p>
+                      <div className="flex items-center gap-1 justify-end">
+                        <p className="text-sm font-bold">{entry.allocationGB.toFixed(2)} GB</p>
+                        {pricingData?.profile?.tiers && (
+                          <div className="flex items-center" title={hasPricingForAllocation(entry.allocationGB, pricingData.profile.tiers) ? "Pricing available" : "No pricing available for this allocation"}>
+                            {hasPricingForAllocation(entry.allocationGB, pricingData.profile.tiers) ? (
+                              <CheckCircle className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <AlertCircle className="h-4 w-4 text-red-500" />
+                            )}
+                          </div>
+                        )}
+                      </div>
                       <p className="text-xs sm:text-sm text-gray-700">{(entry.allocationGB * 1024).toFixed(0)} MB</p>
                       {pricingData?.hasProfile && pricingData?.profile && (
-                        <p className="text-xs sm:text-sm text-green-600 font-medium mt-1">
-                          GHS {calculatePrice(pricingData.profile, entry.allocationGB)?.toFixed(2)}
-                        </p>
+                        <div className="mt-1">
+                          {hasPricingForAllocation(entry.allocationGB, pricingData.profile.tiers || []) ? (
+                            <p className="text-xs sm:text-sm text-green-600 font-medium">
+                              GHS {calculatePrice(pricingData.profile, entry.allocationGB)?.toFixed(2)}
+                            </p>
+                          ) : (
+                            <p className="text-xs sm:text-sm text-red-600 font-medium">
+                              No pricing available
+                            </p>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

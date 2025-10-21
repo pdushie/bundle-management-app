@@ -50,17 +50,18 @@ const DEFAULT_PRICING: PricingProfile = {
 /**
  * Get the pricing profile for a user
  * @param userId The user ID to get the pricing profile for
- * @returns The user's pricing profile or the default profile if not found
+ * @param allowDefault Whether to return default pricing if no profile assigned (default: true for backwards compatibility)
+ * @returns The user's pricing profile, default profile, or null if not found and allowDefault is false
  */
-export async function getUserPricingProfile(userId: number): Promise<PricingProfile> {
+export async function getUserPricingProfile(userId: number, allowDefault: boolean = true): Promise<PricingProfile | null> {
   if (!userId) {
-    return DEFAULT_PRICING;
+    return allowDefault ? DEFAULT_PRICING : null;
   }
 
   // Check if database is available
   if (!db) {
     console.error('Database connection is not available');
-    return DEFAULT_PRICING;
+    return allowDefault ? DEFAULT_PRICING : null;
   }
 
   try {
@@ -83,6 +84,11 @@ export async function getUserPricingProfile(userId: number): Promise<PricingProf
           isTiered: true
         };
       }
+    }
+
+    // If allowDefault is false, return null when no specific profile is assigned
+    if (!allowDefault) {
+      return null;
     }
 
     // Try to get the standard pricing profile
@@ -137,6 +143,10 @@ export async function calculateOrderCost(userId: number, totalData: number): Pro
 
     // Get the user's pricing profile
     const pricingProfile = await getUserPricingProfile(userId);
+    
+    if (!pricingProfile) {
+      throw new Error('No pricing profile available for cost calculation');
+    }
 
     // Get pricing tiers if the profile is tiered
     let tiers: PricingTier[] = [];

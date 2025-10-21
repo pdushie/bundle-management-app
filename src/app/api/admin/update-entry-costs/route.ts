@@ -107,6 +107,10 @@ export async function POST(request: NextRequest) {
         console.log(`Processing order ${order.id} for user ${userId}`);
         
         const userPricingProfile = await getUserPricingProfile(userId);
+        if (!userPricingProfile) {
+          console.error(`No pricing profile found for user ${userId}, skipping order ${order.id}`);
+          continue; // Skip this order if no pricing profile
+        }
         console.log(`Using pricing profile: ${userPricingProfile.name} (ID: ${userPricingProfile.id}), isTiered: ${userPricingProfile.isTiered}`);
         
         // Always use tiered pricing - force profile to be tiered

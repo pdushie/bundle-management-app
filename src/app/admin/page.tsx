@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { redirect } from "next/navigation";
-import { Users, Check, X, Clock, MessageCircle, Shield, Calendar, ArrowLeft, Database, User, LogOut, DollarSign } from "lucide-react";
+import { Users, Check, X, Clock, MessageCircle, Shield, Calendar, ArrowLeft, Database, User, LogOut, DollarSign, Settings } from "lucide-react";
 import UserManagement from "@/components/UserManagement";
 import PricingProfiles from "@/components/PricingProfiles";
+import MinimumEntriesAdmin from "@/components/admin/MinimumEntriesAdmin";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 interface PendingUser {
@@ -27,7 +28,7 @@ interface UserStats {
 export default function AdminDashboard() {
   const { data: session, status } = useSession() as any;
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'pending' | 'users' | 'pricing'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'users' | 'pricing' | 'minimum-entries'>('pending');
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [userStats, setUserStats] = useState<UserStats>({
     totalUsers: 0,
@@ -327,6 +328,18 @@ export default function AdminDashboard() {
               <DollarSign className="w-4 h-4" />
               Pricing Profiles
             </button>
+            
+            <button 
+              onClick={() => setActiveTab('minimum-entries')} 
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'minimum-entries' 
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+              }`}
+            >
+              <Settings className="w-4 h-4" />
+              Minimum Entries
+            </button>
           </div>
         </div>
 
@@ -433,10 +446,15 @@ export default function AdminDashboard() {
         ) : activeTab === 'users' ? (
           // User Management Tab Content
           <UserManagement />
-        ) : (
+        ) : activeTab === 'pricing' ? (
           // Pricing Profiles Tab Content
           <ErrorBoundary>
             <PricingProfiles />
+          </ErrorBoundary>
+        ) : (
+          // Minimum Entries Tab Content
+          <ErrorBoundary>
+            <MinimumEntriesAdmin />
           </ErrorBoundary>
         )}
       </div>

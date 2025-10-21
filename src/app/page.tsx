@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Upload, FileText, Check, Download, Phone, Database, AlertCircle, BarChart, History, Calendar, Eye, Trash2, LogOut, User, Shield, Send, FileBox, CheckCircle, DollarSign, Calculator } from "lucide-react";
+import { Upload, FileText, Check, Download, Phone, Database, AlertCircle, BarChart, History, Calendar, Eye, Trash2, LogOut, User, Shield, Send, FileBox, CheckCircle, DollarSign, Calculator, Package } from "lucide-react";
 import { X } from "lucide-react";
 import { orderTrackingUtils } from "@/lib/orderTracking";
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell, LineChart, Line } from "recharts";
@@ -16,6 +16,7 @@ import SentOrdersApp from "@/components/SentOrdersApp";
 import OrderTrackingApp from "@/components/OrderTrackingApp";
 import BillingApp from "@/components/BillingApp";
 import AccountingApp from "@/components/AccountingApp";
+import PackagesApp from "@/components/PackagesApp";
 import { OrderProvider, useOrderCount } from "@/lib/orderContext";
 import { ORDER_UPDATED_EVENT } from "@/lib/orderNotifications";
 import { requestNotificationPermission, hasNotificationPermission, sendThrottledNotification, playNotificationSound } from '@/lib/notifications';
@@ -888,45 +889,93 @@ function BundleAllocatorApp({
     setIsProcessing(true);
 
     setTimeout(() => {
-      const lines = text
+      const rawLines = text
         .split(/\r?\n/)
         .map((line) => line.trim())
         .filter((line) => line !== "");
+
+      // Enhanced parsing to handle both single-line and multi-line formats
+      const processedEntries: Array<{phoneRaw: string, allocRaw: string, allocGB: number}> = [];
+      
+      // First, try to parse as single-line format (phone and data on same line)
+      // Then handle multi-line format (phone on one line, data on next line)
+      for (let i = 0; i < rawLines.length; i++) {
+        const line = rawLines[i];
+        const cleanedLine = line.replace(/\./g, " ").trim();
+        const parts = cleanedLine.split(/[\s-]+/);
+        
+        // Check if this line has both phone and allocation (single-line format)
+        if (parts.length >= 2) {
+          const phoneRaw = parts[0];
+          let allocRaw = parts[1];
+          allocRaw = allocRaw.replace(/gb$/i, "").trim();
+          
+          const allocGB = parseFloat(allocRaw);
+          
+          if (!isNaN(allocGB) && allocGB > 0) {
+            processedEntries.push({ phoneRaw, allocRaw, allocGB });
+            console.log(`Main page single-line format: Phone="${phoneRaw}", Data="${allocRaw}"`);
+            continue;
+          }
+        }
+        
+        // Check if this could be a phone number for multi-line format
+        if (parts.length === 1) {
+          const possiblePhone = parts[0];
+          
+          // Check if this looks like a phone number (starts with 0, contains only digits, reasonable length)
+          if (/^0\d{8,9}$/.test(possiblePhone) && i + 1 < rawLines.length) {
+            const nextLine = rawLines[i + 1].trim();
+            const nextParts = nextLine.split(/\s+/);
+            
+            // Check if next line could be data allocation
+            if (nextParts.length === 1) {
+              const possibleAlloc = nextParts[0].replace(/gb$/i, "").trim();
+              
+              if (/^\d+(\.\d+)?$/.test(possibleAlloc)) {
+                const allocGB = parseFloat(possibleAlloc);
+                
+                // Make sure it's not a phone number misinterpreted as allocation
+                if (!(allocGB >= 10000000 && allocGB <= 999999999 && possibleAlloc.startsWith('0') && possibleAlloc.length === 10)) {
+                  if (!isNaN(allocGB) && allocGB > 0) {
+                    processedEntries.push({ 
+                      phoneRaw: possiblePhone, 
+                      allocRaw: possibleAlloc, 
+                      allocGB 
+                    });
+                    console.log(`Main page multi-line format: Phone="${possiblePhone}", Data="${possibleAlloc}"`);
+                    i++; // Skip the next line since we've processed it
+                    continue;
+                  }
+                }
+              }
+            }
+          }
+        }
+        
+        console.log(`Main page: Skipping line "${line}" - unrecognized format`);
+      }
 
       const phoneAllocCombinations = new Set<string>();
       const duplicates = new Set<string>();
       let fixedNumbers = 0;
 
       // First pass: collect all phone number + allocation combinations and identify duplicates
-      lines.forEach((line) => {
-        const cleanedLine = line.replace(/\./g, " ").trim();
-        const parts = cleanedLine.split(/[\s-]+/);
+      processedEntries.forEach(({phoneRaw, allocRaw, allocGB}) => {
+        const entryValidation = validateEntry(phoneRaw, allocGB);
+        const finalPhoneNumber = entryValidation.phoneValidation.correctedNumber;
+        
+        if (entryValidation.phoneValidation.wasFixed) {
+          fixedNumbers++;
+        }
 
-        if (parts.length >= 2) {
-          const phoneRaw = parts[0];
-          let allocRaw = parts[1];
+        // Create unique key combining phone number AND allocation
+        const uniqueKey = `${finalPhoneNumber}-${allocGB}`;
 
-          allocRaw = allocRaw.replace(/gb$/i, "").trim();
-
-          const allocGB = parseFloat(allocRaw);
-
-          if (!isNaN(allocGB) && allocGB > 0) {
-            const entryValidation = validateEntry(phoneRaw, allocGB);
-            const finalPhoneNumber = entryValidation.phoneValidation.correctedNumber;
-            
-            if (entryValidation.phoneValidation.wasFixed) {
-              fixedNumbers++;
-            }
-
-            // Create unique key combining phone number AND allocation
-            const uniqueKey = `${finalPhoneNumber}-${allocGB}`;
-
-            if (phoneAllocCombinations.has(uniqueKey)) {
-              duplicates.add(uniqueKey);
-            } else {
-              phoneAllocCombinations.add(uniqueKey);
-            }
-          }
+        if (phoneAllocCombinations.has(uniqueKey)) {
+          duplicates.add(uniqueKey);
+        } else {
+          phoneAllocCombinations.add(uniqueKey);
         }
       });
 
@@ -935,42 +984,28 @@ function BundleAllocatorApp({
       const parsed: PhoneEntry[] = [];
       const seenCombinations = new Set<string>();
 
-      lines.forEach((line) => {
-        const cleanedLine = line.replace(/\./g, " ").trim();
-        const parts = cleanedLine.split(/[\s-]+/);
-
-        if (parts.length >= 2) {
-          const phoneRaw = parts[0];
-          let allocRaw = parts[1];
-
-          allocRaw = allocRaw.replace(/gb$/i, "").trim();
-
-          const allocGB = parseFloat(allocRaw);
-
-          if (!isNaN(allocGB) && allocGB > 0) {
-            const entryValidation = validateEntry(phoneRaw, allocGB);
-            const uniqueKey = `${entryValidation.phoneValidation.correctedNumber}-${allocGB}`;
-            
-            // Only add if this is the first occurrence of this combination
-            if (!seenCombinations.has(uniqueKey)) {
-              seenCombinations.add(uniqueKey);
-              
-              parsed.push({
-                number: entryValidation.phoneValidation.correctedNumber,
-                allocationGB: allocGB,
-                isValid: entryValidation.isValid, // Requires BOTH valid phone number AND valid data allocation
-                isDuplicate: false, // No entries are marked as duplicate since we remove them
-                wasFixed: entryValidation.phoneValidation.wasFixed,
-              });
-            }
-            // Skip duplicate entries (don't add them to parsed array)
-          }
+      processedEntries.forEach(({phoneRaw, allocRaw, allocGB}) => {
+        const entryValidation = validateEntry(phoneRaw, allocGB);
+        const uniqueKey = `${entryValidation.phoneValidation.correctedNumber}-${allocGB}`;
+        
+        // Only add if this is the first occurrence of this combination
+        if (!seenCombinations.has(uniqueKey)) {
+          seenCombinations.add(uniqueKey);
+          
+          parsed.push({
+            number: entryValidation.phoneValidation.correctedNumber,
+            allocationGB: allocGB,
+            isValid: entryValidation.isValid, // Requires BOTH valid phone number AND valid data allocation
+            isDuplicate: false, // No entries are marked as duplicate since we remove them
+            wasFixed: entryValidation.phoneValidation.wasFixed,
+          });
         }
+        // Skip duplicate entries (don't add them to parsed array)
       });
 
       // Show alerts for removed duplicates and fixed numbers
       const alertMessages: string[] = [];
-      const totalDuplicates = lines.length - parsed.length;
+      const totalDuplicates = processedEntries.length - parsed.length;
       
       if (totalDuplicates > 0) {
         alertMessages.push(`🗑️ Removed ${totalDuplicates} duplicate entry(ies).\n\nDuplicates are identified by matching both phone number AND data allocation.\nOnly the first occurrence of each combination was kept.`);
@@ -1343,7 +1378,7 @@ function BundleAllocatorApp({
           <div className="p-3 sm:p-6 space-y-3 sm:space-y-6">
             <div className="relative">
               <textarea
-                placeholder="Paste phone numbers and data allocations here&#10;0554739033 20GB&#10;0201234567 15GB&#10;0556789012 10GB"
+                placeholder="Paste phone numbers and data allocations in either format:&#10;&#10;Single-line format:&#10;0554739033 20GB&#10;0201234567 15GB&#10;&#10;Multi-line format:&#10;0244987337&#10;2gb&#10;&#10;0556789012&#10;4gb"
                 className="w-full p-3 sm:p-4 border border-gray-300 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none font-mono text-sm sm:text-base text-gray-900 bg-white shadow-sm hover:shadow-md placeholder:text-gray-700"
                 rows={6}
                 value={inputText}
@@ -2564,6 +2599,12 @@ function AppContent() {
       icon: AlertCircle, // Changed from Eye to AlertCircle
     },
     {
+      id: "packages",
+      name: "Packages",
+      icon: Package,
+      roles: ["user"] // Only for regular users
+    },
+    {
       id: "billing",
       name: "Billing",
       icon: DollarSign,
@@ -2594,9 +2635,9 @@ function AppContent() {
       return true; // Super admins get access to all tabs including history
     }
     
-    // Regular users can only access send-order, sent-orders, and billing
+    // Regular users can only access send-order, sent-orders, packages, and billing
     if (isRegularUser) {
-      const hasAccess = tab.id === 'send-order' || tab.id === 'sent-orders' || tab.id === 'billing';
+      const hasAccess = tab.id === 'send-order' || tab.id === 'sent-orders' || tab.id === 'packages' || tab.id === 'billing';
       return hasAccess;
     }
     
@@ -2728,6 +2769,13 @@ function AppContent() {
               processedOrderEntriesCount={processedOrderEntriesCount}
             />
           );
+        }
+        break;
+        
+      case "packages":
+        // Packages tab is accessible to regular users only
+        if (isRegularUser) {
+          return <PackagesApp />;
         }
         break;
         

@@ -53,8 +53,13 @@ export async function ensureOrderCosts(order: Order, userId?: number | null): Pr
     // Use order's userId as a fallback if not provided
     const effectiveUserId = userId || order.userId || 0;
     
-    // Get the user's pricing profile
-    const userPricingProfile = await getUserPricingProfile(effectiveUserId);
+    // Get the user's pricing profile (allow default pricing for cost calculation)
+    const userPricingProfile = await getUserPricingProfile(effectiveUserId, true);
+    if (!userPricingProfile) {
+      // This should not happen with allowDefault=true, but just in case
+      console.error('No pricing profile available for cost calculation');
+      return order;
+    }
     console.log(`Using pricing profile: ${userPricingProfile.name} (ID: ${userPricingProfile.id})`);
     
     // Always ensure we're using tiered pricing
