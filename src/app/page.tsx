@@ -2311,8 +2311,11 @@ function TabNavigation({
                tab.id === "orders" ? "Orders" :
                tab.id === "processed-orders" ? "Processed" :
                tab.id === "sent-orders" ? "My Orders" : 
+               tab.id === "track-orders" ? "Track" :
+               tab.id === "packages" ? "Packages" :
+               tab.id === "billing" ? "Billing" :
                tab.id === "history" ? "History & A." : 
-               tab.id === "accounting" ? "Accounting" : "History"}
+               tab.id === "accounting" ? "Accounting" : tab.name}
             </span>
             {tab.id === "history" && isSuperAdmin && history.length > 0 && (
               <span className="bg-white/20 text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
