@@ -79,9 +79,12 @@ export default function SentOrdersApp() {
     // Set up polling interval with a much longer interval (2 minutes)
     // This reduces bandwidth usage and compute hours while still keeping data reasonably fresh
     const intervalId = setInterval(() => {
-      // console.log('SentOrdersApp: Low-frequency polling triggered');
-      fetchUserOrders();
-    }, 120000); // 2 minutes
+      // Only poll if window is visible to further reduce API calls
+      if (document.visibilityState === 'visible') {
+        // console.log('SentOrdersApp: Low-frequency polling triggered');
+        fetchUserOrders();
+      }
+    }, 300000); // 5 minutes
     
     // Clean up
     return () => {

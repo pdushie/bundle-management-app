@@ -65,12 +65,15 @@ export default function OrdersApp() {
     // Add event listeners for all relevant events
     window.addEventListener(ORDER_UPDATED_EVENT, handleOrderUpdate);
     
-    // Set up polling interval with a much longer interval (2 minutes)
-    // This reduces bandwidth usage and compute hours while still keeping data reasonably fresh
+    // Set up polling interval with longer interval (5 minutes)
+    // This significantly reduces bandwidth usage and function invocations
     const intervalId = setInterval(() => {
-      // console.log('OrdersApp: Low-frequency polling triggered');
-      fetchOrders();
-    }, 120000); // 2 minutes
+      // Only poll if window is visible to further reduce API calls
+      if (document.visibilityState === 'visible') {
+        // console.log('OrdersApp: Low-frequency polling triggered');
+        fetchOrders();
+      }
+    }, 300000); // 5 minutes
     
     // Clean up
     return () => {

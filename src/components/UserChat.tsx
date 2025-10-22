@@ -21,12 +21,12 @@ export default function UserChat() {
     
     fetchMessages();
     
-    // Poll for new messages every 10 seconds
+    // Poll for new messages every 2 minutes (reduced from 10s to lower function invocations)
     const interval = setInterval(() => {
       if (document.visibilityState === "visible") {
         fetchMessages();
       }
-    }, 10000);
+    }, 120000); // 2 minutes
     
     return () => clearInterval(interval);
   }, [session]);

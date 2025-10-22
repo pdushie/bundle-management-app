@@ -2220,19 +2220,19 @@ function TabNavigation({
     
     window.addEventListener(ORDER_UPDATED_EVENT, handleOrderUpdate);
     
-    // Set up polling interval with a much longer interval (1 minute)
-    // This reduces bandwidth usage while still keeping data reasonably fresh
+    // Set up polling interval with longer interval (3 minutes)
+    // This significantly reduces bandwidth usage and function invocations
     const intervalId = setInterval(() => {
       refreshOrderCount();
-      console.log('Low-frequency poll refresh - Current counts:', {
-        pending: orderCount, 
-        processed: processedOrderCount, 
-        sent: sentOrderCount,
-        unreadPending: unreadPendingOrders,
-        unreadProcessed: unreadProcessedOrders,
-        unreadSent: unreadSentOrders
-      });
-    }, 60000); // 1 minute
+      // console.log('Low-frequency poll refresh - Current counts:', {
+      //   pending: orderCount, 
+      //   processed: processedOrderCount, 
+      //   sent: sentOrderCount,
+      //   unreadPending: unreadPendingOrders,
+      //   unreadProcessed: unreadProcessedOrders,
+      //   unreadSent: unreadSentOrders
+      // });
+    }, 180000); // 3 minutes
     
     // Clean up event listener and interval on unmount
     return () => {

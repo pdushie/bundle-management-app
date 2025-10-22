@@ -101,12 +101,12 @@ export default function AdminChatNotifier() {
     // Check immediately on mount
     checkForNewMessages();
     
-    // Then check every 15 seconds
+    // Then check every 2 minutes (only when visible to reduce API calls)
     const intervalId = setInterval(() => {
       if (document.visibilityState === 'visible') {
         checkForNewMessages();
       }
-    }, 15000);
+    }, 120000); // 2 minutes
 
     // Listen for visibility changes to refresh when tab becomes active
     const handleVisibilityChange = () => {

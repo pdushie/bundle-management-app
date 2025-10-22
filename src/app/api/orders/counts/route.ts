@@ -2,8 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getOrderCounts } from '@/lib/orderDbOperations';
 import { testConnection } from '@/lib/db';
 
+// Simple cache for order counts (reduces DB load)
+let orderCountsCache: any = null;
+let countsCacheTimestamp = 0;
+const COUNTS_CACHE_DURATION = 60000; // 1 minute cache
+
 export async function POST(request: NextRequest) {
   try {
+    // Check cache first (especially useful for rapid polling)
+    const now = Date.now();
+    if (orderCountsCache && (now - countsCacheTimestamp) < COUNTS_CACHE_DURATION) {
+      return NextResponse.json(orderCountsCache, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=60',
+        }
+      });
+    }
+
     // First, test the database connection with extra logging for ECONNRESET issues
     const connectionTest = await testConnection();
     if (!connectionTest.success) {
@@ -59,8 +75,17 @@ export async function POST(request: NextRequest) {
     // Get order counts with retry logic built into the function
     const counts = await getOrderCounts(userEmail);
     
+    // Update cache
+    orderCountsCache = counts;
+    countsCacheTimestamp = Date.now();
+    
     // Return the counts
-    return NextResponse.json(counts);
+    return NextResponse.json(counts, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=60',
+      }
+    });
   } catch (error) {
     // console.error('Error in order counts route:', error);
     

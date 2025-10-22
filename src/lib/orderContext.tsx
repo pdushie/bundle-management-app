@@ -156,12 +156,15 @@ export const OrderProvider = ({ children }: OrderProviderProps) => {
     window.addEventListener(ORDER_SENT_EVENT, handleOrderSent);
     window.addEventListener(COUNT_UPDATED_EVENT, handleCountUpdate);
 
-    // Set up polling interval with a much longer interval (2 minutes)
-    // This drastically reduces API calls while still providing eventual consistency
+    // Set up polling interval with longer interval (5 minutes)
+    // This drastically reduces API calls and function invocations while providing eventual consistency
     const intervalId = setInterval(() => {
-      console.log('Background polling interval triggered, refreshing counts');
-      refreshOrderCount();
-    }, 120000); // 2 minutes
+      // Only poll if window is visible to further reduce API calls
+      if (document.visibilityState === 'visible') {
+        // console.log('Background polling interval triggered, refreshing counts');
+        refreshOrderCount();
+      }
+    }, 300000); // 5 minutes
 
     // Clean up the event listeners and interval
     return () => {

@@ -40,10 +40,17 @@ export default function AnnouncementBanner() {
   
   const fetchAnnouncements = useCallback(async () => {
     try {
+      // Add client-side cache to prevent redundant requests (5 minutes)
+      const now = getCurrentTimestampSync();
+      if (lastFetchTime && (now - lastFetchTime) < 300000) {
+        // console.log("Skipping fetch - cache still valid");
+        return;
+      }
+      
       // console.log("Fetching announcements...");
       
       // Update last fetch time
-      setLastFetchTime(getCurrentTimestampSync());
+      setLastFetchTime(now);
       
       // Try the admin endpoint first only if user is authenticated and has admin role
       const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'superadmin';
@@ -177,20 +184,20 @@ export default function AnnouncementBanner() {
     // Setup dynamic polling for new announcements
     const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'superadmin';
     
-    // Dynamic polling intervals based on user role and window focus:
-    // - Admins (focused): 2 seconds (very frequent for immediate feedback)
-    // - Admins (unfocused): 5 seconds 
-    // - Users (focused): 10 seconds
-    // - Users (unfocused): 20 seconds (balanced between responsiveness and server load)
+    // Optimized polling intervals to reduce server load and function invocations:
+    // - Admins (focused): 2 minutes (announcements don't change frequently)
+    // - Admins (unfocused): 5 minutes 
+    // - Users (focused): 5 minutes
+    // - Users (unfocused): 10 minutes (announcements are not time-critical)
     let pollingInterval;
     if (isAdmin && session) {
-      pollingInterval = isWindowFocused ? 2000 : 5000;
+      pollingInterval = isWindowFocused ? 120000 : 300000; // 2min/5min
     } else {
-      pollingInterval = isWindowFocused ? 10000 : 20000;
+      pollingInterval = isWindowFocused ? 300000 : 600000; // 5min/10min
     }
     
     pollingIntervalRef.current = setInterval(() => {
-      console.log(`Polling for announcement updates... (${isAdmin ? 'admin' : 'user'} mode, ${isWindowFocused ? 'focused' : 'unfocused'})`);
+      // console.log(`Polling for announcement updates... (${isAdmin ? 'admin' : 'user'} mode, ${isWindowFocused ? 'focused' : 'unfocused'})`);
       fetchAnnouncements();
     }, pollingInterval);
 

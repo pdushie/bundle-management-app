@@ -48,12 +48,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     
     fetchUnreadCount();
     
-    // Poll every 30 seconds
+    // Poll every 3 minutes (reduced to lower function invocations)
     const intervalId = setInterval(() => {
       if (document.visibilityState === 'visible') {
         fetchUnreadCount();
       }
-    }, 30000);
+    }, 180000); // 3 minutes
     
     return () => clearInterval(intervalId);
   }, [session]);

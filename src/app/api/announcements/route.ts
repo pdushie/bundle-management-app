@@ -4,15 +4,29 @@ import { announcements } from "@/lib/schema";
 import { sql } from "drizzle-orm";
 import { getCurrentTime } from "@/lib/timeService";
 
+// Simple in-memory cache for announcements (reduces DB queries)
+let announcementsCache: any[] | null = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 120000; // 2 minutes cache
+
 // Get only active announcements (public endpoint)
 export async function GET(req: NextRequest) {
   try {
+    // Check cache first to reduce database load
+    const now = Date.now();
+    if (announcementsCache && (now - cacheTimestamp) < CACHE_DURATION) {
+      return NextResponse.json(announcementsCache, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=120', // Browser cache for 2 minutes
+        }
+      });
+    }
+
     // Set the content type header first thing to ensure JSON response
     const headers = {
       'Content-Type': 'application/json',
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0'
+      'Cache-Control': 'public, max-age=120', // Browser cache for 2 minutes
     };
 
     // First try using Drizzle ORM if available
@@ -28,6 +42,10 @@ export async function GET(req: NextRequest) {
             (${announcements.endDate} >= ${currentDate} OR ${announcements.endDate} IS NULL)`
           )
           .orderBy(announcements.createdAt);
+        
+        // Update cache
+        announcementsCache = result;
+        cacheTimestamp = Date.now();
         
         return NextResponse.json({ announcements: result }, { headers });
       } catch (drizzleError) {
@@ -48,7 +66,7 @@ export async function GET(req: NextRequest) {
         ORDER BY created_at ASC
       `;
       
-      return NextResponse.json({ announcements: result.map(row => ({
+      const formattedResult = result.map(row => ({
         id: row.id,
         message: row.message,
         type: row.type,
@@ -58,7 +76,13 @@ export async function GET(req: NextRequest) {
         createdBy: row.created_by,
         createdAt: row.created_at,
         updatedAt: row.updated_at
-      }))}, { headers });
+      }));
+      
+      // Update cache
+      announcementsCache = formattedResult;
+      cacheTimestamp = Date.now();
+      
+      return NextResponse.json({ announcements: formattedResult }, { headers });
     } catch (sqlError) {
       // console.error("Direct SQL query failed:", sqlError);
       return NextResponse.json({ 

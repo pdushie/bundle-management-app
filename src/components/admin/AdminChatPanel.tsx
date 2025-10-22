@@ -21,7 +21,7 @@ export default function AdminChatPanel() {
     
     fetchThreads();
     
-    // Poll for new messages every 10 seconds
+    // Poll for new messages every 2 minutes (reduced to lower function invocations)
     const interval = setInterval(() => {
       if (document.visibilityState === "visible") {
         fetchThreads();
@@ -29,7 +29,7 @@ export default function AdminChatPanel() {
           fetchMessages(selectedUserId);
         }
       }
-    }, 10000);
+    }, 120000); // 2 minutes
     
     return () => clearInterval(interval);
   }, [session, selectedUserId]);
