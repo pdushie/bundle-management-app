@@ -126,6 +126,18 @@ function buildProviders() {
             return null;
           }
 
+          // Update last login timestamp
+          try {
+            await client.query(
+              'UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = $1',
+              [user.id]
+            );
+            console.log(`Updated last login timestamp for user ${user.id}`);
+          } catch (error) {
+            console.error('Error updating last login timestamp:', error);
+            // Don't fail the login if this update fails
+          }
+
           console.log('User authenticated:', { 
             id: user.id, 
             email: user.email, 

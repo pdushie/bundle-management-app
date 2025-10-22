@@ -23,6 +23,7 @@ interface UserData {
   status: string;
   email_verified: boolean;
   created_at: string;
+  last_login_at?: string;
 }
 
 export default function UserManagement() {
@@ -327,6 +328,9 @@ export default function UserManagement() {
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                     Created
                   </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    Last Login
+                  </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs sm:text-sm font-medium text-gray-700 uppercase tracking-wider">
                     Actions
                   </th>
@@ -335,7 +339,7 @@ export default function UserManagement() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {users.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-10 text-center text-gray-700">
+                    <td colSpan={7} className="px-6 py-10 text-center text-gray-700">
                       No users found
                     </td>
                   </tr>
@@ -377,6 +381,18 @@ export default function UserManagement() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                     {new Date(user.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                    {user.last_login_at ? (
+                      <div>
+                        <div>{new Date(user.last_login_at).toLocaleDateString()}</div>
+                        <div className="text-xs text-gray-500">
+                          {new Date(user.last_login_at).toLocaleTimeString()}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 italic">Never</span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end gap-2">

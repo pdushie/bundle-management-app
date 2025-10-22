@@ -145,14 +145,16 @@ export class OTPService {
 
       // Verify OTP
       if (user.otp_secret === providedOTP) {
-        // Success - reset attempts but don't clear OTP yet (NextAuth will do final verification)
+        // Success - reset attempts and update last login timestamp
         await client.query(
           `UPDATE users 
            SET otp_attempts = 0,
-               otp_locked_until = NULL
+               otp_locked_until = NULL,
+               last_login_at = CURRENT_TIMESTAMP
            WHERE id = $1`,
           [userId]
         );
+        console.log(`Updated last login timestamp for user ${userId} via OTP verification`);
         return { success: true, message: 'OTP verified successfully' };
       } else {
         // Failed attempt - increment counter

@@ -21,6 +21,7 @@ export const users = pgTable("users", {
   rejectedAt: timestamp("rejected_at"),
   rejectionReason: text("rejection_reason"), // Admin's reason for rejection
   minimumOrderEntries: integer("minimum_order_entries").default(1).notNull(), // Minimum number of entries required in an order
+  lastLoginAt: timestamp("last_login_at", { withTimezone: true }), // When user last logged in
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(), // Added missing field
 });
