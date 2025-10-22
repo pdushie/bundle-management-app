@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result.data);
     
   } catch (error) {
-    console.error('Error in history save route:', error);
+    // console.error('Error in history save route:', error);
     return NextResponse.json({ 
       error: 'Failed to process request', 
       details: error instanceof Error ? error.message : 'Unknown error'

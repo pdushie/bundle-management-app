@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
         
         return NextResponse.json({ announcements: result }, { headers });
       } catch (drizzleError) {
-        console.error("Drizzle query failed:", drizzleError);
+        // console.error("Drizzle query failed:", drizzleError);
         // Continue to fallback method
       }
     }
@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
         updatedAt: row.updated_at
       }))}, { headers });
     } catch (sqlError) {
-      console.error("Direct SQL query failed:", sqlError);
+      // console.error("Direct SQL query failed:", sqlError);
       return NextResponse.json({ 
         announcements: [],
         error: 'Database connection error' 
@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
     }
     
   } catch (error) {
-    console.error("Error fetching active announcements:", error);
+    // console.error("Error fetching active announcements:", error);
     return NextResponse.json(
       { error: "Failed to fetch announcements", announcements: [] }, 
       { status: 500, headers: { 'Content-Type': 'application/json' } }

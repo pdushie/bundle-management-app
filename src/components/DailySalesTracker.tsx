@@ -115,7 +115,7 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
       const data = await response.json();
       setDailySummary(data);
     } catch (error) {
-      console.error('Error loading daily sales summary:', error);
+      // console.error('Error loading daily sales summary:', error);
       setError('Failed to load sales data');
     } finally {
       setIsLoading(false);
@@ -142,7 +142,7 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
       setDailyDetails(data);
       setView('details');
     } catch (error) {
-      console.error('Error loading daily sales details:', error);
+      // console.error('Error loading daily sales details:', error);
       setError('Failed to load daily sales details');
     } finally {
       setIsLoading(false);

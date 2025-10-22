@@ -35,7 +35,7 @@ export default function OrdersApp() {
       setOrders(allOrders);
       refreshOrderCount(); // Update order counts in the context
     } catch (error) {
-      console.error("Failed to fetch orders:", error);
+      // console.error("Failed to fetch orders:", error);
     } finally {
       setIsLoading(false);
     }
@@ -43,20 +43,20 @@ export default function OrdersApp() {
 
   // Set up polling for real-time updates
   useEffect(() => {
-    console.log('OrdersApp: Setting up event listeners');
+    // console.log('OrdersApp: Setting up event listeners');
     
     // Fetch orders immediately
     fetchOrders();
     
     // Set up event listener for order updates
     const handleOrderUpdate = () => {
-      console.log('OrdersApp: ORDER_UPDATED_EVENT received');
+      // console.log('OrdersApp: ORDER_UPDATED_EVENT received');
       fetchOrders();
     };
     
     // Create a more specific handler for order processed events
     const handleOrderProcessed = () => {
-      console.log('OrdersApp: ORDER_PROCESSED_EVENT received');
+      // console.log('OrdersApp: ORDER_PROCESSED_EVENT received');
       fetchOrders();
       // Force a count update notification
       notifyCountUpdated();
@@ -68,7 +68,7 @@ export default function OrdersApp() {
     // Set up polling interval with a much longer interval (2 minutes)
     // This reduces bandwidth usage and compute hours while still keeping data reasonably fresh
     const intervalId = setInterval(() => {
-      console.log('OrdersApp: Low-frequency polling triggered');
+      // console.log('OrdersApp: Low-frequency polling triggered');
       fetchOrders();
     }, 120000); // 2 minutes
     
@@ -102,7 +102,7 @@ export default function OrdersApp() {
           refreshOrderCount();
         }
       } catch (error) {
-        console.error("Error loading orders:", error);
+        // console.error("Error loading orders:", error);
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -266,7 +266,7 @@ export default function OrdersApp() {
     
     // For a single order, check if it exceeds the threshold
     if (order.totalData > MAX_DATA_GB) {
-      console.log(`Order ${order.id} exceeds 1.5 TB threshold (${order.totalData} GB). Splitting into multiple files.`);
+      // console.log(`Order ${order.id} exceeds 1.5 TB threshold (${order.totalData} GB). Splitting into multiple files.`);
       // Use the splitting function and return a zip file
       const result = await splitAndZipLargeOrderData([order], MAX_DATA_GB);
       return { 
@@ -458,7 +458,7 @@ export default function OrdersApp() {
       try {
         await updateEntryStatuses(order.id, 'sent');
       } catch (error) {
-        console.warn('Failed to update entry statuses:', error);
+        // console.warn('Failed to update entry statuses:', error);
       }
       
       // Notify that the order has been processed
@@ -471,7 +471,7 @@ export default function OrdersApp() {
       refreshOrderCount();
       
     } catch (error) {
-      console.error("Error downloading order:", error);
+      // console.error("Error downloading order:", error);
       alert("Failed to download order. Please try again.");
     }
   };
@@ -485,7 +485,7 @@ export default function OrdersApp() {
         totalDataGB += order.totalData;
       }
       
-      console.log(`Total data allocation: ${totalDataGB.toFixed(2)} GB`);
+      // console.log(`Total data allocation: ${totalDataGB.toFixed(2)} GB`);
       
       // Check if we need to split files (1.5 TB = 1,536 GB)
       const MAX_DATA_GB = 1536; // 1.5 TB in GB

@@ -48,14 +48,14 @@ export default function BillingApp() {
         // Format the date as YYYY-MM-DD for the API using local time
         const dateString = formatDateForInput(selectedDate);
         const data = await getUserBilling(dateString);
-        console.log("Billing data received:", data);
-        console.log("Total amount:", data.totalAmount);
+        // console.log("Billing data received:", data);
+        // console.log("Total amount:", data.totalAmount);
         
         // Debug order costs
         if (data && data.orders) {
-          console.log("Orders with costs:");
-          data.orders.forEach((order: any) => {
-            console.log(`- ${order.id}: estimatedCost=${order.estimatedCost}, status=${order.status}`);
+          // console.log("Orders with costs:");
+          data.orders.forEach(order => {
+            // console.log(`- ${order.id}: estimatedCost=${order.estimatedCost}, status=${order.status}`);
           });
           
           // Calculate total ourselves to verify
@@ -63,18 +63,18 @@ export default function BillingApp() {
             return total + (Number(order.estimatedCost) || 0);
           }, 0);
           
-          console.log(`API reports totalAmount: ${data.totalAmount}, Calculated: ${calculatedTotal}`);
+          // console.log(`API reports totalAmount: ${data.totalAmount}, Calculated: ${calculatedTotal}`);
           
           // If there's a significant difference, use our calculation
           if (Math.abs(data.totalAmount - calculatedTotal) > 0.01) {
-            console.log(`Fixing total amount from ${data.totalAmount} to ${calculatedTotal}`);
+            // console.log(`Fixing total amount from ${data.totalAmount} to ${calculatedTotal}`);
             data.totalAmount = calculatedTotal;
           }
         }
         
         setBillingData(data);
       } catch (err: any) {
-        console.error('Error fetching billing data:', err);
+        // console.error('Error fetching billing data:', err);
         setError(err.message || 'Failed to load billing information');
         setBillingData(null);
       } finally {
@@ -331,7 +331,7 @@ export default function BillingApp() {
                         document.body.removeChild(link);
                         window.URL.revokeObjectURL(url);
                       } catch (error) {
-                        console.error('Error downloading PDF:', error);
+                        // console.error('Error downloading PDF:', error);
                         alert('Failed to download PDF. Please try again.');
                       }
                     }}

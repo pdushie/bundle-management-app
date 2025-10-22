@@ -51,7 +51,7 @@ export default function PackagesApp() {
         setError(data.message || 'No pricing profile assigned');
       }
     } catch (err) {
-      console.error('Error fetching user pricing:', err);
+      // console.error('Error fetching user pricing:', err);
       setError('Failed to load pricing information');
     } finally {
       setLoading(false);

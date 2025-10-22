@@ -30,7 +30,7 @@ export default function ProcessedOrdersApp() {
       setOrders(processedOrders);
       refreshOrderCount();
     } catch (error) {
-      console.error("Failed to fetch processed orders:", error);
+      // console.error("Failed to fetch processed orders:", error);
     } finally {
       setLoading(false);
     }
@@ -38,20 +38,20 @@ export default function ProcessedOrdersApp() {
 
   // Set up polling for real-time updates
   useEffect(() => {
-    console.log('ProcessedOrdersApp: Setting up event listeners');
+    // console.log('ProcessedOrdersApp: Setting up event listeners');
     
     // Fetch orders immediately
     fetchProcessedOrders();
     
     // Set up event listener for order updates
     const handleOrderUpdate = () => {
-      console.log('ProcessedOrdersApp: ORDER_UPDATED_EVENT received');
+      // console.log('ProcessedOrdersApp: ORDER_UPDATED_EVENT received');
       fetchProcessedOrders();
     };
     
     // Set up a more specific event listener for processed orders
     const handleOrderProcessed = () => {
-      console.log('ProcessedOrdersApp: ORDER_PROCESSED_EVENT received');
+      // console.log('ProcessedOrdersApp: ORDER_PROCESSED_EVENT received');
       fetchProcessedOrders();
       // Force a count update notification
       notifyCountUpdated();
@@ -64,7 +64,7 @@ export default function ProcessedOrdersApp() {
     // Set up polling interval with a much longer interval (2 minutes)
     // This reduces bandwidth usage and compute hours while still keeping data reasonably fresh
     const intervalId = setInterval(() => {
-      console.log('ProcessedOrdersApp: Low-frequency polling triggered');
+      // console.log('ProcessedOrdersApp: Low-frequency polling triggered');
       fetchProcessedOrders();
     }, 120000); // 2 minutes
     

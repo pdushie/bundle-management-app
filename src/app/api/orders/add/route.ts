@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions) as any;
     const userId = session?.user?.id ? parseInt(session.user.id) : null;
     
-    console.log(`Processing new order from user ID ${userId || 'unknown'}`);
+    // console.log(`Processing new order from user ID ${userId || 'unknown'}`);
     
     // Validate that the user has a pricing profile assigned
     if (!userId) {
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
       await notifyAdminAboutNewOrder(typedOrderWithCost);
     } catch (notificationError) {
       // Log but don't fail the request if notification sending fails
-      console.error('Failed to send admin notification:', notificationError);
+      // console.error('Failed to send admin notification:', notificationError);
     }
     
     return NextResponse.json({ 
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       cost: typedOrderWithCost.cost 
     });
   } catch (error) {
-    console.error('Error in add order route:', error);
+    // console.error('Error in add order route:', error);
     return NextResponse.json(
       { error: 'Failed to add order' },
       { status: 500 }

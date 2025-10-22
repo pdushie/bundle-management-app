@@ -78,7 +78,7 @@ export default function PackagesPage() {
       const data = await response.json();
       setPricingData(data);
     } catch (err) {
-      console.error('Error fetching pricing data:', err);
+      // console.error('Error fetching pricing data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load pricing information');
     } finally {
       setLoading(false);

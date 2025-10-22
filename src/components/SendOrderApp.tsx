@@ -33,7 +33,7 @@ const saveOrderEntriesToStorage = (entries: OrderEntry[], manualText: string) =>
     localStorage.setItem(SEND_ORDER_STORAGE_KEY, JSON.stringify(entries));
     localStorage.setItem(SEND_ORDER_TEXT_KEY, manualText);
   } catch (error) {
-    console.error('Failed to save order entries to localStorage:', error);
+    // console.error('Failed to save order entries to localStorage:', error);
   }
 };
 
@@ -49,7 +49,7 @@ const loadOrderEntriesFromStorage = (): { entries: OrderEntry[], manualText: str
       };
     }
   } catch (error) {
-    console.error('Failed to load order entries from localStorage:', error);
+    // console.error('Failed to load order entries from localStorage:', error);
   }
   
   return { entries: [], manualText: '' };
@@ -96,9 +96,9 @@ export default function SendOrderApp() {
         setLoadingPricing(true);
         const data = await getCurrentUserPricing();
         setPricingData(data);
-        console.log("User pricing data loaded:", data);
+        // console.log("User pricing data loaded:", data);
       } catch (error) {
-        console.error("Error loading user pricing:", error);
+        // console.error("Error loading user pricing:", error);
       } finally {
         setLoadingPricing(false);
       }
@@ -114,7 +114,7 @@ export default function SendOrderApp() {
           }
         }
       } catch (error) {
-        console.error('Failed to load user settings:', error);
+        // console.error('Failed to load user settings:', error);
       }
     }
     
@@ -130,7 +130,7 @@ export default function SendOrderApp() {
   const validateNumber = (num: string): { isValid: boolean; correctedNumber: string; wasFixed: boolean } => {
     // Handle empty strings or nulls
     if (!num || typeof num !== 'string' || num.trim() === '') {
-      console.log('Invalid number: empty or null');
+      // console.log('Invalid number: empty or null');
       return { isValid: false, correctedNumber: num || '', wasFixed: false };
     }
     
@@ -141,7 +141,7 @@ export default function SendOrderApp() {
     // Check if there were non-digits that we stripped
     if (digitsOnly.length !== num.length) {
       wasFixed = true;
-      console.log(`Fixed number by removing non-digits (dots, hyphens, etc): '${num}' -> '${digitsOnly}'`);
+      // console.log(`Fixed number by removing non-digits (dots, hyphens, etc): '${num}' -> '${digitsOnly}'`);
     }
     
     // First case: Already valid 10 digits starting with 0
@@ -153,29 +153,29 @@ export default function SendOrderApp() {
     if (digitsOnly.length === 9) {
       // Don't add extra 0 if it already starts with 0
       if (digitsOnly.startsWith('0')) {
-        console.log(`9-digit number already starts with 0, marking as invalid: '${digitsOnly}'`);
+        // console.log(`9-digit number already starts with 0, marking as invalid: '${digitsOnly}'`);
         return { isValid: false, correctedNumber: digitsOnly, wasFixed: wasFixed };
       }
       const withZero = '0' + digitsOnly;
-      console.log(`Fixed number by adding leading zero: '${digitsOnly}' -> '${withZero}'`);
+      // console.log(`Fixed number by adding leading zero: '${digitsOnly}' -> '${withZero}'`);
       return { isValid: true, correctedNumber: withZero, wasFixed: true };
     }
     
     // Third case: 10 digits but doesn't start with 0 - replace first digit with 0
     if (digitsOnly.length === 10 && !digitsOnly.startsWith('0')) {
       const withZero = '0' + digitsOnly.substring(1);
-      console.log(`Fixed number by replacing first digit with 0: '${digitsOnly}' -> '${withZero}'`);
+      // console.log(`Fixed number by replacing first digit with 0: '${digitsOnly}' -> '${withZero}'`);
       return { isValid: true, correctedNumber: withZero, wasFixed: true };
     }
     
     // Invalid cases - number doesn't match required pattern and can't be fixed
     // Log specific reasons for debugging
     if (digitsOnly.length < 9) {
-      console.log(`Invalid number: too short (${digitsOnly.length} digits)`);
+      // console.log(`Invalid number: too short (${digitsOnly.length} digits)`);
     } else if (digitsOnly.length > 10) {
-      console.log(`Invalid number: too long (${digitsOnly.length} digits)`);
+      // console.log(`Invalid number: too long (${digitsOnly.length} digits)`);
     } else {
-      console.log(`Invalid number: unknown validation failure for '${digitsOnly}'`);
+      // console.log(`Invalid number: unknown validation failure for '${digitsOnly}'`);
     }
     
     // Return as invalid with the original digits-only string
@@ -250,7 +250,7 @@ export default function SendOrderApp() {
             if (!(allocGB >= 10000000 && allocGB <= 999999999 && allocRaw.startsWith('0') && allocRaw.length === 10)) {
               if (!isNaN(allocGB) && allocGB > 0) {
                 processedEntries.push({ phoneRaw, allocRaw, allocGB });
-                console.log(`Single-line format: Phone="${phoneRaw}", Data="${allocRaw}"`);
+                // console.log(`Single-line format: Phone="${phoneRaw}", Data="${allocRaw}"`);
                 continue;
               }
             }
@@ -281,7 +281,7 @@ export default function SendOrderApp() {
                       allocRaw: possibleAlloc, 
                       allocGB 
                     });
-                    console.log(`Multi-line format: Phone="${possiblePhone}", Data="${possibleAlloc}"`);
+                    // console.log(`Multi-line format: Phone="${possiblePhone}", Data="${possibleAlloc}"`);
                     i++; // Skip the next line since we've processed it
                     continue;
                   }
@@ -291,7 +291,7 @@ export default function SendOrderApp() {
           }
         }
         
-        console.log(`Skipping line "${line}" - unrecognized format`);
+        // console.log(`Skipping line "${line}" - unrecognized format`);
       }
       
       // First pass: collect all phone number + allocation combinations and identify duplicates
@@ -326,7 +326,7 @@ export default function SendOrderApp() {
       processedEntries.forEach(({phoneRaw, allocRaw, allocGB}) => {
         // Use comprehensive validation that checks both phone number AND data allocation
         const entryValidation = validateEntry(phoneRaw, allocGB);
-        console.log(`Manual input: Entry validation for ${phoneRaw} with ${allocGB}GB:`, entryValidation);
+        // console.log(`Manual input: Entry validation for ${phoneRaw} with ${allocGB}GB:`, entryValidation);
         
         const uniqueKey = `${entryValidation.phoneValidation.correctedNumber}-${allocGB}`;
         
@@ -339,7 +339,7 @@ export default function SendOrderApp() {
           
           // Final validation combines all checks: phone number format, validation function, AND data allocation
           const finalValid = isValidNumber && entryValidation.isValid;
-          console.log(`Final validation for ${entryValidation.phoneValidation.correctedNumber}: regex=${isValidNumber}, entry validation=${entryValidation.isValid}, final=${finalValid}`);
+          // console.log(`Final validation for ${entryValidation.phoneValidation.correctedNumber}: regex=${isValidNumber}, entry validation=${entryValidation.isValid}, final=${finalValid}`);
           
           const entry = {
             number: entryValidation.phoneValidation.correctedNumber,

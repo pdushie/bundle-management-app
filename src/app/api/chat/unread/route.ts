@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    console.log(`API access: /api/chat/unread by user ${(session.user as any).id} (${session.user.role})`);
+    // console.log(`API access: /api/chat/unread by user ${(session.user as any).id} (${session.user.role})`);
 
     // Get count of all unread messages from users
     const unreadCountResult = await neonClient`
@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
       unreadCount
     });
   } catch (error) {
-    console.error("Error fetching unread message count:", error);
+    // console.error("Error fetching unread message count:", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch unread message count" }, 
       { status: 500 }

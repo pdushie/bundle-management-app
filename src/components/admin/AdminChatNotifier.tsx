@@ -58,14 +58,14 @@ export default function AdminChatNotifier() {
         if (!response.ok) {
           // Only log error if it's not a 401/403 (authentication/authorization)
           if (response.status !== 401 && response.status !== 403) {
-            console.error("Failed to fetch unread messages count:", response.status);
+            // console.error("Failed to fetch unread messages count:", response.status);
           }
           return;
         }
         
         const contentType = response.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
-          console.error("Invalid response type from chat unread endpoint");
+          // console.error("Invalid response type from chat unread endpoint");
           return;
         }
         
@@ -77,7 +77,7 @@ export default function AdminChatNotifier() {
             setHasNewMessages(true);
             // Play notification sound
             notificationSound?.play().catch(err => {
-              console.log('Error playing notification:', err);
+              // console.log('Error playing notification:', err);
             });
           }
           
@@ -87,11 +87,11 @@ export default function AdminChatNotifier() {
         clearTimeout(timeoutId);
         
         if (error instanceof Error && error.name === 'AbortError') {
-          console.warn("Chat unread request timed out");
+          // console.warn("Chat unread request timed out");
         } else if (error instanceof TypeError && error.message === 'Failed to fetch') {
-          console.warn("Network error fetching chat unread count - server may be starting up");
+          // console.warn("Network error fetching chat unread count - server may be starting up");
         } else {
-          console.error("Error checking for new messages:", error);
+          // console.error("Error checking for new messages:", error);
         }
       } finally {
         setIsLoading(false);

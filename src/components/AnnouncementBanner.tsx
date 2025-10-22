@@ -40,7 +40,7 @@ export default function AnnouncementBanner() {
   
   const fetchAnnouncements = useCallback(async () => {
     try {
-      console.log("Fetching announcements...");
+      // console.log("Fetching announcements...");
       
       // Update last fetch time
       setLastFetchTime(getCurrentTimestampSync());
@@ -65,17 +65,17 @@ export default function AnnouncementBanner() {
             if (contentType && contentType.includes("application/json")) {
               const data = await adminResponse.json();
               if (data.announcements && data.announcements.length > 0) {
-                console.log("Admin announcements data received:", data);
+                // console.log("Admin announcements data received:", data);
                 // Filter out inactive announcements immediately on client side
                 const activeAnnouncements = data.announcements.filter((ann: Announcement) => ann.isActive === true);
                 setAnnouncements(activeAnnouncements);
                 return; // Successfully got announcements from admin endpoint
               }
             } else {
-              console.log("Admin endpoint returned non-JSON response:", contentType);
+              // console.log("Admin endpoint returned non-JSON response:", contentType);
             }
           } else if (adminResponse.status === 401 || adminResponse.status === 403) {
-            console.log("Admin endpoint authentication failed, falling back to public endpoint");
+            // console.log("Admin endpoint authentication failed, falling back to public endpoint");
           } else {
             console.log("Admin endpoint failed:", adminResponse.status, adminResponse.statusText);
           }

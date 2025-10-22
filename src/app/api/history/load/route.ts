@@ -21,8 +21,8 @@ export async function GET(request: NextRequest) {
     const totalEntriesData = await getTotalEntries();
     
     // Log the result for debugging
-    console.log(`History entries found: ${historyEntries.length}`);
-    console.log(`Total entries: ${totalEntriesData.totalEntries} (phone_entries: ${totalEntriesData.phoneEntriesCount}, processed order_entries: ${totalEntriesData.processedOrderEntriesCount})`);
+    // console.log(`History entries found: ${historyEntries.length}`);
+    // console.log(`Total entries: ${totalEntriesData.totalEntries} (phone_entries: ${totalEntriesData.phoneEntriesCount}, processed order_entries: ${totalEntriesData.processedOrderEntriesCount})`);
     
     // Return in a consistent format that the component can use
     return NextResponse.json({ 
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       processedOrderEntriesCount: totalEntriesData.processedOrderEntriesCount
     });
   } catch (error) {
-    console.error('Error in history/load route:', error);
+    // console.error('Error in history/load route:', error);
     return NextResponse.json(
       { error: 'Failed to retrieve history entries' },
       { status: 500 }

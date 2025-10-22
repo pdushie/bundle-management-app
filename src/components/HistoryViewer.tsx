@@ -54,11 +54,11 @@ export default function HistoryViewer() {
         setPhoneEntriesCount(historyData.phoneEntriesCount);
         setProcessedOrderEntriesCount(historyData.processedOrderEntriesCount);
         
-        console.log('Total database entries:', historyData.totalEntries);
-        console.log('Phone entries count:', historyData.phoneEntriesCount);
-        console.log('Processed order entries count:', historyData.processedOrderEntriesCount);
+        // console.log('Total database entries:', historyData.totalEntries);
+        // console.log('Phone entries count:', historyData.phoneEntriesCount);
+        // console.log('Processed order entries count:', historyData.processedOrderEntriesCount);
       } catch (error) {
-        console.error("Failed to load history:", error);
+        // console.error("Failed to load history:", error);
       } finally {
         setIsLoading(false);
       }
@@ -82,7 +82,7 @@ export default function HistoryViewer() {
       const entries = await getPhoneEntriesForHistory(historyId);
       setPhoneEntries(entries);
     } catch (error) {
-      console.error("Failed to load phone entries:", error);
+      // console.error("Failed to load phone entries:", error);
     } finally {
       setIsLoadingPhones(false);
     }

@@ -87,7 +87,7 @@ export default function UserChat() {
         }
       }
     } catch (error) {
-      console.error("Error fetching messages:", error);
+      // console.error("Error fetching messages:", error);
     } finally {
       setLoading(false);
     }
@@ -99,12 +99,12 @@ export default function UserChat() {
     if (!newMessage.trim() || !session?.user) return;
     
     setLoading(true);
-    console.log("Sending message:", newMessage);
-    console.log("Session user:", session.user);
+    // console.log("Sending message:", newMessage);
+    // console.log("Session user:", session.user);
     
     try {
       const messagePayload = { message: newMessage };
-      console.log("Sending payload:", messagePayload);
+      // console.log("Sending payload:", messagePayload);
       
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -114,32 +114,32 @@ export default function UserChat() {
         body: JSON.stringify(messagePayload),
       });
       
-      console.log("Response status:", response.status);
+      // console.log("Response status:", response.status);
       const responseText = await response.text();
-      console.log("Response text:", responseText);
+      // console.log("Response text:", responseText);
       
       // Try to parse the response as JSON
       let data;
       try {
         data = JSON.parse(responseText);
       } catch (parseError) {
-        console.error("Failed to parse response as JSON:", parseError);
+        // console.error("Failed to parse response as JSON:", parseError);
         throw new Error("Invalid response format");
       }
       
       if (data.success && data.message) {
-        console.log("Message sent successfully:", data.message);
+        // console.log("Message sent successfully:", data.message);
         setMessages([...messages, data.message]);
         setNewMessage("");
         
         // Immediately fetch messages to ensure everything is in sync
         setTimeout(() => fetchMessages(), 300);
       } else {
-        console.error("Message not successful:", data);
+        // console.error("Message not successful:", data);
         throw new Error(data.error || "Failed to send message");
       }
     } catch (error) {
-      console.error("Error sending message:", error);
+      // console.error("Error sending message:", error);
       alert("Failed to send message. Please try again.");
     } finally {
       setLoading(false);

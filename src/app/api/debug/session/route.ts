@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Debug session error:', error);
+    // console.error('Debug session error:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error'

@@ -28,22 +28,22 @@ export default function SentOrdersApp() {
       const userOrders = await getUserOrdersOldestFirst(userEmail);
       
       // Log the orders to see if entry costs are present
-      console.log('User orders with entry costs:', 
-        userOrders.map(order => ({
-          id: order.id,
-          totalData: order.totalData,
-          entries: order.entries.map(e => ({
-            number: e.number,
-            allocationGB: e.allocationGB,
-            cost: e.cost
-          }))
-        }))
-      );
+      // console.log('User orders with entry costs:', 
+      //   userOrders.map(order => ({
+      //     id: order.id,
+      //     totalData: order.totalData,
+      //     entries: order.entries.map(e => ({
+      //       number: e.number,
+      //       allocationGB: e.allocationGB,
+      //       cost: e.cost
+      //     }))
+      //   }))
+      // );
       
       setOrders(userOrders);
       refreshOrderCount();
     } catch (error) {
-      console.error("Failed to fetch user orders:", error);
+      // console.error("Failed to fetch user orders:", error);
     } finally {
       setLoading(false);
     }
@@ -53,20 +53,20 @@ export default function SentOrdersApp() {
   useEffect(() => {
     if (!userEmail) return;
     
-    console.log('SentOrdersApp: Setting up event listeners for user:', userEmail);
+    // console.log('SentOrdersApp: Setting up event listeners for user:', userEmail);
     
     // Fetch orders immediately
     fetchUserOrders();
     
     // Set up event listener for order updates
     const handleOrderUpdate = () => {
-      console.log('SentOrdersApp: ORDER_UPDATED_EVENT received');
+      // console.log('SentOrdersApp: ORDER_UPDATED_EVENT received');
       fetchUserOrders();
     };
     
     // Set up a more specific event listener for sent orders
     const handleOrderSent = () => {
-      console.log('SentOrdersApp: ORDER_SENT_EVENT received');
+      // console.log('SentOrdersApp: ORDER_SENT_EVENT received');
       fetchUserOrders();
       // Force a count update notification
       notifyCountUpdated();
@@ -79,7 +79,7 @@ export default function SentOrdersApp() {
     // Set up polling interval with a much longer interval (2 minutes)
     // This reduces bandwidth usage and compute hours while still keeping data reasonably fresh
     const intervalId = setInterval(() => {
-      console.log('SentOrdersApp: Low-frequency polling triggered');
+      // console.log('SentOrdersApp: Low-frequency polling triggered');
       fetchUserOrders();
     }, 120000); // 2 minutes
     

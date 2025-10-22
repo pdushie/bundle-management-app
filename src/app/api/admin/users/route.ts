@@ -13,9 +13,9 @@ export async function GET() {
     // Use secure session validation with role checking
     const session = await requireAdmin();
     
-    console.log(`Admin user ${session.user.id} (${session.user.role}) accessing user list`);
+    // console.log(`Admin user ${session.user.id} (${session.user.role}) accessing user list`);
   } catch (error) {
-    console.error("Unauthorized access attempt to user list:", error);
+    // console.error("Unauthorized access attempt to user list:", error);
     return NextResponse.json({ 
       error: error instanceof Error ? error.message : "Unauthorized access" 
     }, { status: 401 });
@@ -32,7 +32,7 @@ export async function GET() {
 
     return NextResponse.json({ users: result.rows });
   } catch (error) {
-    console.error("Database error:", error);
+    // console.error("Database error:", error);
     return NextResponse.json(
       { error: "Failed to fetch users" },
       { status: 500 }
