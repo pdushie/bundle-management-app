@@ -310,8 +310,41 @@ export default function AdminOrdersDashboard() {
       <div className="bg-white rounded-lg shadow-md">
         <div className="p-6">
           <h2 className="text-xl font-semibold mb-4">
-            Processing Reports ({orders.length} results)
+            Processing Reports ({paginationMeta.totalRecords} total records)
           </h2>
+          
+          {/* Summary Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">
+                {orders.filter(order => order.status === 'processed').length}
+              </div>
+              <div className="text-sm text-gray-600">Processed</div>
+              <div className="text-xs text-gray-500">Completed & left queue</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-yellow-600">
+                {orders.filter(order => order.status === 'pending').length}
+              </div>
+              <div className="text-sm text-gray-600">Pending</div>
+              <div className="text-xs text-gray-500">
+                {(() => {
+                  const pendingOrders = orders.filter(order => order.status === 'pending');
+                  if (pendingOrders.length === 0) return 'Queue empty';
+                  const oldestOrder = pendingOrders.reduce((oldest, current) => 
+                    current.timestamp < oldest.timestamp ? current : oldest
+                  );
+                  const hoursOld = Math.floor((Date.now() - oldestOrder.timestamp) / (1000 * 60 * 60));
+                  return hoursOld < 24 ? `Oldest: ${hoursOld}h ago` : `Oldest: ${Math.floor(hoursOld / 24)}d ago`;
+                })()}
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">{paginationMeta.totalRecords}</div>
+              <div className="text-sm text-gray-600">Total Records</div>
+              <div className="text-xs text-gray-500">All orders (page {paginationMeta.currentPage} of {paginationMeta.totalPages})</div>
+            </div>
+          </div>
           
           {loading ? (
             <div className="text-center py-8">Loading...</div>

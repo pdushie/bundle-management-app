@@ -251,9 +251,14 @@ export const updateOrder = async (orderId: string, updates: Partial<Order>): Pro
       if (drizzleUpdates.totalData !== undefined) drizzleUpdates.totalData = drizzleUpdates.totalData.toString();
       if (drizzleUpdates.cost !== undefined) drizzleUpdates.cost = drizzleUpdates.cost !== null ? drizzleUpdates.cost.toString() : null;
       if (drizzleUpdates.estimatedCost !== undefined) drizzleUpdates.estimatedCost = drizzleUpdates.estimatedCost !== null ? drizzleUpdates.estimatedCost.toString() : null;
-      // Convert processedBy and processedAt
+      // Convert processedBy and processedAt properly
       if (drizzleUpdates.processedBy !== undefined) drizzleUpdates.processedBy = drizzleUpdates.processedBy;
-      if (drizzleUpdates.processedAt !== undefined) drizzleUpdates.processedAt = drizzleUpdates.processedAt;
+      if (drizzleUpdates.processedAt !== undefined) {
+        // Convert string to Date object if it's a string
+        if (typeof drizzleUpdates.processedAt === 'string') {
+          drizzleUpdates.processedAt = new Date(drizzleUpdates.processedAt);
+        }
+      }
       await db.update(orders).set(drizzleUpdates).where(eq(orders.id, orderId));
     } else {
       // Only allow updating one field at a time for Neon
@@ -268,6 +273,10 @@ export const updateOrder = async (orderId: string, updates: Partial<Order>): Pro
           if (v === null) v = null;
           else if (typeof v === 'number') v = v.toString();
           else if (typeof v === 'boolean') v = v ? 'true' : 'false';
+          // Handle processedAt conversion for Neon
+          else if (key === 'processedAt' && typeof v === 'string') {
+            v = new Date(v).toISOString();
+          }
           await neonClient`UPDATE orders SET ${key} = ${v} WHERE id = ${orderId}`;
           updated = true;
         }
