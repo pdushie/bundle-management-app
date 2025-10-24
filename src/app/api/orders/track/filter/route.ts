@@ -17,6 +17,11 @@ function transformPhoneEntriesToOrderEntries(phoneEntries: any[]) {
     createdAt: entry.createdAt,
     // Add source field to identify the entry source
     source: 'phone_entries',
+    // Include admin info if available
+    adminInfo: entry.adminName ? {
+      adminName: entry.adminName,
+      adminEmail: entry.adminEmail
+    } : null,
     // Include original data for reference
     originalEntry: entry
   }));
