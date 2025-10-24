@@ -42,6 +42,8 @@ export const orders = pgTable("orders", {
   estimatedCost: decimal('estimated_cost', { precision: 10, scale: 2, mode: 'string' }), // Estimated cost for display
   pricingProfileId: integer('pricing_profile_id'), // ID of the pricing profile used
   pricingProfileName: varchar('pricing_profile_name', { length: 255 }), // Name of the pricing profile used
+  processedBy: integer('processed_by').references(() => users.id, { onDelete: 'set null' }), // Admin who processed the order
+  processedAt: timestamp('processed_at'), // When the order was processed
   createdAt: timestamp('created_at').defaultNow(),
 });
 
@@ -60,6 +62,10 @@ export const orderEntries = pgTable("order_entries", {
 export const ordersRelations = relations(orders, ({ one, many }) => ({
   user: one(users, {
     fields: [orders.userId],
+    references: [users.id],
+  }),
+  processedByUser: one(users, {
+    fields: [orders.processedBy],
     references: [users.id],
   }),
   entries: many(orderEntries),

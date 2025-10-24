@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { neonClient } from '@/lib/db';
 import { executeDbQuery } from '@/lib/dbUtils';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,6 +12,12 @@ export async function POST(request: NextRequest) {
     if (!id || !entries || entries.length === 0) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+
+    // Get the current user's ID from the session to track who processed the data
+    const session = await getServerSession(authOptions);
+    const userId = (session?.user as any)?.id ? parseInt((session?.user as any)?.id) : null;
+    
+    console.log(`Bundle allocator data processed by user ${userId} (${session?.user?.email}) at ${new Date().toISOString()}`);
 
     // Prevent bundle-categorizer data from being saved to database
     if (type === 'bundle-categorizer') {
@@ -22,10 +30,10 @@ export async function POST(request: NextRequest) {
       await neonClient`BEGIN`;
       
       try {
-        // Insert history entry using neonClient
+        // Insert history entry using neonClient with user tracking
         await neonClient`
-          INSERT INTO history_entries (id, date, timestamp, total_gb, valid_count, invalid_count, duplicate_count, type)
-          VALUES (${id}, ${date}, ${timestamp}, ${totalGB}, ${validCount}, ${invalidCount}, ${duplicateCount}, ${type})
+          INSERT INTO history_entries (id, date, timestamp, total_gb, valid_count, invalid_count, duplicate_count, type, user_id)
+          VALUES (${id}, ${date}, ${timestamp}, ${totalGB}, ${validCount}, ${invalidCount}, ${duplicateCount}, ${type}, ${userId})
           ON CONFLICT (id) DO NOTHING
         `;
 

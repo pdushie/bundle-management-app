@@ -27,6 +27,13 @@ type OrderEntry = {
   createdAt: string;
   source?: 'order_entries' | 'phone_entries';
   originalEntry?: any;
+  adminInfo?: {
+    adminName: string;
+    adminEmail: string;
+  };
+  order?: {
+    processedAt?: string;
+  };
 };
 
 // Main component for order tracking
@@ -42,6 +49,8 @@ export default function OrderTrackingApp() {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [processedByFilter, setProcessedByFilter] = useState<string>("all");
+  const [admins, setAdmins] = useState<Array<{id: string, name: string, email: string}>>([]);
   const [isFiltering, setIsFiltering] = useState<boolean>(false);
   
   // Pagination states
@@ -57,11 +66,12 @@ export default function OrderTrackingApp() {
     // Ensure this only runs on the client side
     if (typeof window !== 'undefined') {
       fetchOrderEntries();
+      fetchAdmins();
     }
   }, []);
   
   // Function to fetch order entries with or without filters
-  const fetchOrderEntries = async (filters?: { phoneNumber?: string, startDate?: string, endDate?: string, status?: string }) => {
+  const fetchOrderEntries = async (filters?: { phoneNumber?: string, startDate?: string, endDate?: string, status?: string, processedBy?: string }) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -111,7 +121,7 @@ export default function OrderTrackingApp() {
     setIsFiltering(true);
     
     // Create filter object
-    const filters: { phoneNumber?: string; startDate?: string; endDate?: string; status?: string } = {};
+    const filters: { phoneNumber?: string; startDate?: string; endDate?: string; status?: string; processedBy?: string } = {};
     
     if (searchTerm) {
       filters.phoneNumber = searchTerm;
@@ -131,6 +141,10 @@ export default function OrderTrackingApp() {
       filters.status = statusFilter;
     }
     
+    if (processedByFilter && processedByFilter !== "all") {
+      filters.processedBy = processedByFilter;
+    }
+    
     // Check if we have any filters
     if (Object.keys(filters).length > 0) {
       console.log("Applying filters:", JSON.stringify(filters));
@@ -147,7 +161,21 @@ export default function OrderTrackingApp() {
     setStartDate("");
     setEndDate("");
     setStatusFilter("all");
+    setProcessedByFilter("all");
     fetchOrderEntries();
+  };
+
+  // Function to fetch available admins for the filter
+  const fetchAdmins = async () => {
+    try {
+      const response = await fetch("/api/admin/admins");
+      if (response.ok) {
+        const data = await response.json();
+        setAdmins(data.admins || []);
+      }
+    } catch (error) {
+      console.error("Error fetching admins:", error);
+    }
   };
 
   // Apply sorting when orderEntries changes
@@ -303,8 +331,28 @@ export default function OrderTrackingApp() {
             >
               <option value="all">All Statuses</option>
               <option value="pending">Pending</option>
+              <option value="processed">Processed</option>
               <option value="sent">Sent</option>
               <option value="error">Error</option>
+            </select>
+          </div>
+          
+          {/* Processed By Filter */}
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Filter className="h-5 w-5 text-gray-700" />
+            </div>
+            <select
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              value={processedByFilter}
+              onChange={(e) => setProcessedByFilter(e.target.value)}
+            >
+              <option value="all">All Admins</option>
+              {admins.map((admin) => (
+                <option key={admin.id} value={admin.id}>
+                  {admin.name}
+                </option>
+              ))}
             </select>
           </div>
           
@@ -434,6 +482,12 @@ export default function OrderTrackingApp() {
               >
                 Order ID
               </th>
+              <th 
+                scope="col" 
+                className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider"
+              >
+                Processed By
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -468,11 +522,28 @@ export default function OrderTrackingApp() {
                       ? `History: ${entry.orderId}`
                       : entry.orderId}
                   </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                    {entry.adminInfo ? (
+                      <div className="flex flex-col">
+                        <span className="font-medium text-gray-900">{entry.adminInfo.adminName}</span>
+                        <span className="text-xs text-gray-500">{entry.adminInfo.adminEmail}</span>
+                        {entry.order?.processedAt && (
+                          <span className="text-xs text-gray-400">
+                            {formatDate(new Date(entry.order.processedAt))}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 italic">
+                        {entry.source === 'phone_entries' ? 'N/A' : 'Not processed'}
+                      </span>
+                    )}
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-gray-700">
+                <td colSpan={6} className="px-4 py-8 text-center text-gray-700">
                   No order entries match your search criteria
                 </td>
               </tr>

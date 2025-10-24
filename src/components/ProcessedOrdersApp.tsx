@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { getProcessedOrdersOldestFirst, Order } from '@/lib/orderClient';
+import { getProcessedOrdersWithAdminInfo, getProcessedOrdersOldestFirst, Order } from '@/lib/orderClient';
 import { useOrderCount } from '@/lib/orderContext';
 import { ORDER_UPDATED_EVENT, ORDER_PROCESSED_EVENT, notifyCountUpdated } from '@/lib/orderNotifications';
 import { ChevronLeft, ChevronRight, X, Search, Eye } from 'lucide-react';
@@ -26,7 +26,7 @@ export default function ProcessedOrdersApp() {
   const fetchProcessedOrders = async () => {
     try {
       setLoading(true);
-      const processedOrders = await getProcessedOrdersOldestFirst();
+      const processedOrders = await getProcessedOrdersWithAdminInfo();
       setOrders(processedOrders);
       refreshOrderCount();
     } catch (error) {
@@ -251,7 +251,7 @@ export default function ProcessedOrdersApp() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[600px]">
+              <table className="w-full min-w-[800px]">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">Order ID</th>
@@ -282,6 +282,7 @@ export default function ProcessedOrdersApp() {
                       </div>
                     </th>
                     <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">Data</th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">Processed By</th>
                     <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">Status</th>
                   </tr>
                 </thead>
@@ -310,6 +311,21 @@ export default function ProcessedOrdersApp() {
                             : `${order.totalData} GB`
                           }
                         </span>
+                      </td>
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-900">
+                        {order.adminName ? (
+                          <div className="flex flex-col">
+                            <span className="font-medium text-gray-900">{order.adminName}</span>
+                            <span className="text-xs text-gray-500">{order.adminEmail}</span>
+                            {order.processedAt && (
+                              <span className="text-xs text-gray-400">
+                                {new Date(order.processedAt).toLocaleString()}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 italic">Unknown</span>
+                        )}
                       </td>
                       <td className="px-3 sm:px-6 py-2 sm:py-4">
                         <div className="flex items-center gap-2">
@@ -378,13 +394,23 @@ export default function ProcessedOrdersApp() {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-xl font-bold mb-2">Order Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                     <div><span className="font-medium">Order ID:</span> {selectedOrder.id}</div>
                     <div><span className="font-medium">User:</span> {selectedOrder.userName}</div>
                     <div><span className="font-medium">Date:</span> {new Date(selectedOrder.timestamp).toLocaleString()}</div>
                     <div><span className="font-medium">Total Data:</span> {selectedOrder.totalData > 1023 
                       ? `${(selectedOrder.totalData / 1024).toFixed(2)} TB` 
                       : `${selectedOrder.totalData} GB`}
+                    </div>
+                    <div>
+                      <span className="font-medium">Processed By:</span> {selectedOrder.adminName || 'Unknown'}
+                    </div>
+                    <div>
+                      <span className="font-medium">Processed At:</span> {
+                        selectedOrder.processedAt 
+                          ? new Date(selectedOrder.processedAt).toLocaleString() 
+                          : 'Unknown'
+                      }
                     </div>
                   </div>
                 </div>

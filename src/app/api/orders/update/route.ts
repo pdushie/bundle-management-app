@@ -21,6 +21,13 @@ export async function PUT(request: NextRequest) {
     const session = await getServerSession(authOptions);
     const userId = (session?.user as any)?.id ? parseInt((session?.user as any)?.id) : null;
     
+    // If order is being processed, capture admin info
+    if (order.status === "processed" && session?.user) {
+      order.processedBy = userId;
+      order.processedAt = new Date().toISOString();
+      console.log(`Order ${order.id} processed by admin ${userId} (${session.user.email}) at ${order.processedAt}`);
+    }
+    
     // Ensure the order has accurate tier-based pricing for all entries
     console.log(`Updating order ${order.id} with accurate tier pricing calculations`);
     const orderWithCost = await ensureOrderCosts(order, userId);

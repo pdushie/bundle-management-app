@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { orderEntries, phoneEntries, orders } from "@/lib/schema";
+import { orderEntries, phoneEntries, orders, users, historyEntries } from "@/lib/schema";
 import { and, desc, like, gte, lte, eq } from "drizzle-orm";
 
 // Helper function to transform phone entries to match order entry format
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Get filter parameters from request body
-    const { phoneNumber, startDate, endDate, status } = await req.json();
+    const { phoneNumber, startDate, endDate, status, processedBy } = await req.json();
     
     // Build filter conditions for order entries
     let orderConditions = [];
@@ -97,33 +97,90 @@ export async function POST(req: NextRequest) {
     let orderEntriesData: any[] = [];
     try {
       let orderEntriesResult;
-      if (orderConditions.length > 0) {
+      
+      // If processedBy filter is specified, we need to join with orders table
+      if (processedBy && processedBy !== 'all') {
+        // Join order_entries with orders and filter by processedBy
+        const joinConditions = [eq(orderEntries.orderId, orders.id)];
+        joinConditions.push(eq(orders.processedBy, parseInt(processedBy)));
+        
+        // Add other order-level conditions
+        if (orderConditions.length > 0) {
+          joinConditions.push(...orderConditions);
+        }
+        
         orderEntriesResult = await db
-          .select()
+          .select({
+            id: orderEntries.id,
+            orderId: orderEntries.orderId,
+            number: orderEntries.number,
+            allocationGB: orderEntries.allocationGB,
+            status: orderEntries.status,
+            createdAt: orderEntries.createdAt,
+            cost: orderEntries.cost
+          })
           .from(orderEntries)
-          .where(and(...orderConditions))
+          .innerJoin(orders, eq(orderEntries.orderId, orders.id))
+          .where(and(...joinConditions))
           .orderBy(desc(orderEntries.createdAt))
           .limit(500);
       } else {
-        orderEntriesResult = await db
-          .select()
-          .from(orderEntries)
-          .orderBy(desc(orderEntries.createdAt))
-          .limit(500);
+        // Original logic for when no processedBy filter
+        if (orderConditions.length > 0) {
+          orderEntriesResult = await db
+            .select()
+            .from(orderEntries)
+            .where(and(...orderConditions))
+            .orderBy(desc(orderEntries.createdAt))
+            .limit(500);
+        } else {
+          orderEntriesResult = await db
+            .select()
+            .from(orderEntries)
+            .orderBy(desc(orderEntries.createdAt))
+            .limit(500);
+        }
       }
       
-      // Get associated order data for each entry
+      // Get associated order data and admin info for each entry
       orderEntriesData = [];
       for (const entry of orderEntriesResult) {
         const orderResult = await db
-          .select()
+          .select({
+            id: orders.id,
+            status: orders.status,
+            processedBy: orders.processedBy,
+            processedAt: orders.processedAt,
+            userName: orders.userName,
+            userEmail: orders.userEmail
+          })
           .from(orders)
           .where(eq(orders.id, entry.orderId))
           .limit(1);
         
+        let adminInfo = null;
+        console.log('Filter API - Order result for entry:', entry.id, 'orderResult:', orderResult);
+        if (orderResult.length > 0 && orderResult[0].processedBy) {
+          console.log('Filter API - Looking up admin for processedBy:', orderResult[0].processedBy);
+          const adminResult = await db
+            .select({
+              adminName: users.name,
+              adminEmail: users.email
+            })
+            .from(users)
+            .where(eq(users.id, orderResult[0].processedBy))
+            .limit(1);
+          
+          console.log('Filter API - Admin lookup result:', adminResult);
+          adminInfo = adminResult.length > 0 ? adminResult[0] : null;
+        } else {
+          console.log('Filter API - No processedBy found for order:', orderResult.length > 0 ? orderResult[0] : 'no order');
+        }
+        
         orderEntriesData.push({
           ...entry,
-          order: orderResult.length > 0 ? orderResult[0] : null
+          order: orderResult.length > 0 ? orderResult[0] : null,
+          adminInfo: adminInfo
         });
       }
     } catch (orderError) {
@@ -192,20 +249,36 @@ export async function POST(req: NextRequest) {
       phoneConditions.push(phoneDateCondition);
     }
     
-    // Query phone entries using direct queries - explicitly type the variable
+    // Query phone entries with admin info from history entries
     let phoneEntriesData: any[] = [];
     try {
+      // Join phone_entries with history_entries and users to get admin info
+      const phoneBaseQuery = db
+        .select({
+          // Phone entry fields
+          id: phoneEntries.id,
+          historyEntryId: phoneEntries.historyEntryId,
+          number: phoneEntries.number,
+          allocationGB: phoneEntries.allocationGB,
+          isValid: phoneEntries.isValid,
+          isDuplicate: phoneEntries.isDuplicate,
+          createdAt: phoneEntries.createdAt,
+          // Admin info from history entries
+          adminName: users.name,
+          adminEmail: users.email,
+          userId: historyEntries.userId
+        })
+        .from(phoneEntries)
+        .leftJoin(historyEntries, eq(phoneEntries.historyEntryId, historyEntries.id))
+        .leftJoin(users, eq(historyEntries.userId, users.id));
+      
       if (phoneConditions.length > 0) {
-        phoneEntriesData = await db
-          .select()
-          .from(phoneEntries)
+        phoneEntriesData = await phoneBaseQuery
           .where(and(...phoneConditions))
           .orderBy(desc(phoneEntries.createdAt))
           .limit(500);
       } else {
-        phoneEntriesData = await db
-          .select()
-          .from(phoneEntries)
+        phoneEntriesData = await phoneBaseQuery
           .orderBy(desc(phoneEntries.createdAt))
           .limit(500);
       }

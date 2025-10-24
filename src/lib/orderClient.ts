@@ -25,6 +25,10 @@ export type Order = {
   pricingProfileName?: string; // Name of the pricing profile used
   cost?: number; // Total cost of the order
   estimatedCost?: number | null; // Total estimated cost of the order
+  processedBy?: number; // ID of admin who processed the order
+  processedAt?: string; // Timestamp when order was processed
+  adminEmail?: string; // Email of admin who processed the order (for reporting)
+  adminName?: string; // Name of admin who processed the order (for reporting)
   isSelected?: boolean;
   userId?: number;
 };
@@ -217,6 +221,29 @@ export const getProcessedOrdersOldestFirst = async (): Promise<Order[]> => {
   } catch (error) {
     console.error('Failed to get processed orders:', error);
     return [];
+  }
+};
+
+// Get processed orders with admin information for the processed orders tab
+export const getProcessedOrdersWithAdminInfo = async (): Promise<Order[]> => {
+  try {
+    const response = await fetchWithRetry('/api/admin/orders', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get processed orders with admin info');
+    }
+
+    const data = await response.json();
+    return data.orders || [];
+  } catch (error) {
+    console.error('Failed to get processed orders with admin info:', error);
+    // Fallback to regular processed orders if admin API fails
+    return await getProcessedOrdersOldestFirst();
   }
 };
 

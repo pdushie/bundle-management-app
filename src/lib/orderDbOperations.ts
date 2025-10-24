@@ -1,6 +1,6 @@
 import { db, neonClient } from './db';
-import { orders, orderEntries } from './schema';
-import { eq, desc, asc, and } from 'drizzle-orm';
+import { orders, orderEntries, users } from './schema';
+import { eq, desc, asc, and, gte, lte } from 'drizzle-orm';
 
 export type OrderEntryStatus = "pending" | "sent" | "error";
 
@@ -26,6 +26,8 @@ export type Order = {
   estimatedCost?: number | null;
   pricingProfileId?: number;
   pricingProfileName?: string;
+  processedBy?: number;
+  processedAt?: string;
   userId?: number;
 };
 
@@ -56,6 +58,8 @@ const mapDbOrderToOrder = async (dbOrder: any): Promise<Order> => {
     estimatedCost: dbOrder.estimatedCost ? parseFloat(dbOrder.estimatedCost as string) : (dbOrder.cost ? parseFloat(dbOrder.cost as string) : null),
     pricingProfileId: dbOrder.pricingProfileId || undefined,
     pricingProfileName: dbOrder.pricingProfileName || undefined,
+    processedBy: dbOrder.processedBy || undefined,
+    processedAt: dbOrder.processedAt || undefined,
     userId: dbOrder.userId || undefined
   };
 };
@@ -247,12 +251,15 @@ export const updateOrder = async (orderId: string, updates: Partial<Order>): Pro
       if (drizzleUpdates.totalData !== undefined) drizzleUpdates.totalData = drizzleUpdates.totalData.toString();
       if (drizzleUpdates.cost !== undefined) drizzleUpdates.cost = drizzleUpdates.cost !== null ? drizzleUpdates.cost.toString() : null;
       if (drizzleUpdates.estimatedCost !== undefined) drizzleUpdates.estimatedCost = drizzleUpdates.estimatedCost !== null ? drizzleUpdates.estimatedCost.toString() : null;
+      // Convert processedBy and processedAt
+      if (drizzleUpdates.processedBy !== undefined) drizzleUpdates.processedBy = drizzleUpdates.processedBy;
+      if (drizzleUpdates.processedAt !== undefined) drizzleUpdates.processedAt = drizzleUpdates.processedAt;
       await db.update(orders).set(drizzleUpdates).where(eq(orders.id, orderId));
     } else {
       // Only allow updating one field at a time for Neon
       const allowedFields = [
         'timestamp', 'date', 'time', 'userName', 'userEmail', 'totalData', 'totalCount', 'status',
-        'cost', 'estimatedCost', 'pricingProfileId', 'pricingProfileName', 'userId'
+        'cost', 'estimatedCost', 'pricingProfileId', 'pricingProfileName', 'userId', 'processedBy', 'processedAt'
       ];
       let updated = false;
       for (const key of allowedFields) {
@@ -478,5 +485,119 @@ export const getOrderCounts = async (userEmail?: string): Promise<{
     
     // Return default counts with connection error flag
     return { ...defaultCounts, connectionError: true };
+  }
+};
+
+// Get orders with admin information for reporting - includes joins to get admin details
+export const getOrdersWithAdminInfo = async (filters?: {
+  adminId?: string;
+  adminEmail?: string;
+  userEmail?: string;
+  status?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}): Promise<Order[]> => {
+  try {
+    if (!db) throw new Error('Database not initialized');
+    
+    // Build where conditions
+    const conditions = [];
+    if (filters?.adminId) {
+      conditions.push(eq(orders.processedBy, parseInt(filters.adminId)));
+    }
+    if (filters?.adminEmail) {
+      conditions.push(eq(users.email, filters.adminEmail));
+    }
+    if (filters?.userEmail) {
+      conditions.push(eq(orders.userEmail, filters.userEmail));
+    }
+    if (filters?.status) {
+      conditions.push(eq(orders.status, filters.status));
+    }
+    if (filters?.dateFrom) {
+      conditions.push(gte(orders.date, filters.dateFrom));
+    }
+    if (filters?.dateTo) {
+      conditions.push(lte(orders.date, filters.dateTo));
+    }
+
+    // Build the query
+    let baseQuery = db
+      .select({
+        // Order fields
+        id: orders.id,
+        timestamp: orders.timestamp,
+        date: orders.date,
+        time: orders.time,
+        userName: orders.userName,
+        userEmail: orders.userEmail,
+        totalData: orders.totalData,
+        totalCount: orders.totalCount,
+        status: orders.status,
+        cost: orders.cost,
+        estimatedCost: orders.estimatedCost,
+        pricingProfileId: orders.pricingProfileId,
+        pricingProfileName: orders.pricingProfileName,
+        userId: orders.userId,
+        processedBy: orders.processedBy,
+        processedAt: orders.processedAt,
+        // Admin info
+        adminEmail: users.email,
+        adminName: users.name
+      })
+      .from(orders)
+      .leftJoin(users, eq(orders.processedBy, users.id))
+      .orderBy(desc(orders.timestamp));
+
+    // Apply conditions if any
+    const dbOrders = conditions.length > 0 
+      ? await baseQuery.where(and(...conditions))
+      : await baseQuery;
+    
+    // Map to application orders with entries and admin info
+    const allOrders: Order[] = [];
+    for (const dbOrder of dbOrders) {
+      // Fetch the entries for this order
+      const entries = await db
+        .select()
+        .from(orderEntries)
+        .where(eq(orderEntries.orderId, dbOrder.id));
+      
+      // Create order object with admin info
+      const orderWithEntries = {
+        id: dbOrder.id,
+        timestamp: dbOrder.timestamp,
+        date: dbOrder.date,
+        time: dbOrder.time,
+        userName: dbOrder.userName,
+        userEmail: dbOrder.userEmail,
+        totalData: dbOrder.totalData,
+        totalCount: dbOrder.totalCount,
+        status: dbOrder.status,
+        cost: dbOrder.cost,
+        estimatedCost: dbOrder.estimatedCost,
+        pricingProfileId: dbOrder.pricingProfileId,
+        pricingProfileName: dbOrder.pricingProfileName,
+        userId: dbOrder.userId,
+        processedBy: dbOrder.processedBy,
+        processedAt: dbOrder.processedAt,
+        entries: entries,
+        // Additional admin info for reporting
+        adminEmail: dbOrder.adminEmail,
+        adminName: dbOrder.adminName
+      };
+
+      const order = await mapDbOrderToOrder(orderWithEntries);
+      // Add admin info to the order for reporting
+      (order as any).adminEmail = dbOrder.adminEmail;
+      (order as any).adminName = dbOrder.adminName;
+      
+      allOrders.push(order);
+    }
+    
+    return allOrders;
+  } catch (error) {
+    console.error('Failed to get orders with admin info:', error);
+    throw error;
   }
 };
