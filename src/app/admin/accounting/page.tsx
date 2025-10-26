@@ -16,6 +16,61 @@ import { cn } from '@/lib/utils';
 import { Order } from '@/lib/costCalculationMiddleware';
 import NotAuthorized from '@/components/NotAuthorized';
 
+// Hook to check RBAC permissions
+function usePermissions() {
+  const [permissions, setPermissions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      const userId = (session?.user as any)?.id;
+      const userRole = (session?.user as any)?.role;
+      console.log('Fetching permissions for user:', { userId, userRole });
+      
+      if (!userId) {
+        console.log('No userId found, setting loading to false');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/admin/rbac/users/${userId}/permissions`);
+        console.log('Permissions API response status:', response.status);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Permissions API response:', data);
+          
+          if (data.success) {
+            const permissionNames = data.permissions.map((p: any) => p.name);
+            console.log('Setting permissions:', permissionNames);
+            setPermissions(permissionNames);
+          }
+        } else {
+          console.error('Permissions API failed with status:', response.status);
+        }
+      } catch (error) {
+        console.error('Error fetching permissions:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPermissions();
+  }, [(session?.user as any)?.id]);
+
+  const hasPermission = (permission: string) => {
+    return permissions.includes(permission);
+  };
+
+  const hasAnyPermission = (permissionList: string[]) => {
+    return permissionList.some(permission => permissions.includes(permission));
+  };
+
+  return { permissions, loading, hasPermission, hasAnyPermission };
+}
+
 type UserOption = {
   id: number;
   name: string;
@@ -25,9 +80,8 @@ type UserOption = {
 export default function AccountingPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { hasPermission, loading: permissionsLoading } = usePermissions();
   
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [dateValue, setDateValue] = useState<Date | undefined>(new Date());
   const [users, setUsers] = useState<UserOption[]>([]);
@@ -39,15 +93,9 @@ export default function AccountingPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isUserListLoading, setIsUserListLoading] = useState(false);
 
-  // Check if the user is admin
+  // Check authentication and permissions
   useEffect(() => {
     if (status === 'authenticated' && session) {
-      // Check if the user is admin
-      const userRole = (session.user as any)?.role;
-      const userIsAdmin = (session.user as any)?.isAdmin === true;
-      
-      setIsAdmin(userRole === 'admin' || userIsAdmin);
-      setIsSuperAdmin(userRole === 'superadmin');
       setIsLoading(false);
     } else if (status === 'unauthenticated') {
       // Redirect to login if not authenticated
@@ -55,12 +103,12 @@ export default function AccountingPage() {
     }
   }, [session, status, router]);
 
-  // Load users when the component mounts
+  // Load users when the component mounts and user has permission
   useEffect(() => {
-    if ((isAdmin || isSuperAdmin) && !isUserListLoading) {
+    if (!permissionsLoading && hasPermission('admin.accounting') && !isUserListLoading) {
       loadUsers();
     }
-  }, [isAdmin, isSuperAdmin]);
+  }, [hasPermission, permissionsLoading, isUserListLoading]);
 
   // Function to load all users
   const loadUsers = async () => {
@@ -157,8 +205,8 @@ export default function AccountingPage() {
     document.body.removeChild(link);
   };
 
-  // Show loading spinner while checking admin status
-  if (isLoading) {
+  // Show loading spinner while checking permissions
+  if (isLoading || permissionsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader className="h-8 w-8 animate-spin text-blue-500" />
@@ -166,8 +214,8 @@ export default function AccountingPage() {
     );
   }
 
-  // Show unauthorized component if not admin
-  if (!isAdmin && !isSuperAdmin) {
+  // Show unauthorized component if user doesn't have accounting permission
+  if (!hasPermission('admin.accounting')) {
     return <NotAuthorized />;
   }
 

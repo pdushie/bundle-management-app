@@ -25,7 +25,7 @@ export async function requireAuth() {
 
 export async function requireAdmin() {
   const session = await requireAuth() as any
-  if (session.user?.role !== 'admin' && session.user?.role !== 'superadmin') {
+  if (session.user?.role !== 'admin' && session.user?.role !== 'standard_admin' && session.user?.role !== 'super_admin') {
     throw new Error('Admin access required')
   }
   return session
@@ -33,7 +33,7 @@ export async function requireAdmin() {
 
 export async function requireSuperAdmin() {
   const session = await requireAuth() as any
-  if (session.user?.role !== 'superadmin') {
+  if (session.user?.role !== 'super_admin') {
     throw new Error('Super Admin access required')
   }
   return session
@@ -60,6 +60,47 @@ async function verifyUserRole(userId: string): Promise<string | null> {
     }
     
     return user.role;
+  } finally {
+    client.release();
+  }
+}
+
+// Utility function to get user's RBAC roles
+async function getUserRBACRoles(userId: number): Promise<string[]> {
+  const client = await pool.connect();
+  try {
+    const result = await client.query(`
+      SELECT r.name as role_name
+      FROM user_roles ur
+      JOIN roles r ON ur.role_id = r.id
+      WHERE ur.user_id = $1 AND ur.is_active = true AND r.is_active = true
+      ORDER BY r.name
+    `, [userId]);
+    
+    return result.rows.map(row => row.role_name);
+  } finally {
+    client.release();
+  }
+}
+
+// Get the primary role for session (preferring super_admin > admin > standard_admin > user > viewer)
+async function getPrimaryRole(userId: number): Promise<string> {
+  const roles = await getUserRBACRoles(userId);
+  
+  if (roles.includes('super_admin')) return 'super_admin';
+  if (roles.includes('admin')) return 'admin';
+  if (roles.includes('standard_admin')) return 'standard_admin';
+  if (roles.includes('user')) return 'user';
+  if (roles.includes('viewer')) return 'viewer';
+  
+  // Fallback to legacy role if no RBAC roles
+  const client = await pool.connect();
+  try {
+    const result = await client.query(
+      'SELECT role FROM users WHERE id = $1',
+      [userId]
+    );
+    return result.rows[0]?.role || 'user';
   } finally {
     client.release();
   }
@@ -145,11 +186,14 @@ function buildProviders() {
             role: user.role 
           });
           
+          // Get RBAC role for session
+          const primaryRole = await getPrimaryRole(user.id);
+          
           return {
             id: user.id,
             email: user.email,
             name: user.name,
-            role: user.role || 'user',
+            role: primaryRole,
           };
         } finally {
           client.release();
@@ -204,11 +248,14 @@ function buildProviders() {
               role: user.role 
             });
             
+            // Get RBAC role for session
+            const primaryRole = await getPrimaryRole(user.id);
+            
             return {
               id: user.id,
               email: user.email,
               name: user.name,
-              role: user.role || 'user',
+              role: primaryRole,
             };
           } finally {
             client.release();
@@ -302,20 +349,22 @@ export const authOptions: NextAuthOptions = {
           (now - roleVerifiedAt) > 900)) { // Verify every 15 minutes
         
         console.log('Verifying user role from database for user:', token.id);
-        const currentRole = await verifyUserRole(token.id as string);
         
-        if (currentRole === null) {
+        // First check if user is still active
+        const legacyRole = await verifyUserRole(token.id as string);
+        if (legacyRole === null) {
           console.error('User not found or inactive during role verification:', token.id);
-          // Return a special token that will be handled in session callback
           return {
             ...token,
             invalid: true
           };
         }
         
+        // Get current RBAC role
+        const currentRole = await getPrimaryRole(parseInt(token.id as string));
+        
         if (currentRole !== token.role) {
-          console.error(`Role mismatch detected! Token role: ${token.role}, DB role: ${currentRole}`);
-          // Update with correct role from database
+          console.log(`RBAC role updated! Token role: ${token.role}, New RBAC role: ${currentRole}`);
           token.role = currentRole;
         }
         

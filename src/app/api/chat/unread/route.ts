@@ -14,8 +14,8 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Only admin and superadmin can access this endpoint
-    if (session.user.role !== "admin" && session.user.role !== "superadmin") {
+    // Only admin and super_admin can access this endpoint
+    if (session.user.role !== "admin" && session.user.role !== "super_admin") {
       return NextResponse.json(
         { success: false, error: "Forbidden" }, 
         { status: 403 }

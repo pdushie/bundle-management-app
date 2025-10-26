@@ -32,7 +32,7 @@ export async function GET(
     }
     if (
       session.user.role !== "admin" && 
-      session.user.role !== "superadmin" && 
+      session.user.role !== "super_admin" && 
       session.user.email !== userIdParam // assuming userIdParam is email, otherwise adjust accordingly
     ) {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
@@ -121,7 +121,7 @@ export async function POST(
     if (!session) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
-    if (session.user.role !== "admin" && session.user.role !== "superadmin") {
+    if (session.user.role !== "admin" && session.user.role !== "super_admin") {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
     // Use a different variable name to avoid redeclaration

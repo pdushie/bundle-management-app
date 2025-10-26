@@ -24,7 +24,7 @@ export default function MinimumEntriesAdmin() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Check if user has admin access
-  const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'superadmin';
+  const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'super_admin' || session?.user?.role === 'standard_admin';
 
   useEffect(() => {
     if (isAdmin) {
@@ -210,7 +210,7 @@ export default function MinimumEntriesAdmin() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        user.role === 'superadmin' 
+                        user.role === 'super_admin' 
                           ? 'bg-purple-100 text-purple-800'
                           : user.role === 'admin'
                           ? 'bg-blue-100 text-blue-800'

@@ -4,9 +4,64 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Users, Bell, ArrowLeft, Shield, MessageSquare, Settings } from 'lucide-react';
+import { Users, Bell, ArrowLeft, Shield, MessageSquare, Settings, UserCheck, DollarSign } from 'lucide-react';
 import AdminChatNotifier from '@/components/admin/AdminChatNotifier';
 import AdminOTPStatusIndicator from '@/components/admin/AdminOTPStatusIndicator';
+
+// Hook to check RBAC permissions
+function usePermissions() {
+  const [permissions, setPermissions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      const userId = (session?.user as any)?.id;
+      const userRole = (session?.user as any)?.role;
+      console.log('Fetching permissions for user:', { userId, userRole });
+      
+      if (!userId) {
+        console.log('No userId found, setting loading to false');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/admin/rbac/users/${userId}/permissions`);
+        console.log('Permissions API response status:', response.status);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Permissions API response:', data);
+          
+          if (data.success) {
+            const permissionNames = data.permissions.map((p: any) => p.name);
+            console.log('Setting permissions:', permissionNames);
+            setPermissions(permissionNames);
+          }
+        } else {
+          console.error('Permissions API failed with status:', response.status);
+        }
+      } catch (error) {
+        console.error('Error fetching permissions:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPermissions();
+  }, [(session?.user as any)?.id]);
+
+  const hasPermission = (permission: string) => {
+    return permissions.includes(permission);
+  };
+
+  const hasAnyPermission = (permissionList: string[]) => {
+    return permissionList.some(permission => permissions.includes(permission));
+  };
+
+  return { permissions, loading, hasPermission, hasAnyPermission };
+}
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -17,6 +72,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const { data: session } = useSession();
   const userRole = session?.user?.role;
   const [unreadCount, setUnreadCount] = useState(0);
+  const { permissions, loading: permissionsLoading, hasPermission, hasAnyPermission } = usePermissions();
   
   const isActive = (path: string) => {
     return pathname === path;
@@ -25,7 +81,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   // Fetch unread message count for the navigation badge
   useEffect(() => {
     const fetchUnreadCount = async () => {
-      if (!session?.user || (session.user.role !== 'admin' && session.user.role !== 'superadmin')) {
+      if (!session?.user || (session.user.role !== 'admin' && session.user.role !== 'standard_admin' && session.user.role !== 'super_admin')) {
         return;
       }
       
@@ -58,12 +114,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     return () => clearInterval(intervalId);
   }, [session]);
   
-  // Redirect non-superadmin users attempting to access superadmin-only pages
-  if ((pathname !== '/admin/announcements' && pathname !== '/admin/chat') && userRole === 'admin') {
-    // For admin users, redirect to announcements page if they try to access superadmin pages
-    if (typeof window !== 'undefined') {
-      window.location.href = '/admin/announcements';
-    }
+  // Show loading state while permissions are being fetched
+  if (permissionsLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading permissions...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -104,8 +164,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4">
           <nav className="flex space-x-4">
-            {/* Only show User Management link to superadmins */}
-            {userRole === 'superadmin' && (
+            {/* Show User Management link to users with user permissions or legacy roles */}
+            {(hasAnyPermission(['users.read', 'users.create', 'users.update', 'users.delete', 'users.manage']) || userRole === 'admin' || userRole === 'standard_admin' || userRole === 'super_admin') && (
               <Link
                 href="/admin"
                 className={`px-3 py-4 text-sm font-medium ${
@@ -121,8 +181,42 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </Link>
             )}
             
-            {/* Only show OTP Settings link to superadmins */}
-            {userRole === 'superadmin' && (
+            {/* Show Pricing Management link to users with pricing permissions or legacy roles */}
+            {(hasAnyPermission(['pricing.read', 'pricing.manage', 'pricing:create', 'pricing:update', 'pricing:delete']) || userRole === 'admin' || userRole === 'standard_admin' || userRole === 'super_admin') && (
+              <Link
+                href="/admin/pricing"
+                className={`px-3 py-4 text-sm font-medium ${
+                  isActive('/admin/pricing')
+                    ? 'text-blue-600 border-b-2 border-blue-600'
+                    : 'text-gray-900 hover:text-blue-600'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <DollarSign className="w-4 h-4" />
+                  Pricing Management
+                </span>
+              </Link>
+            )}
+            
+            {/* Show RBAC Management link to users with RBAC permissions or super_admin */}
+            {(hasAnyPermission(['rbac.roles.read', 'rbac.roles.manage', 'rbac.permissions.read', 'rbac.users.manage']) || userRole === 'super_admin') && (
+              <Link
+                href="/admin/rbac"
+                className={`px-3 py-4 text-sm font-medium ${
+                  isActive('/admin/rbac')
+                    ? 'text-blue-600 border-b-2 border-blue-600'
+                    : 'text-gray-900 hover:text-blue-600'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <UserCheck className="w-4 h-4" />
+                  RBAC Management
+                </span>
+              </Link>
+            )}
+            
+            {/* Show OTP Settings link to super_admin or users with system admin permissions */}
+            {(userRole === 'super_admin' || hasPermission('system:admin')) && (
               <Link
                 href="/admin/otp-settings"
                 className={`px-3 py-4 text-sm font-medium ${
@@ -138,7 +232,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </Link>
             )}
             
-            {/* Show Announcements link to both admin and superadmin */}
+            {/* Show Announcements link to users with announcements permissions or super_admin role only */}
+            {(hasAnyPermission(['admin.announcements']) || userRole === 'super_admin') && (
             <Link
               href="/admin/announcements"
               className={`px-3 py-4 text-sm font-medium ${
@@ -152,8 +247,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 Announcements
               </span>
             </Link>
+            )}
             
-            {/* Show Chat link to both admin and superadmin */}
+            {/* Show Chat link to users with chat permissions or super_admin role only */}
+            {(hasAnyPermission(['admin.chat']) || userRole === 'super_admin') && (
             <Link
               href="/admin/chat"
               className={`px-3 py-4 text-sm font-medium ${
@@ -172,6 +269,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 )}
               </span>
             </Link>
+            )}
           </nav>
         </div>
       </div>

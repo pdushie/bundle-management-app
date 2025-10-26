@@ -21,25 +21,39 @@ interface UserData {
   email: string;
   role: string;
   status: string;
+  is_active: boolean;
   email_verified: boolean;
   created_at: string;
   last_login_at?: string;
 }
 
+interface RoleData {
+  id: number;
+  name: string;
+  displayName: string;
+  description: string | null;
+  isActive: boolean;
+  isSystemRole: boolean;
+}
+
 export default function UserManagement() {
   const [users, setUsers] = useState<UserData[]>([]);
+  const [roles, setRoles] = useState<RoleData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [rolesLoading, setRolesLoading] = useState(true);
   
-  // Fetch users on component mount
+  // Fetch users and roles on component mount
   useEffect(() => {
     fetchUsers();
+    fetchRoles();
   }, []);
   
   // Function to fetch users
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/admin/users");
+      // Add cache-busting parameter to ensure fresh data
+      const response = await fetch(`/api/admin/users?_=${Date.now()}`);
       if (response.ok) {
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
@@ -55,6 +69,26 @@ export default function UserManagement() {
       setIsLoading(false);
     }
   };
+  
+  // Function to fetch RBAC roles
+  const fetchRoles = async () => {
+    setRolesLoading(true);
+    try {
+      const response = await fetch("/api/admin/rbac/roles");
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          // Filter to only active roles
+          const activeRoles = data.data.filter((role: RoleData) => role.isActive);
+          setRoles(activeRoles);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch roles:", error);
+    } finally {
+      setRolesLoading(false);
+    }
+  };
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
   const [isUpdateRoleModalOpen, setIsUpdateRoleModalOpen] = useState(false);
@@ -66,8 +100,18 @@ export default function UserManagement() {
     name: "",
     email: "",
     password: "",
-    role: "user"
+    role: ""
   });
+  
+  // Set default role when roles are loaded
+  useEffect(() => {
+    if (roles.length > 0 && !newUser.role) {
+      // Default to lowest privilege role or first role available
+      const defaultRole = roles.find(r => r.name.includes('user') || r.name.includes('viewer')) || 
+                         roles.sort((a, b) => a.displayName.localeCompare(b.displayName))[0];
+      setNewUser(prev => ({ ...prev, role: defaultRole.name }));
+    }
+  }, [roles, newUser.role]);
   
   // Reset password form state
   const [newPassword, setNewPassword] = useState("");
@@ -98,11 +142,13 @@ export default function UserManagement() {
       
       setSuccess("User created successfully");
       // Reset form
+      const defaultRole = roles.find(r => r.name.includes('user') || r.name.includes('viewer')) || 
+                         roles.sort((a, b) => a.displayName.localeCompare(b.displayName))[0];
       setNewUser({
         name: "",
         email: "",
         password: "",
-        role: "user"
+        role: defaultRole ? defaultRole.name : ""
       });
       
       // Close modal after a short delay
@@ -183,15 +229,31 @@ export default function UserManagement() {
         throw new Error(data.error || "Failed to update role");
       }
       
-      setSuccess("User role updated successfully");
+      if (data.isCurrentUser) {
+        setSuccess("Your role has been updated successfully. You may need to refresh the page or log out and log back in to see the changes.");
+      } else {
+        setSuccess("User role updated successfully");
+      }
       
-      // Close modal after a short delay
+      // Close modal after a longer delay if it's current user to let them read the message
       setTimeout(() => {
         setIsUpdateRoleModalOpen(false);
         setSelectedUser(null);
         setSuccess(null);
         fetchUsers(); // Refresh user list
-      }, 1000);
+        
+        // If it's the current user, suggest page refresh
+        if (data.isCurrentUser) {
+          if (confirm("Your role has been changed. Would you like to refresh the page to apply the changes?")) {
+            window.location.reload();
+          }
+        } else {
+          // Force a more aggressive refresh for other users
+          setTimeout(() => {
+            fetchUsers();
+          }, 500);
+        }
+      }, data.isCurrentUser ? 2000 : 1000);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -201,7 +263,9 @@ export default function UserManagement() {
   
   // Handle toggling user status (enable/disable)
   const handleToggleStatus = async (user: UserData) => {
-    const isEnabling = user.status !== "approved";
+    // Check both status and is_active for proper enable/disable logic
+    const isCurrentlyEnabled = user.status === "approved" && (user as any).is_active !== false;
+    const isEnabling = !isCurrentlyEnabled;
     
     try {
       const response = await fetch("/api/admin/users/toggle-status", {
@@ -225,47 +289,48 @@ export default function UserManagement() {
     }
   };
   
-  // Get role badge color
-  const getRoleBadgeColor = (role: string) => {
-    switch (role) {
-      case "superadmin":
-        return "bg-red-100 text-red-700";
-      case "admin":
-        return "bg-purple-100 text-purple-700";
-      case "manager":
-        return "bg-green-100 text-green-700";
-      default:
-        return "bg-blue-100 text-blue-700";
+  // Get role badge color dynamically based on role hierarchy
+  const getRoleBadgeColor = (roleName: string) => {
+    const role = roles.find(r => r.name === roleName);
+    if (!role) return "bg-gray-100 text-gray-700";
+    
+    // Assign colors based on role name patterns or hierarchy
+    if (roleName.includes('super') || roleName.includes('root')) {
+      return "bg-red-100 text-red-700";
+    } else if (roleName.includes('admin')) {
+      return "bg-purple-100 text-purple-700";
+    } else if (roleName.includes('manager') || roleName.includes('moderator')) {
+      return "bg-green-100 text-green-700";
+    } else if (roleName.includes('viewer') || roleName.includes('read')) {
+      return "bg-gray-100 text-gray-700";
+    } else {
+      return "bg-blue-100 text-blue-700";
     }
   };
   
   // Get status badge color
-  const getStatusBadgeColor = (status: string) => {
+  const getStatusBadgeColor = (status: string, isActive: boolean = true) => {
+    // If user is not active, always show as disabled
+    if (!isActive || status === "disabled") {
+      return "bg-red-100 text-red-700";
+    }
+    
     switch (status) {
       case "approved":
         return "bg-green-100 text-green-700";
       case "pending":
         return "bg-yellow-100 text-yellow-700";
       case "rejected":
-      case "disabled":
         return "bg-red-100 text-red-700";
       default:
         return "bg-gray-100 text-gray-700";
     }
   };
   
-  // Format readable role name
-  const formatRoleName = (role: string) => {
-    switch (role) {
-      case "superadmin":
-        return "Super Admin";
-      case "admin":
-        return "Admin";
-      case "manager":
-        return "Manager";
-      default:
-        return "User";
-    }
+  // Format readable role name using RBAC data
+  const formatRoleName = (roleName: string) => {
+    const role = roles.find(r => r.name === roleName);
+    return role ? role.displayName : roleName.charAt(0).toUpperCase() + roleName.slice(1);
   };
 
   return (
@@ -278,9 +343,12 @@ export default function UserManagement() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={fetchUsers}
+            onClick={() => {
+              fetchUsers();
+              fetchRoles();
+            }}
             className="flex items-center gap-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-200"
-            title="Refresh user list"
+            title="Refresh user list and roles"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M21 3V8H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -290,6 +358,7 @@ export default function UserManagement() {
               <path d="M16 21H21V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M8 3H3V8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
+            Refresh
           </button>
           <button
             onClick={() => setIsCreateModalOpen(true)}
@@ -362,8 +431,8 @@ export default function UserManagement() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs sm:text-sm leading-5 font-semibold rounded-full ${getStatusBadgeColor(user.status)}`}>
-                      {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+                    <span className={`px-2 py-1 inline-flex text-xs sm:text-sm leading-5 font-semibold rounded-full ${getStatusBadgeColor(user.status, user.is_active)}`}>
+                      {!user.is_active || user.status === "disabled" ? "Disabled" : user.status.charAt(0).toUpperCase() + user.status.slice(1)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -429,13 +498,13 @@ export default function UserManagement() {
                       <button
                         onClick={() => handleToggleStatus(user)}
                         className={`${
-                          user.status === "approved" 
+                          user.status === "approved" && user.is_active !== false
                             ? "text-red-600 hover:text-red-900 hover:bg-red-50" 
                             : "text-green-600 hover:text-green-900 hover:bg-green-50"
                         } p-1 rounded-md`}
-                        title={user.status === "approved" ? "Disable User" : "Enable User"}
+                        title={user.status === "approved" && user.is_active !== false ? "Disable User" : "Enable User"}
                       >
-                        {user.status === "approved" ? (
+                        {user.status === "approved" && user.is_active !== false ? (
                           <ToggleRight className="w-5 h-5" />
                         ) : (
                           <ToggleLeft className="w-5 h-5" />
@@ -532,11 +601,17 @@ export default function UserManagement() {
                       className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={newUser.role}
                       onChange={(e) => setNewUser({...newUser, role: e.target.value})}
+                      disabled={rolesLoading}
                     >
-                      <option value="user">User</option>
-                      <option value="manager">Manager</option>
-                      <option value="admin">Admin</option>
-                      <option value="superadmin">Super Admin</option>
+                      {rolesLoading ? (
+                        <option value="">Loading roles...</option>
+                      ) : (
+                        roles.map((role) => (
+                          <option key={role.id} value={role.name}>
+                            {role.displayName}
+                          </option>
+                        ))
+                      )}
                     </select>
                   </div>
                 </div>
@@ -685,11 +760,17 @@ export default function UserManagement() {
                     required
                     className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     defaultValue={selectedUser.role}
+                    disabled={rolesLoading}
                   >
-                    <option value="user">User</option>
-                    <option value="manager">Manager</option>
-                    <option value="admin">Admin</option>
-                    <option value="superadmin">Super Admin</option>
+                    {rolesLoading ? (
+                      <option value="">Loading roles...</option>
+                    ) : (
+                      roles.map((role) => (
+                        <option key={role.id} value={role.name}>
+                          {role.displayName}
+                        </option>
+                      ))
+                    )}
                   </select>
                 </div>
                 

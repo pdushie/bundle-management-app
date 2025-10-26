@@ -1,4 +1,4 @@
-import { pgTable, varchar, decimal, integer, boolean, timestamp, serial, bigint, date, text } from 'drizzle-orm/pg-core';
+import { pgTable, varchar, decimal, integer, boolean, timestamp, serial, bigint, date, text, unique } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Move users table to the TOP - Remove self-references
@@ -213,6 +213,95 @@ export const announcementsRelations = relations(announcements, ({ one }) => ({
   }),
 }));
 
+// RBAC Tables
+export const roles = pgTable('roles', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 50 }).notNull().unique(),
+  displayName: varchar('display_name', { length: 100 }).notNull(),
+  description: text('description'),
+  isActive: boolean('is_active').default(true).notNull(),
+  isSystemRole: boolean('is_system_role').default(false).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export const permissions = pgTable('permissions', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull().unique(),
+  displayName: varchar('display_name', { length: 150 }).notNull(),
+  description: text('description'),
+  resource: varchar('resource', { length: 50 }).notNull(),
+  action: varchar('action', { length: 50 }).notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const rolePermissions = pgTable('role_permissions', {
+  id: serial('id').primaryKey(),
+  roleId: integer('role_id').notNull().references(() => roles.id, { onDelete: 'cascade' }),
+  permissionId: integer('permission_id').notNull().references(() => permissions.id, { onDelete: 'cascade' }),
+  grantedAt: timestamp('granted_at').defaultNow(),
+  grantedBy: integer('granted_by').references(() => users.id),
+}, (table) => {
+  return {
+    unique: unique().on(table.roleId, table.permissionId),
+  };
+});
+
+export const userRoles = pgTable('user_roles', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  roleId: integer('role_id').notNull().references(() => roles.id, { onDelete: 'cascade' }),
+  assignedAt: timestamp('assigned_at').defaultNow(),
+  assignedBy: integer('assigned_by').references(() => users.id),
+  expiresAt: timestamp('expires_at'),
+  isActive: boolean('is_active').default(true).notNull(),
+}, (table) => {
+  return {
+    unique: unique().on(table.userId, table.roleId),
+  };
+});
+
+// RBAC Relations
+export const rolesRelations = relations(roles, ({ many }) => ({
+  rolePermissions: many(rolePermissions),
+  userRoles: many(userRoles),
+}));
+
+export const permissionsRelations = relations(permissions, ({ many }) => ({
+  rolePermissions: many(rolePermissions),
+}));
+
+export const rolePermissionsRelations = relations(rolePermissions, ({ one }) => ({
+  role: one(roles, {
+    fields: [rolePermissions.roleId],
+    references: [roles.id],
+  }),
+  permission: one(permissions, {
+    fields: [rolePermissions.permissionId],
+    references: [permissions.id],
+  }),
+  grantedByUser: one(users, {
+    fields: [rolePermissions.grantedBy],
+    references: [users.id],
+  }),
+}));
+
+export const userRolesRelations = relations(userRoles, ({ one }) => ({
+  user: one(users, {
+    fields: [userRoles.userId],
+    references: [users.id],
+  }),
+  role: one(roles, {
+    fields: [userRoles.roleId],
+    references: [roles.id],
+  }),
+  assignedByUser: one(users, {
+    fields: [userRoles.assignedBy],
+    references: [users.id],
+  }),
+}));
+
 // Add relation to users for pricing profiles and announcements
 export const usersRelations = relations(users, ({ many }) => ({
   sessions: many(sessions),
@@ -220,4 +309,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   historyEntries: many(historyEntries),
   pricingProfile: many(userPricingProfiles),
   announcements: many(announcements),
+  userRoles: many(userRoles),
+  assignedRoles: many(userRoles, { relationName: 'assignedBy' }),
+  grantedPermissions: many(rolePermissions, { relationName: 'grantedBy' }),
 }));

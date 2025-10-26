@@ -22,10 +22,10 @@ export default function AdminOTPSettings() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    // Check if user is superadmin only
+    // Check if user is super_admin only
     if (status === 'loading') return;
     
-    if (!session || session.user?.role !== 'superadmin') {
+    if (!session || session.user?.role !== 'super_admin') {
       router.push('/');
       return;
     }
@@ -83,7 +83,7 @@ export default function AdminOTPSettings() {
     );
   }
 
-  if (!session || session.user?.role !== 'superadmin') {
+  if (!session || session.user?.role !== 'super_admin') {
     return null;
   }
 

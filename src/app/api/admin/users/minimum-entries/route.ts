@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
     const session = await getServerSession(authOptions);
     
-    if (!session || !session.user?.role || !['admin', 'superadmin'].includes(session.user.role)) {
+    if (!session || !session.user?.role || !['admin', 'standard_admin', 'super_admin'].includes(session.user.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
     
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
 
     const session = await getServerSession(authOptions);
     
-    if (!session || !session.user?.role || !['admin', 'superadmin'].includes(session.user.role)) {
+    if (!session || !session.user?.role || !['admin', 'standard_admin', 'super_admin'].includes(session.user.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
     

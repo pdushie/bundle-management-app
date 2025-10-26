@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     // Check if user is admin
     const session = await getServerAuthSession();
     
-    if (!session || (session.user?.role !== 'admin' && session.user?.role !== 'superadmin')) {
+    if (!session || (session.user?.role !== 'admin' && session.user?.role !== 'super_admin')) {
       return NextResponse.json(
         { error: 'Admin access required' },
         { status: 403 }

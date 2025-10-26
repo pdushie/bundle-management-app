@@ -15,9 +15,15 @@ export const metadata: Metadata = {
 export default async function AnnouncementsPage() {
   const session = await getServerSession(authOptions);
   
-  // Only admin and superadmin roles can access this page
-  if (!session || (session.user?.role !== "admin" && session.user?.role !== "superadmin")) {
+  // Check RBAC permissions for announcements access or super_admin role
+  if (!session?.user?.role) {
     redirect("/");
+  }
+  
+  // For now, only allow super_admin role since we need proper RBAC integration
+  // TODO: Integrate with RBAC permissions check for 'admin:announcements' 
+  if (session.user.role !== 'super_admin') {
+    redirect("/admin");
   }
 
   return (

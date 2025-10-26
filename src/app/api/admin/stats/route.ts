@@ -11,7 +11,7 @@ const pool = new Pool({
 export async function GET() {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user || session.user.role !== "superadmin") {
+  if (!session?.user || !session.user.role || !["super_admin", "admin", "standard_admin"].includes(session.user.role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -24,7 +24,7 @@ export async function GET() {
       client.query("SELECT COUNT(*) AS count FROM users WHERE status = 'approved'"),
       client.query("SELECT COUNT(*) AS count FROM users WHERE status = 'rejected'"),
       client.query("SELECT COUNT(*) AS count FROM users"),
-      client.query("SELECT COUNT(*) AS count FROM users WHERE role = 'admin' OR role = 'superadmin'")
+      client.query("SELECT COUNT(*) AS count FROM users WHERE role = 'admin' OR role = 'super_admin'")
     ]);
 
     const stats = {

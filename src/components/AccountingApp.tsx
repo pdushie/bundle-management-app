@@ -40,8 +40,8 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<AccountingTab>('user-billing');
   
-  // Check if user has admin privileges
-  const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'superadmin';
+  // Check if user has admin privileges  
+  const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'super_admin' || session?.user?.role === 'standard_admin';
 
   // Reset data and refresh when tab becomes active
   useEffect(() => {

@@ -2443,8 +2443,8 @@ function AppContent() {
   // Convert role to lowercase for case-insensitive comparison
   const userRole = session?.user?.role?.toLowerCase();
   // Enhanced role checking
-  const isSuperAdmin = userRole === 'superadmin';
-  const isAdmin = userRole === 'admin';
+  const isSuperAdmin = userRole === 'super_admin';
+  const isAdmin = userRole === 'admin' || userRole === 'standard_admin';
   const isRegularUser = userRole === 'user';
   
 
@@ -2616,7 +2616,7 @@ function AppContent() {
       id: "accounting",
       name: "Accounting",
       icon: Calculator,
-      roles: ["admin", "superadmin"] // Restrict to admin roles
+      roles: ["admin", "super_admin"] // Restrict to admin roles
     }
   ];
 
@@ -2678,7 +2678,7 @@ function AppContent() {
     // Render the appropriate component based on the active tab and user role
     switch (activeTab) {
       case "bundle-allocator":
-        // Super admins and admins can access
+        // Super admins, admins, and standard_admins can access
         if (isSuperAdmin || isAdmin) {
           return (
             <BundleAllocatorApp
@@ -2748,7 +2748,7 @@ function AppContent() {
         // History tab is accessible to super admins and admins
         
         // Always render history tab if the user is a superadmin
-        if (session?.user?.role?.toLowerCase() === 'superadmin') {
+        if (session?.user?.role?.toLowerCase() === 'super_admin') {
           return (
             <HistoryManager
               history={history}
@@ -2941,12 +2941,18 @@ function AppContent() {
                       {session?.user?.name || session?.user?.email}
                     </span>
                     {/* Show role indicator for all users */}
-                    {session?.user?.role === 'admin' ? (
+                    {session?.user?.role === 'super_admin' ? (
+                      <span className="text-xs bg-red-200 text-red-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">Super Admin</span>
+                    ) : session?.user?.role === 'admin' ? (
                       <span className="text-xs bg-purple-200 text-purple-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">Admin</span>
                     ) : session?.user?.role === 'user' ? (
                       <span className="text-xs bg-blue-200 text-blue-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">User</span>
-                    ) : (
+                    ) : session?.user?.role === 'viewer' ? (
+                      <span className="text-xs bg-gray-200 text-gray-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">Viewer</span>
+                    ) : session?.user?.role === 'manager' ? (
                       <span className="text-xs bg-green-200 text-green-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">Manager</span>
+                    ) : (
+                      <span className="text-xs bg-gray-200 text-gray-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">{session?.user?.role || 'Unknown'}</span>
                     )}
                     <button
                       onClick={handleSignOut}

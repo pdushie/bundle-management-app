@@ -57,7 +57,7 @@ export default function AdminChatPanel() {
   }, [session, selectedUserId]);
 
   const fetchThreads = async () => {
-    if (!session?.user || (session.user.role !== "admin" && session.user.role !== "superadmin")) return;
+    if (!session?.user || (session.user.role !== "admin" && session.user.role !== "super_admin")) return;
     
     try {
       console.log("Fetching chat threads for admin...");
@@ -93,7 +93,7 @@ export default function AdminChatPanel() {
   };
 
   const fetchMessages = async (userId: number) => {
-    if (!session?.user || (session.user.role !== "admin" && session.user.role !== "superadmin")) return;
+    if (!session?.user || (session.user.role !== "admin" && session.user.role !== "super_admin")) return;
     
     setLoading(true);
     
@@ -226,8 +226,8 @@ export default function AdminChatPanel() {
   // Calculate total unread messages
   const totalUnread = threads.reduce((sum, thread) => sum + thread.unreadCount, 0);
 
-  // Don't show if not admin or superadmin
-  if (!session?.user || (session.user.role !== "admin" && session.user.role !== "superadmin")) {
+  // Don't show if not admin or super_admin
+  if (!session?.user || (session.user.role !== "admin" && session.user.role !== "super_admin")) {
     return (
       <div className="p-6 text-center">
         <p className="text-red-500">You don't have permission to access this page.</p>

@@ -25,10 +25,10 @@ export default function AdminChatNotifier() {
       return;
     }
 
-    // Skip if not authenticated or not admin/superadmin or already on chat page
+    // Skip if not authenticated or not admin/super_admin or already on chat page
     if (status !== 'authenticated' || 
         !session?.user || 
-        (session.user.role !== 'admin' && session.user.role !== 'superadmin') ||
+        (session.user.role !== 'admin' && session.user.role !== 'super_admin') ||
         isOnChatPage) {
       return;
     }
@@ -127,7 +127,7 @@ export default function AdminChatNotifier() {
   if (status === 'loading' ||
       status !== 'authenticated' ||
       !session?.user || 
-      (session.user.role !== 'admin' && session.user.role !== 'superadmin') ||
+      (session.user.role !== 'admin' && session.user.role !== 'super_admin') ||
       isOnChatPage || 
       unreadCount === 0) {
     return null;

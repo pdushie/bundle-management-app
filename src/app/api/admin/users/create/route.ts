@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.user || session.user.role !== "superadmin") {
+    if (!session?.user || !session.user.role || !["super_admin", "admin", "standard_admin"].includes(session.user.role)) {
       return NextResponse.json(
         { error: "Unauthorized" }, 
         { status: 401 }
@@ -46,10 +46,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if email already exists
     const client = await pool.connect();
     
     try {
+      // Validate role against RBAC system
+      const roleValidationQuery = await client.query(
+        "SELECT id FROM roles WHERE name = $1 AND is_active = true",
+        [role]
+      );
+      
+      if (roleValidationQuery.rows.length === 0) {
+        return NextResponse.json(
+          { error: "Invalid or inactive role" }, 
+          { status: 400 }
+        );
+      }
+
+      // Check if email already exists
       const emailCheck = await client.query(
         "SELECT * FROM users WHERE email = $1",
         [email]

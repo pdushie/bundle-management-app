@@ -89,14 +89,14 @@ export function hasRole(session: SecureSession | null, allowedRoles: string[]): 
  * Validates that a user has admin privileges
  */
 export function isAdmin(session: SecureSession | null): boolean {
-  return hasRole(session, ['admin', 'superadmin']);
+  return hasRole(session, ['admin', 'super_admin']);
 }
 
 /**
  * Validates that a user has superadmin privileges
  */
 export function isSuperAdmin(session: SecureSession | null): boolean {
-  return hasRole(session, ['superadmin']);
+  return hasRole(session, ['super_admin']);
 }
 
 /**
@@ -158,12 +158,12 @@ export async function requireRole(allowedRoles: string[]): Promise<SecureSession
  * API route helper requiring admin role
  */
 export async function requireAdmin(): Promise<SecureSession> {
-  return await requireRole(['admin', 'superadmin']);
+  return await requireRole(['admin', 'standard_admin', 'super_admin']);
 }
 
 /**
  * API route helper requiring superadmin role
  */
 export async function requireSuperAdmin(): Promise<SecureSession> {
-  return await requireRole(['superadmin']);
+  return await requireRole(['super_admin']);
 }

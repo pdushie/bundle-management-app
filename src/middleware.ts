@@ -23,17 +23,14 @@ export default withAuth(
       if (pathname.startsWith('/admin')) {
         const userRole = token.role;
         
-        // Admin pages require admin or superadmin role
-        if (userRole !== 'admin' && userRole !== 'superadmin') {
+        // Admin pages require admin, standard_admin, or super_admin role
+        if (userRole !== 'admin' && userRole !== 'standard_admin' && userRole !== 'super_admin') {
           console.log(`Unauthorized admin access attempt by user role: ${userRole}`);
           return NextResponse.redirect(new URL('/?error=unauthorized', req.url));
         }
 
-        // Superadmin-only paths
-        if (pathname === '/admin' && userRole !== 'superadmin') {
-          console.log(`Unauthorized superadmin access attempt by user role: ${userRole}`);
-          return NextResponse.redirect(new URL('/admin/announcements', req.url));
-        }
+        // Let page-level logic handle specific permission checks
+        // No longer redirecting admin users away from /admin - RBAC permissions will be checked at page level
       }
 
       // Rate limiting for API routes (basic implementation)
@@ -77,7 +74,8 @@ export default withAuth(
 
         // Role-based authorization
         if (pathname.startsWith('/admin')) {
-          return token.role === 'admin' || token.role === 'superadmin';
+          console.log(`Middleware auth check: path=${pathname}, role=${token.role}, hasAccess=${token.role === 'admin' || token.role === 'standard_admin' || token.role === 'super_admin'}`);
+          return token.role === 'admin' || token.role === 'standard_admin' || token.role === 'super_admin';
         }
 
         return true;

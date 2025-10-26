@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       const isAdmin = 
         session?.user?.isAdmin === true || 
         session?.user?.role === 'admin' || 
-        session?.user?.role === 'superadmin';
+        session?.user?.role === 'super_admin';
       
       console.log('Is admin check result:', isAdmin);
       

@@ -5,17 +5,61 @@ import { Shield, ExternalLink, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect, useCallback, useRef } from "react";
 
+// Hook to check RBAC permissions
+function usePermissions() {
+  const [permissions, setPermissions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      const userId = (session?.user as any)?.id;
+      
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/admin/rbac/users/${userId}/permissions`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.success) {
+            const permissionNames = data.permissions.map((p: any) => p.name);
+            setPermissions(permissionNames);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching permissions:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPermissions();
+  }, [(session?.user as any)?.id]);
+
+  const hasPermission = (permission: string) => {
+    return permissions.includes(permission);
+  };
+
+  return { permissions, loading, hasPermission };
+}
+
 export default function AdminDashboardLink() {
   const { data: session } = useSession();
+  const { hasPermission, loading: permissionsLoading } = usePermissions();
   const [isVisible, setIsVisible] = useState(false);
   const [unreadChatCount, setUnreadChatCount] = useState<number>(0);
   const [isLoadingChat, setIsLoadingChat] = useState<boolean>(false);
   const [isWindowFocused, setIsWindowFocused] = useState<boolean>(true);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Fetch unread chat count
+  // Fetch unread chat count - only for users with chat permissions
   const fetchUnreadChatCount = useCallback(async () => {
-    if (!session?.user || (session.user.role !== "admin" && session.user.role !== "superadmin")) {
+    if (!session?.user || permissionsLoading || !hasPermission('admin.chat')) {
       return;
     }
     
@@ -41,7 +85,7 @@ export default function AdminDashboardLink() {
     } finally {
       setIsLoadingChat(false);
     }
-  }, [session?.user]);
+  }, [session?.user, hasPermission, permissionsLoading]);
   
   // Animation effect on mount
   useEffect(() => {
@@ -53,9 +97,9 @@ export default function AdminDashboardLink() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Setup window focus detection for immediate chat updates
+  // Setup window focus detection for immediate chat updates - only for users with chat permissions
   useEffect(() => {
-    if (!session?.user || (session.user.role !== "admin" && session.user.role !== "superadmin")) {
+    if (!session?.user || permissionsLoading || !hasPermission('admin.chat')) {
       return;
     }
     
@@ -76,11 +120,11 @@ export default function AdminDashboardLink() {
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('blur', handleBlur);
     };
-  }, [fetchUnreadChatCount, session?.user]);
+  }, [fetchUnreadChatCount, session?.user, hasPermission, permissionsLoading]);
 
-  // Setup chat polling for admins
+  // Setup chat polling for users with chat permissions
   useEffect(() => {
-    if (!session?.user || (session.user.role !== "admin" && session.user.role !== "superadmin")) {
+    if (!session?.user || permissionsLoading || !hasPermission('admin.chat')) {
       return;
     }
     
@@ -101,10 +145,15 @@ export default function AdminDashboardLink() {
         clearInterval(pollingIntervalRef.current);
       }
     };
-  }, [fetchUnreadChatCount, session?.user, isWindowFocused]);
+  }, [fetchUnreadChatCount, session?.user, isWindowFocused, hasPermission, permissionsLoading]);
   
-  // Only show the link for users with admin or superadmin role
-  if (!session?.user?.role || (session.user.role !== "admin" && session.user.role !== "superadmin")) {
+  // Only show the link for users with admin, super_admin, or standard_admin role
+  if (!session?.user?.role || (session.user.role !== "admin" && session.user.role !== "super_admin" && session.user.role !== "standard_admin")) {
+    return null;
+  }
+
+  // Don't show during permissions loading
+  if (permissionsLoading) {
     return null;
   }
   
@@ -116,12 +165,13 @@ export default function AdminDashboardLink() {
         <Link 
           href="/admin"
           className={`flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105 ${
-            unreadChatCount > 0 ? 'ring-2 ring-red-400 ring-opacity-75 animate-pulse' : ''
+            hasPermission('admin.chat') && unreadChatCount > 0 ? 'ring-2 ring-red-400 ring-opacity-75 animate-pulse' : ''
           }`}
           title={
-            unreadChatCount > 0 
+            hasPermission('admin.chat') && unreadChatCount > 0 
               ? `Access Admin Dashboard - ${unreadChatCount} unread message${unreadChatCount !== 1 ? 's' : ''}` 
-              : (session.user.role === "superadmin" ? "Access Admin Dashboard (Superadmin)" : "Access Admin Dashboard")
+              : (session.user.role === "super_admin" ? "Access Admin Dashboard (Super Admin)" : 
+                 session.user.role === "standard_admin" ? "Access Admin Dashboard (Standard Admin)" : "Access Admin Dashboard")
           }
         >
           <Shield className="h-5 w-5" />
@@ -130,8 +180,8 @@ export default function AdminDashboardLink() {
           <ExternalLink className="h-4 w-4" />
         </Link>
         
-        {/* Chat Notification Badge */}
-        {unreadChatCount > 0 && (
+        {/* Chat Notification Badge - only show for users with chat permissions */}
+        {hasPermission('admin.chat') && unreadChatCount > 0 && (
           <div className="absolute -top-2 -right-2 flex items-center justify-center">
             <div className="bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 shadow-lg ring-2 ring-white animate-pulse">
               {unreadChatCount > 99 ? '99+' : unreadChatCount}
@@ -140,8 +190,8 @@ export default function AdminDashboardLink() {
           </div>
         )}
         
-        {/* Chat Icon Indicator (subtle) */}
-        {unreadChatCount > 0 && (
+        {/* Chat Icon Indicator (subtle) - only show for users with chat permissions */}
+        {hasPermission('admin.chat') && unreadChatCount > 0 && (
           <div className="absolute -top-1 -left-1 bg-blue-500 rounded-full w-3 h-3 flex items-center justify-center">
             <MessageCircle className="h-2 w-2 text-white" />
           </div>

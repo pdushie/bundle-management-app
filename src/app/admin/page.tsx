@@ -5,6 +5,58 @@ import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { Users, Check, X, Clock, MessageCircle, Shield, Calendar, ArrowLeft, Database, User, LogOut, DollarSign, Settings } from "lucide-react";
+
+// Hook to check RBAC permissions
+function usePermissions() {
+  const [permissions, setPermissions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      const userId = (session?.user as any)?.id;
+      console.log('AdminDashboard: Fetching permissions for user ID:', userId, 'Role:', session?.user?.role);
+      if (!userId) {
+        console.log('AdminDashboard: No user ID found, stopping permission fetch');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        console.log('AdminDashboard: Making request to:', `/api/admin/rbac/users/${userId}/permissions`);
+        const response = await fetch(`/api/admin/rbac/users/${userId}/permissions`);
+        console.log('AdminDashboard: Permission API response status:', response.status);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('AdminDashboard: Permission API response data:', data);
+          if (data.success) {
+            const permissionNames = data.permissions.map((p: any) => p.name);
+            console.log('AdminDashboard: Setting permissions:', permissionNames);
+            setPermissions(permissionNames);
+          }
+        } else {
+          console.log('AdminDashboard: Permission API request failed with status:', response.status);
+        }
+      } catch (error) {
+        console.error('AdminDashboard: Error fetching permissions:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPermissions();
+  }, [(session?.user as any)?.id]);
+
+  const hasPermission = (permission: string) => {
+    return permissions.includes(permission);
+  };
+
+  const hasAnyPermission = (permissionList: string[]) => {
+    return permissionList.some(permission => permissions.includes(permission));
+  };
+
+  return { permissions, loading, hasPermission, hasAnyPermission };
+}
 import UserManagement from "@/components/UserManagement";
 import PricingProfiles from "@/components/PricingProfiles";
 import MinimumEntriesAdmin from "@/components/admin/MinimumEntriesAdmin";
@@ -29,7 +81,31 @@ interface UserStats {
 export default function AdminDashboard() {
   const { data: session, status } = useSession() as any;
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'pending' | 'users' | 'pricing' | 'minimum-entries' | 'orders'>('pending');
+  const { permissions, loading: permissionsLoading, hasPermission, hasAnyPermission } = usePermissions();
+  
+  // Set default tab based on user role and permissions
+  const getDefaultTab = () => {
+    if (session?.user?.role === 'super_admin') {
+      return 'pending';
+    }
+    // For users with user management permissions, default to pending tab
+    if (hasAnyPermission(['users:create', 'users:update']) || session?.user?.role === 'admin' || session?.user?.role === 'standard_admin') {
+      return 'pending';
+    }
+    // Otherwise default to users tab if they have user permissions
+    if (hasAnyPermission(['users:view'])) {
+      return 'users';
+    }
+    // Otherwise default to pricing if they have pricing permissions
+    if (hasAnyPermission(['pricing:view', 'pricing:create', 'pricing:update', 'pricing:delete'])) {
+      return 'pricing';
+    }
+    // Fallback to users
+    return 'users';
+  };
+  
+  const [activeTab, setActiveTab] = useState<'pending' | 'users' | 'pricing' | 'minimum-entries' | 'orders'>('users');
+  const [userHasSelectedTab, setUserHasSelectedTab] = useState(false);
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [userStats, setUserStats] = useState<UserStats>({
     totalUsers: 0,
@@ -53,28 +129,55 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
+    console.log('AdminDashboard: UseEffect triggered - Status:', status, 'Role:', session?.user?.role, 'PermissionsLoading:', permissionsLoading);
+    
     // Redirect unauthenticated users
     if (status === "unauthenticated") {
+      console.log('AdminDashboard: Redirecting unauthenticated user');
       redirect("/");
     }
     
-    // Redirect regular admin users to announcements page
-    if (session && session.user?.role === 'admin') {
-      router.push('/admin/announcements');
+    // For non-super_admin users, check if they have permissions to access admin dashboard
+    if (session && session.user?.role !== 'super_admin' && session.user?.role !== 'admin' && session.user?.role !== 'standard_admin' && !permissionsLoading) {
+      const hasAdminPermissions = hasAnyPermission([
+        'users:view', 'users:create', 'users:update', 'users:delete',
+        'pricing:view', 'pricing:create', 'pricing:update', 'pricing:delete'
+      ]);
+      
+      console.log('AdminDashboard: Non-admin user check - HasAdminPermissions:', hasAdminPermissions, 'Permissions:', permissions);
+      
+      // If they don't have admin permissions, redirect to announcements
+      if (!hasAdminPermissions) {
+        console.log('AdminDashboard: No admin permissions found, redirecting to announcements');
+        router.push('/admin/announcements');
+      }
     }
     
     // Regular users get redirected to home
-    if (session && session.user?.role !== 'superadmin' && session.user?.role !== 'admin') {
+    if (session && session.user?.role !== 'super_admin' && session.user?.role !== 'admin' && session.user?.role !== 'standard_admin') {
+      console.log('AdminDashboard: Non-admin user detected, redirecting to home');
       redirect("/");
     }
-  }, [status, session, router]);
+  }, [status, session, router, permissionsLoading, hasAnyPermission, permissions]);
 
   useEffect(() => {
-    if (session?.user?.role === 'superadmin') {
+    if (session?.user?.role === 'super_admin' || session?.user?.role === 'admin' || session?.user?.role === 'standard_admin' || hasAnyPermission(['users:create', 'users:update'])) {
       fetchPendingUsers();
       fetchUserStats();
     }
-  }, [session]);
+  }, [session, hasAnyPermission]);
+  
+  // Update default tab when permissions are loaded (only if user hasn't manually selected a tab)
+  useEffect(() => {
+    if (!permissionsLoading && session && !userHasSelectedTab) {
+      const defaultTab = getDefaultTab();
+      console.log('AdminDashboard: Setting default tab to:', defaultTab, 'Current tab:', activeTab, 'User has selected tab:', userHasSelectedTab);
+      // Only set the default tab if user hasn't manually selected one
+      if (defaultTab !== activeTab) {
+        setActiveTab(defaultTab as 'pending' | 'users' | 'pricing' | 'minimum-entries' | 'orders');
+      }
+    }
+  }, [permissionsLoading, session, hasAnyPermission, userHasSelectedTab]);
 
   const fetchPendingUsers = async () => {
     try {
@@ -151,7 +254,7 @@ export default function AdminDashboard() {
     }
   };
 
-  if (status === "loading") {
+  if (status === "loading" || permissionsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
@@ -162,20 +265,17 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!session || (session.user?.role !== 'superadmin' && session.user?.role !== 'admin')) {
-    return null;
-  }
+  // Check if user has permission to access admin dashboard
+  const hasAdminAccess = session?.user?.role === 'super_admin' || 
+    session?.user?.role === 'admin' || 
+    session?.user?.role === 'standard_admin' ||
+    hasAnyPermission([
+      'users:view', 'users:create', 'users:update', 'users:delete',
+      'pricing:view', 'pricing:create', 'pricing:update', 'pricing:delete'
+    ]);
   
-  // For admin users, we redirect them to the announcements page (handled in useEffect)
-  if (session.user?.role === 'admin') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-700">Redirecting to announcements...</p>
-        </div>
-      </div>
-    );
+  if (!session || !hasAdminAccess) {
+    return null;
   }
 
   return (
@@ -227,132 +327,149 @@ export default function AdminDashboard() {
         {/* Admin Quick Actions */}
         <div className="flex justify-end mb-6">
           <button
-            onClick={() => router.push('/admin/update-entry-costs')}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200"
+            disabled
+            className="flex items-center gap-2 bg-gray-400 text-gray-200 px-4 py-2 rounded-lg cursor-not-allowed transition-all duration-200"
           >
             <Database className="w-4 h-4" />
             Update All Order Pricing
           </button>
         </div>
         
-        {/* Enhanced Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Clock className="w-5 h-5 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-700 font-medium">Pending Requests</p>
-                <p className="text-2xl font-bold text-gray-900">{pendingUsers.length}</p>
+        {/* Enhanced Stats - Show for users with user management permissions */}
+        {(session?.user?.role === 'super_admin' || session?.user?.role === 'admin' || session?.user?.role === 'standard_admin' || hasAnyPermission(['users:create', 'users:update'])) && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-yellow-100 rounded-lg">
+                  <Clock className="w-5 h-5 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-700 font-medium">Pending Requests</p>
+                  <p className="text-2xl font-bold text-gray-900">{pendingUsers.length}</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Users className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-700 font-medium">Total Users</p>
-                <p className="text-2xl font-bold text-gray-900">{userStats.totalUsers}</p>
+            <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <Users className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-700 font-medium">Total Users</p>
+                  <p className="text-2xl font-bold text-gray-900">{userStats.totalUsers}</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Check className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-700 font-medium">Approved Users</p>
-                <p className="text-2xl font-bold text-gray-900">{userStats.approvedCount}</p>
+            <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Check className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-700 font-medium">Approved Users</p>
+                  <p className="text-2xl font-bold text-gray-900">{userStats.approvedCount}</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Shield className="w-5 h-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-700 font-medium">Admins</p>
-                <p className="text-2xl font-bold text-gray-900">{userStats.adminCount}</p>
+            <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Shield className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-700 font-medium">Admins</p>
+                  <p className="text-2xl font-bold text-gray-900">{userStats.adminCount}</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Admin Dashboard Tabs */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-6">
           <div className="flex border-b border-gray-200">
-            <button 
-              onClick={() => setActiveTab('pending')} 
-              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
-                activeTab === 'pending' 
-                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
-                  : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
-              }`}
-            >
-              <Clock className="w-4 h-4" />
-              Pending Requests
-              {pendingUsers.length > 0 && (
-                <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">
-                  {pendingUsers.length}
-                </span>
-              )}
-            </button>
+            {/* Show Pending Requests tab to users with user management permissions */}
+            {(session?.user?.role === 'super_admin' || session?.user?.role === 'admin' || session?.user?.role === 'standard_admin' || hasAnyPermission(['users:create', 'users:update'])) && (
+              <button 
+                onClick={() => { setActiveTab('pending'); setUserHasSelectedTab(true); }} 
+                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+                  activeTab === 'pending' 
+                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
+                    : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+                }`}
+              >
+                <Clock className="w-4 h-4" />
+                Pending Requests
+                {pendingUsers.length > 0 && (
+                  <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">
+                    {pendingUsers.length}
+                  </span>
+                )}
+              </button>
+            )}
             
-            <button 
-              onClick={() => setActiveTab('users')} 
-              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
-                activeTab === 'users' 
-                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
-                  : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
-              }`}
-            >
-              <Users className="w-4 h-4" />
-              User Management
-            </button>
+            {/* Show User Management tab to users with user permissions or admin roles */}
+            {(hasAnyPermission(['users:view', 'users:create', 'users:update', 'users:delete']) || session?.user?.role === 'super_admin' || session?.user?.role === 'admin' || session?.user?.role === 'standard_admin') && (
+              <button 
+                onClick={() => { setActiveTab('users'); setUserHasSelectedTab(true); }} 
+                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+                  activeTab === 'users' 
+                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
+                    : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+                }`}
+              >
+                <Users className="w-4 h-4" />
+                User Management
+              </button>
+            )}
             
-            <button 
-              onClick={() => setActiveTab('pricing')} 
-              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
-                activeTab === 'pricing' 
-                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
-                  : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
-              }`}
-            >
-              <DollarSign className="w-4 h-4" />
-              Pricing Profiles
-            </button>
+            {/* Show Pricing Profiles tab to users with pricing permissions or admin roles */}
+            {(hasAnyPermission(['pricing:view', 'pricing:create', 'pricing:update', 'pricing:delete']) || session?.user?.role === 'super_admin' || session?.user?.role === 'admin' || session?.user?.role === 'standard_admin') && (
+              <button 
+                onClick={() => { setActiveTab('pricing'); setUserHasSelectedTab(true); }} 
+                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+                  activeTab === 'pricing' 
+                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
+                    : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+                }`}
+              >
+                <DollarSign className="w-4 h-4" />
+                Pricing Profiles
+              </button>
+            )}
             
-            <button 
-              onClick={() => setActiveTab('minimum-entries')} 
-              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
-                activeTab === 'minimum-entries' 
-                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
-                  : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
-              }`}
-            >
-              <Settings className="w-4 h-4" />
-              Minimum Entries
-            </button>
+            {/* Show Minimum Entries tab to users with minimum entries permissions or admin roles */}
+            {(hasAnyPermission(['admin:minimum_entries']) || session?.user?.role === 'super_admin' || session?.user?.role === 'admin' || session?.user?.role === 'standard_admin') && (
+              <button 
+                onClick={() => { setActiveTab('minimum-entries'); setUserHasSelectedTab(true); }} 
+                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+                  activeTab === 'minimum-entries' 
+                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
+                    : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+                }`}
+              >
+                <Settings className="w-4 h-4" />
+                Minimum Entries
+              </button>
+            )}
             
-            <button 
-              onClick={() => setActiveTab('orders')} 
-              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
-                activeTab === 'orders' 
-                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
-                  : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
-              }`}
-            >
-              <Database className="w-4 h-4" />
-              Order Reports
-            </button>
+            {/* Show Order Reports tab to users with order permissions or admin roles */}
+            {(hasAnyPermission(['admin:orders']) || session?.user?.role === 'super_admin' || session?.user?.role === 'admin' || session?.user?.role === 'standard_admin') && (
+              <button 
+                onClick={() => { setActiveTab('orders'); setUserHasSelectedTab(true); }} 
+                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+                  activeTab === 'orders' 
+                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
+                    : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+                }`}
+              >
+                <Database className="w-4 h-4" />
+                Order Reports
+              </button>
+            )}
           </div>
         </div>
 

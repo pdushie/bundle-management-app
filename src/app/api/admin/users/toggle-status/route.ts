@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.user || session.user.role !== "superadmin") {
+    if (!session?.user || !session.user.role || !["super_admin", "admin", "standard_admin"].includes(session.user.role)) {
       return NextResponse.json(
         { error: "Unauthorized" }, 
         { status: 401 }
@@ -59,13 +59,14 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Update user active status
+      // Update both user active status and status field for consistency
+      const newStatus = enabled ? 'approved' : 'disabled';
       const result = await client.query(
         `UPDATE users 
-         SET is_active = $1
-         WHERE id = $2
+         SET is_active = $1, status = $2
+         WHERE id = $3
          RETURNING id, name, email, role, status, is_active`,
-        [enabled, userId]
+        [enabled, newStatus, userId]
       );
 
       return NextResponse.json({ 
