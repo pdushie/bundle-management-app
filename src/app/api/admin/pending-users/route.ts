@@ -11,7 +11,7 @@ const pool = new Pool({
 export async function GET() {
   const session = await getServerSession(authOptions);
   
-  if (!session?.user || !['super_admin', 'admin', 'standard_admin'].includes(session.user.role)) {
+  if (!session?.user || !session.user.role || !['super_admin', 'admin', 'standard_admin'].includes(session.user.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

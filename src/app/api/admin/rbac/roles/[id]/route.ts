@@ -7,7 +7,7 @@ import { eq, and } from 'drizzle-orm';
 // GET /api/admin/rbac/roles/[id] - Get specific role
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireSuperAdmin();
@@ -19,7 +19,8 @@ export async function GET(
       );
     }
     
-    const roleId = parseInt(params.id);
+    const { id } = await params;
+    const roleId = parseInt(id);
     
     if (isNaN(roleId)) {
       return NextResponse.json(
@@ -67,7 +68,7 @@ export async function GET(
 // PUT /api/admin/rbac/roles/[id] - Update role
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await requireSuperAdmin();
@@ -206,7 +207,7 @@ export async function PUT(
 // DELETE /api/admin/rbac/roles/[id] - Delete role
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireSuperAdmin();

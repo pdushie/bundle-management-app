@@ -7,7 +7,7 @@ import { eq, and, inArray } from 'drizzle-orm';
 // GET /api/admin/rbac/roles/[id]/permissions - Get permissions for a role
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireSuperAdmin();
@@ -49,7 +49,7 @@ export async function GET(
 // PUT /api/admin/rbac/roles/[id]/permissions - Update permissions for a role
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await requireSuperAdmin();

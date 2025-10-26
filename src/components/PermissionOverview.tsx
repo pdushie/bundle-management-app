@@ -45,7 +45,7 @@ export function PermissionOverview({ permissions }: PermissionOverviewProps) {
     return acc;
   }, {} as Record<string, Permission[]>);
 
-  const resources = [...new Set(permissions.map(p => p.resource))].sort();
+  const resources = Array.from(new Set(permissions.map(p => p.resource))).sort();
 
   const getActionColor = (action: string) => {
     switch (action.toLowerCase()) {
