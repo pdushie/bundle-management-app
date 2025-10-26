@@ -2875,7 +2875,6 @@ function AppContent() {
                 </div>
                 <div>
                   <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Clickyfied</h1>
-                  <p className="text-sm text-gray-700">Your reliable data plug</p>
                 </div>
               </div>
 
