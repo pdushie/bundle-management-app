@@ -227,6 +227,11 @@ export async function POST(req: NextRequest) {
       // 'pending' doesn't apply to phone entries
     }
     
+    // Handle processedBy filter for phone entries (filter by admin who processed them)
+    if (processedBy && processedBy !== 'all') {
+      phoneConditions.push(eq(historyEntries.userId, parseInt(processedBy)));
+    }
+    
     // Build date range conditions for phone entries
     let phoneDateCondition = null;
     if (startDate && endDate) {
