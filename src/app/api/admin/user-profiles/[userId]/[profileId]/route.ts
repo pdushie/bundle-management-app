@@ -29,8 +29,8 @@ export async function POST(
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
     
-    // Only allow admins and superadmins to assign users to pricing profiles
-    if (session.user.role !== "admin" && session.user.role !== "superadmin") {
+    // Only allow admins, super_admins, and standard_admins to assign users to pricing profiles
+    if (session.user.role !== "admin" && session.user.role !== "super_admin" && session.user.role !== "standard_admin") {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
     
@@ -111,8 +111,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
     
-    // Only allow admins and superadmins to remove user assignments
-    if (session.user.role !== "admin" && session.user.role !== "superadmin") {
+    // Only allow admins, super_admins, and standard_admins to remove user assignments
+    if (session.user.role !== "admin" && session.user.role !== "super_admin" && session.user.role !== "standard_admin") {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
     

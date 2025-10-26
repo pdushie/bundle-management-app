@@ -27,7 +27,7 @@ export async function POST(
     }
     
     // Only allow admins and superadmins to assign users to pricing profiles
-    if (session.user.role !== "admin" && session.user.role !== "superadmin") {
+    if (session.user.role !== "admin" && session.user.role !== "super_admin" && session.user.role !== "standard_admin") {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
     

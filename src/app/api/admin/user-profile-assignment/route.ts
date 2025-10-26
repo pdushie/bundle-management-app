@@ -28,8 +28,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
     
-    // Only allow admins and superadmins
-    if (session.user.role !== "admin" && session.user.role !== "superadmin") {
+    // Only allow admins, super_admins, and standard_admins
+    if (session.user.role !== "admin" && session.user.role !== "super_admin" && session.user.role !== "standard_admin") {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
     
@@ -97,8 +97,8 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
     
-    // Only allow admins and superadmins
-    if (session.user.role !== "admin" && session.user.role !== "superadmin") {
+    // Only allow admins, super_admins, and standard_admins
+    if (session.user.role !== "admin" && session.user.role !== "super_admin" && session.user.role !== "standard_admin") {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
     

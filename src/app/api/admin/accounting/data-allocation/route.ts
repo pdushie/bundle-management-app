@@ -8,8 +8,10 @@ import { sql } from 'drizzle-orm';
 function isAdminUser(session: any) {
   if (!session || !session.user) return false;
   
+  // Check for admin roles including standard_admin
   return session.user.role === 'admin' || 
-         session.user.role === 'superadmin' || 
+         session.user.role === 'super_admin' || 
+         session.user.role === 'standard_admin' ||
          session.user.isAdmin === true;
 }
 

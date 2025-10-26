@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
         email: users.email
       })
       .from(users)
-      .where(eq(users.role, 'superadmin'))
+      .where(eq(users.role, 'super_admin'))
       .orderBy(users.name);
 
     const allAdmins = [...adminUsers, ...superAdminUsers];

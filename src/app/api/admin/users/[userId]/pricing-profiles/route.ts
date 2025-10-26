@@ -121,7 +121,7 @@ export async function POST(
     if (!session) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
-    if (session.user.role !== "admin" && session.user.role !== "super_admin") {
+    if (session.user.role !== "admin" && session.user.role !== "super_admin" && session.user.role !== "standard_admin") {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
     // Use a different variable name to avoid redeclaration
