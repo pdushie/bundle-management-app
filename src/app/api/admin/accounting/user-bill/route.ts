@@ -53,18 +53,44 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // Get user details first to get their email for filtering orders
+    console.log(`Fetching user details for ID: ${userIdInt}`);
+    const userDetailsResult = await db!.execute(sql`
+      SELECT id, name, email FROM users WHERE id = ${userIdInt} LIMIT 1
+    `);
+    
+    const userDetails = userDetailsResult.rows.map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      email: row.email
+    }));
+    
+    if (userDetails.length === 0) {
+      console.log(`No user found with ID: ${userIdInt}`);
+      return NextResponse.json({ 
+        error: 'User not found'
+      }, { status: 404 });
+    }
+    
+    const user = userDetails[0];
+    const userEmail = user.email;
+    
+    console.log(`User found: ${user.name} (${userEmail})`);
+
     // Parse date as UTC and get UNIX timestamps
     const startTimestamp = new Date(date + 'T00:00:00.000Z').getTime();
     const endTimestamp = new Date(date + 'T23:59:59.999Z').getTime();
 
     // Query to get all orders for the specified user and date
+    // Note: Using userEmail instead of userId because user_id field is not populated in orders table
     const userOrders = await db
       .select()
       .from(ordersTable)
       .where(
         and(
           sql`timestamp >= ${startTimestamp} AND timestamp <= ${endTimestamp}`,
-          eq(ordersTable.date, date)
+          eq(ordersTable.date, date),
+          eq(ordersTable.userEmail, userEmail)
         )
       )
       .orderBy(ordersTable.timestamp);
@@ -73,29 +99,7 @@ export async function GET(request: NextRequest) {
     
     // If no orders found, return empty UserBillData structure
     if (userOrders.length === 0) {
-      // Get user details for empty response
-      const userDetails = await db!
-        .select()
-        .from(sql`users`)
-        .where(sql`id = ${userIdInt}`)
-        .limit(1) as Array<{ id: number; name: string; email: string }>;
-      
-      if (userDetails.length === 0) {
-        return NextResponse.json({ 
-          error: 'User not found'
-        }, { status: 404 });
-      }
-      
-      const user = userDetails[0];
-      
-      // Make sure we have a proper userName by using email as fallback
-      console.log('Empty orders - user data:', { 
-        name: user.name ? `"${user.name}"` : 'null/undefined', 
-        name_type: typeof user.name,
-        email: user.email
-      });
-      
-      // Force use the name if it exists and is not empty, otherwise use email
+      // Use the user details we already fetched above
       let userName = user.name;
       if (!userName || userName.trim() === '') {
         userName = user.email;
@@ -113,38 +117,7 @@ export async function GET(request: NextRequest) {
       });
     }
     
-    // Get user details
-    console.log(`Fetching user details for ID: ${userIdInt}`);
-    // Use raw SQL to directly query the database
-    const userDetailsResult = await db!.execute(sql`
-      SELECT id, name, email FROM users WHERE id = ${userIdInt} LIMIT 1
-    `);
-    
-    console.log('Raw SQL result:', userDetailsResult);
-    
-    // Format the result into the expected array structure
-    const userDetails = userDetailsResult.rows.map((row: any) => ({
-      id: row.id,
-      name: row.name,
-      email: row.email
-    }));
-    
-    console.log('User details query result:', JSON.stringify(userDetails));
-    
-    if (userDetails.length === 0) {
-      console.log(`No user found with ID: ${userIdInt}`);
-      return NextResponse.json({ 
-        error: 'User not found'
-      }, { status: 404 });
-    }
-    
-    const user = userDetails[0];
-    console.log('User data from DB query:', { 
-      id: user.id, 
-      name: user.name ? `"${user.name}"` : 'null/undefined', 
-      name_type: typeof user.name,
-      email: user.email
-    });
+    // User details already fetched above
     
     // Format the orders for the response
     const formattedOrders = await Promise.all(userOrders.map(async order => {

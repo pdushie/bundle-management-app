@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
     }
     
     // Only allow admins, super_admins, and standard_admins
-    if (session.user.role !== "admin" && session.user.role !== "super_admin" && session.user.role !== "standard_admin") {
+    if (session.user.role !== "admin" && session.user.role !== "super_admin" && session.user.role !== "standard_admin" && session.user.role !== "data_processor") {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
 

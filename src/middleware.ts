@@ -23,8 +23,8 @@ export default withAuth(
       if (pathname.startsWith('/admin')) {
         const userRole = token.role;
         
-        // Admin pages require admin, standard_admin, or super_admin role
-        if (userRole !== 'admin' && userRole !== 'standard_admin' && userRole !== 'super_admin') {
+        // Admin pages require admin, standard_admin, super_admin, or data_processor role
+        if (userRole !== 'admin' && userRole !== 'standard_admin' && userRole !== 'super_admin' && userRole !== 'data_processor') {
           console.log(`Unauthorized admin access attempt by user role: ${userRole}`);
           return NextResponse.redirect(new URL('/?error=unauthorized', req.url));
         }
