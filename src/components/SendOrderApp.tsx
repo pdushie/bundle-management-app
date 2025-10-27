@@ -1039,23 +1039,31 @@ export default function SendOrderApp() {
             {/* Input Method Selection Tabs */}
             <div className="flex bg-gray-100 rounded-lg p-1">
               <button
-                onClick={() => setInputMethod("file")}
+                onClick={() => !ordersHalted && setInputMethod("file")}
+                disabled={ordersHalted}
                 className={`flex-1 px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-                  inputMethod === "file"
+                  ordersHalted
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : inputMethod === "file"
                     ? "bg-white text-blue-600 shadow-sm"
                     : "text-gray-700 hover:text-gray-900"
                 }`}
+                title={ordersHalted ? `Order processing is currently halted: ${message}` : ""}
               >
                 <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
                 Upload File
               </button>
               <button
-                onClick={() => setInputMethod("manual")}
+                onClick={() => !ordersHalted && setInputMethod("manual")}
+                disabled={ordersHalted}
                 className={`flex-1 px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-                  inputMethod === "manual"
+                  ordersHalted
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : inputMethod === "manual"
                     ? "bg-white text-blue-600 shadow-sm"
                     : "text-gray-700 hover:text-gray-900"
                 }`}
+                title={ordersHalted ? `Order processing is currently halted: ${message}` : ""}
               >
                 <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
                 Paste Text
@@ -1065,30 +1073,43 @@ export default function SendOrderApp() {
             {/* File Upload Option */}
             {inputMethod === "file" && (
               <div
-                onClick={handleUploadClick}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-                className="border-2 border-dashed rounded-lg sm:rounded-xl p-4 sm:p-8 text-center cursor-pointer transition-all duration-300 border-gray-300 hover:border-blue-400 hover:bg-blue-50"
+                onClick={!ordersHalted ? handleUploadClick : undefined}
+                onDragOver={!ordersHalted ? handleDragOver : undefined}
+                onDrop={!ordersHalted ? handleDrop : undefined}
+                className={`border-2 border-dashed rounded-lg sm:rounded-xl p-4 sm:p-8 text-center transition-all duration-300 ${
+                  ordersHalted
+                    ? "border-gray-200 bg-gray-50 cursor-not-allowed opacity-60"
+                    : "border-gray-300 hover:border-blue-400 hover:bg-blue-50 cursor-pointer"
+                }`}
+                title={ordersHalted ? `Order processing is currently halted: ${message}` : ""}
               >
-                <div className="w-10 h-10 sm:w-14 sm:h-14 mx-auto mb-2 sm:mb-4 flex items-center justify-center rounded-full bg-gray-100 text-gray-700">
+                <div className={`w-10 h-10 sm:w-14 sm:h-14 mx-auto mb-2 sm:mb-4 flex items-center justify-center rounded-full ${
+                  ordersHalted ? "bg-gray-200 text-gray-400" : "bg-gray-100 text-gray-700"
+                }`}>
                   <Upload className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
-                <p className="text-gray-700 font-medium mb-1 sm:mb-2 text-sm sm:text-base">
-                  Drag & drop your order file or click to browse
+                <p className={`font-medium mb-1 sm:mb-2 text-sm sm:text-base ${
+                  ordersHalted ? "text-gray-400" : "text-gray-700"
+                }`}>
+                  {ordersHalted ? "Order processing is currently halted" : "Drag & drop your order file or click to browse"}
                 </p>
-              <p className="text-xs sm:text-sm text-gray-700">
-                Upload an Excel file with phone numbers and GB allocations
+              <p className={`text-xs sm:text-sm ${
+                ordersHalted ? "text-gray-400" : "text-gray-700"
+              }`}>
+                {ordersHalted ? message : "Upload an Excel file with phone numbers and GB allocations"}
               </p>                {/* Template download link */}
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    downloadTemplate();
-                  }}
-                  className="mt-3 text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium flex items-center gap-1 mx-auto"
-                >
-                  <Download className="w-3 h-3 sm:w-4 sm:h-4" />
-                  Download template
-                </button>
+                {!ordersHalted && (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      downloadTemplate();
+                    }}
+                    className="mt-3 text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium flex items-center gap-1 mx-auto"
+                  >
+                    <Download className="w-3 h-3 sm:w-4 sm:h-4" />
+                    Download template
+                  </button>
+                )}
               </div>
             )}
 
@@ -1096,7 +1117,7 @@ export default function SendOrderApp() {
             {inputMethod === "manual" && (
               <div className="relative">
                 <textarea
-                  placeholder={`Paste Phone numbers and data allocation in either format:
+                  placeholder={ordersHalted ? `Order processing is currently halted: ${message}` : `Paste Phone numbers and data allocation in either format:
 
 Single-line format (phone and data on same line):
 0554739033 20GB
@@ -1108,12 +1129,19 @@ Multi-line format (phone on one line, data on next):
 
 0556789012
 4gb`}
-                  className="w-full p-3 sm:p-4 border border-gray-300 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none font-mono text-sm sm:text-base text-gray-900 bg-white shadow-sm hover:shadow-md placeholder:text-gray-700"
+                  className={`w-full p-3 sm:p-4 border rounded-lg sm:rounded-xl transition-all duration-200 resize-none font-mono text-sm sm:text-base ${
+                    ordersHalted
+                      ? "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed placeholder:text-gray-400"
+                      : "border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white shadow-sm hover:shadow-md placeholder:text-gray-700"
+                  }`}
                   rows={6}
                   value={manualInputText}
+                  disabled={ordersHalted}
                   onChange={(e) => {
-                    const entries = processManualInput(e.target.value);
-                    setOrderEntries(entries);
+                    if (!ordersHalted) {
+                      const entries = processManualInput(e.target.value);
+                      setOrderEntries(entries);
+                    }
                   }}
                 />
                 {isProcessing && (
@@ -1133,6 +1161,7 @@ Multi-line format (phone on one line, data on next):
               ref={fileInputRef}
               onChange={handleFileUpload}
               accept=".xlsx"
+              disabled={ordersHalted}
               className="hidden"
             />
           </div>
@@ -1193,15 +1222,18 @@ Multi-line format (phone on one line, data on next):
                 <div className="flex gap-2">
                   <button
                     onClick={() => {
-                      setOrderEntries([]);
-                      setManualInputText("");
-                      setStatus("idle");
-                      setErrorMessage("");
-                      // Clear localStorage as well
-                      localStorage.removeItem(SEND_ORDER_STORAGE_KEY);
-                      localStorage.removeItem(SEND_ORDER_TEXT_KEY);
+                      if (!ordersHalted) {
+                        setOrderEntries([]);
+                        setManualInputText("");
+                        setStatus("idle");
+                        setErrorMessage("");
+                        // Clear localStorage as well
+                        localStorage.removeItem(SEND_ORDER_STORAGE_KEY);
+                        localStorage.removeItem(SEND_ORDER_TEXT_KEY);
+                      }
                     }}
-                    disabled={orderEntries.length === 0}
+                    disabled={orderEntries.length === 0 || ordersHalted}
+                    title={ordersHalted ? `Order processing is currently halted: ${message}` : ""}
                     className="px-4 py-2 border border-gray-300 rounded-lg font-medium flex items-center gap-2 transition-all hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Clear
