@@ -94,38 +94,54 @@ export async function POST(
       );
     }
     
-    // Check if role assignment already exists
+    // Check if role assignment already exists (active or inactive)
     const existingAssignment = await db
       .select()
       .from(userRoles)
       .where(
         and(
           eq(userRoles.userId, userId),
-          eq(userRoles.roleId, roleId),
-          eq(userRoles.isActive, true)
+          eq(userRoles.roleId, roleId)
         )
       )
       .limit(1);
     
-    if (existingAssignment.length > 0) {
-      return NextResponse.json(
-        { success: false, error: 'User already has this role' },
-        { status: 400 }
-      );
-    }
+    let assignment;
     
-    // Create role assignment
-    const [assignment] = await db
-      .insert(userRoles)
-      .values({
-        userId,
-        roleId,
-        assignedAt: new Date(),
-        assignedBy: adminId,
-        expiresAt: expiresAt ? new Date(expiresAt) : null,
-        isActive: true,
-      })
-      .returning();
+    if (existingAssignment.length > 0) {
+      // If assignment exists but is inactive, reactivate it
+      if (!existingAssignment[0].isActive) {
+        [assignment] = await db
+          .update(userRoles)
+          .set({
+            isActive: true,
+            assignedAt: new Date(),
+            assignedBy: adminId,
+            expiresAt: expiresAt ? new Date(expiresAt) : null,
+          })
+          .where(eq(userRoles.id, existingAssignment[0].id))
+          .returning();
+      } else {
+        // Already has active role
+        return NextResponse.json(
+          { success: false, error: 'User already has this role assigned' },
+          { status: 400 }
+        );
+      }
+    } else {
+      // Create new role assignment
+      [assignment] = await db
+        .insert(userRoles)
+        .values({
+          userId,
+          roleId,
+          assignedAt: new Date(),
+          assignedBy: adminId,
+          expiresAt: expiresAt ? new Date(expiresAt) : null,
+          isActive: true,
+        })
+        .returning();
+    }
     
     return NextResponse.json({
       success: true,

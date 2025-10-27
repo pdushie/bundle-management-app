@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import '@/styles/rbac-select-fix.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -68,18 +69,27 @@ export function UserRoleManagement({ users, roles, onUsersChange }: UserRoleMana
       const response = await fetch(`/api/admin/rbac/users/${userId}/roles`);
       const data = await response.json();
       
-      if (data.success) {
+      console.log(`Fetching roles for user ${userId}:`, { status: response.status, data });
+      
+      if (response.ok && data.success) {
         setUserRoles(prev => ({ ...prev, [userId]: data.data }));
+      } else {
+        console.error(`Failed to fetch roles for user ${userId}:`, data.error);
       }
     } catch (error) {
-      console.error('Error fetching user roles:', error);
+      console.error(`Error fetching user roles for user ${userId}:`, error);
     } finally {
       setLoadingRoles(prev => ({ ...prev, [userId]: false }));
     }
   };
 
   const handleAssignRole = async () => {
-    if (!selectedUser || !selectedRoleId) return;
+    if (!selectedUser || !selectedRoleId) {
+      console.log('Missing selectedUser or selectedRoleId:', { selectedUser, selectedRoleId });
+      return;
+    }
+
+    console.log('Assigning role:', { userId: selectedUser.id, roleId: selectedRoleId });
 
     try {
       const response = await fetch(`/api/admin/rbac/users/${selectedUser.id}/roles`, {
@@ -93,23 +103,39 @@ export function UserRoleManagement({ users, roles, onUsersChange }: UserRoleMana
       });
 
       const data = await response.json();
+      console.log('Role assignment response:', { status: response.status, data });
 
-      if (data.success) {
+      if (response.ok && data.success) {
         // Refresh user roles
         setUserRoles(prev => {
           const updated = { ...prev };
           delete updated[selectedUser.id];
           return updated;
         });
-        fetchUserRoles(selectedUser.id);
+        await fetchUserRoles(selectedUser.id);
         setIsAssignDialogOpen(false);
         setSelectedRoleId('');
+        console.log('Role assigned successfully');
+        
+        // Show success message
+        alert('✅ Role assigned successfully!');
       } else {
-        alert(data.error || 'Failed to assign role');
+        console.error('Role assignment failed:', { status: response.status, error: data.error });
+        
+        // Handle specific error cases
+        if (data.error?.includes('already has this role')) {
+          alert('⚠️ User already has this role assigned.');
+        } else if (response.status === 401) {
+          alert('❌ Unauthorized. You need super admin access to assign roles.');
+        } else if (response.status === 404) {
+          alert('❌ User not found.');
+        } else {
+          alert(`❌ Failed to assign role: ${data.error || 'Unknown error'}`);
+        }
       }
     } catch (error) {
       console.error('Error assigning role:', error);
-      alert('Failed to assign role');
+      alert('❌ Network error: Failed to assign role. Please try again.');
     }
   };
 
@@ -122,27 +148,38 @@ export function UserRoleManagement({ users, roles, onUsersChange }: UserRoleMana
       });
 
       const data = await response.json();
+      console.log('Role removal response:', { status: response.status, data });
 
-      if (data.success) {
+      if (response.ok && data.success) {
         // Refresh user roles
         setUserRoles(prev => {
           const updated = { ...prev };
           delete updated[userId];
           return updated;
         });
-        fetchUserRoles(userId);
+        await fetchUserRoles(userId);
+        alert('✅ Role removed successfully!');
       } else {
-        alert(data.error || 'Failed to remove role');
+        console.error('Role removal failed:', { status: response.status, error: data.error });
+        
+        if (response.status === 401) {
+          alert('❌ Unauthorized. You need super admin access to remove roles.');
+        } else if (response.status === 404) {
+          alert('❌ User or role not found.');
+        } else {
+          alert(`❌ Failed to remove role: ${data.error || 'Unknown error'}`);
+        }
       }
     } catch (error) {
       console.error('Error removing role:', error);
-      alert('Failed to remove role');
+      alert('❌ Network error: Failed to remove role. Please try again.');
     }
   };
 
   const getAvailableRoles = (userId: number) => {
     const assignedRoleIds = userRoles[userId]?.map(ur => ur.roleId) || [];
-    return roles.filter(role => role.isActive && !assignedRoleIds.includes(role.id));
+    const available = roles.filter(role => role.isActive && !assignedRoleIds.includes(role.id));
+    return available;
   };
 
   return (
@@ -210,7 +247,15 @@ export function UserRoleManagement({ users, roles, onUsersChange }: UserRoleMana
                             Assign
                           </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent 
+                          className="max-w-md bg-white border border-gray-200 shadow-xl"
+                          style={{ 
+                            backgroundColor: 'white', 
+                            opacity: 1, 
+                            zIndex: 50,
+                            overflow: 'visible'
+                          }}
+                        >
                           <DialogHeader>
                             <DialogTitle>Assign Role to {user.name}</DialogTitle>
                           </DialogHeader>
@@ -218,20 +263,52 @@ export function UserRoleManagement({ users, roles, onUsersChange }: UserRoleMana
                             <div className="space-y-2">
                               <Label htmlFor="role">Select Role</Label>
                               <Select value={selectedRoleId} onValueChange={setSelectedRoleId}>
-                                <SelectTrigger>
+                                <SelectTrigger 
+                                  className="w-full bg-white border border-gray-300 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                  style={{ backgroundColor: 'white', opacity: 1, zIndex: 1 }}
+                                >
                                   <SelectValue placeholder="Choose a role..." />
                                 </SelectTrigger>
-                                <SelectContent>
-                                  {getAvailableRoles(user.id).map((role) => (
-                                    <SelectItem key={role.id} value={role.id.toString()}>
-                                      {role.displayName}
-                                      {role.isSystemRole && (
-                                        <Badge variant="secondary" className="ml-2">System</Badge>
-                                      )}
-                                    </SelectItem>
-                                  ))}
+                                <SelectContent 
+                                  className="bg-white border border-gray-300 shadow-xl z-[99999]" 
+                                  position="popper" 
+                                  sideOffset={8}
+                                  alignOffset={0}
+                                  style={{ 
+                                    backgroundColor: 'white', 
+                                    opacity: 1, 
+                                    zIndex: 99999,
+                                    border: '1px solid #d1d5db',
+                                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+                                  }}
+                                >
+                                  {getAvailableRoles(user.id).length === 0 ? (
+                                    <div className="p-3 text-sm text-gray-500 bg-white border-b">
+                                      No available roles to assign
+                                    </div>
+                                  ) : (
+                                    getAvailableRoles(user.id).map((role) => (
+                                      <SelectItem 
+                                        key={role.id} 
+                                        value={role.id.toString()}
+                                        className="bg-white hover:bg-blue-50 focus:bg-blue-50 cursor-pointer px-3 py-2"
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-gray-900">{role.displayName}</span>
+                                          {role.isSystemRole && (
+                                            <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600">System</Badge>
+                                          )}
+                                        </div>
+                                      </SelectItem>
+                                    ))
+                                  )}
                                 </SelectContent>
                               </Select>
+                              {getAvailableRoles(user.id).length === 0 && (
+                                <p className="text-xs text-gray-500">
+                                  User already has all available roles assigned.
+                                </p>
+                              )}
                             </div>
                             <div className="flex justify-end gap-2">
                               <Button 

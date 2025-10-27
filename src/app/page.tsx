@@ -1959,6 +1959,7 @@ function TabNavigation({
   tabs, 
   isAdmin, 
   isSuperAdmin,
+  isModerator,
   history 
 }: { 
   activeTab: string; 
@@ -1966,6 +1967,7 @@ function TabNavigation({
   tabs: Array<{ id: string; name: string; icon: any; roles?: string[] }>;
   isAdmin: boolean;
   isSuperAdmin: boolean;
+  isModerator: boolean;
   history: any[];
 }) {
   // Use the order counts from context
@@ -2446,6 +2448,7 @@ function AppContent() {
   const isSuperAdmin = userRole === 'super_admin';
   const isAdmin = userRole === 'admin' || userRole === 'standard_admin';
   const isDataProcessor = userRole === 'data_processor';
+  const isModerator = userRole === 'moderator';
   const isRegularUser = userRole === 'user';
   
 
@@ -2655,6 +2658,16 @@ function AppContent() {
       return hasAccess;
     }
     
+    // Moderator users can access limited admin tabs only
+    if (isModerator) {
+      const hasAccess = tab.id === 'bundle-allocator' || 
+             tab.id === 'bundle-categorizer' || 
+             tab.id === 'orders' || 
+             tab.id === 'processed-orders' || 
+             tab.id === 'track-orders';
+      return hasAccess;
+    }
+    
     // Admin users can access specific tabs, including track-orders and history
     if (isAdmin) {
       const hasAccess = tab.id === 'bundle-allocator' || 
@@ -2689,8 +2702,8 @@ function AppContent() {
     // Render the appropriate component based on the active tab and user role
     switch (activeTab) {
       case "bundle-allocator":
-        // Super admins, admins, standard_admins, and data_processors can access
-        if (isSuperAdmin || isAdmin || isDataProcessor) {
+        // Super admins, admins, standard_admins, data_processors, and moderators can access
+        if (isSuperAdmin || isAdmin || isDataProcessor || isModerator) {
           return (
             <BundleAllocatorApp
               inputText={allocatorInputText}
@@ -2704,8 +2717,8 @@ function AppContent() {
         break;
 
       case "bundle-categorizer":
-        // Super admins, admins, and data_processors can access
-        if (isSuperAdmin || isAdmin || isDataProcessor) {
+        // Super admins, admins, data_processors, and moderators can access
+        if (isSuperAdmin || isAdmin || isDataProcessor || isModerator) {
           return (
             <BundleCategorizerApp
               rawData={categorizerRawData}
@@ -2728,15 +2741,15 @@ function AppContent() {
         break;
         
       case "orders":
-        // Super admins, admins, and data_processors can access
-        if (isSuperAdmin || isAdmin || isDataProcessor) {
+        // Super admins, admins, data_processors, and moderators can access
+        if (isSuperAdmin || isAdmin || isDataProcessor || isModerator) {
           return <OrdersApp />;
         }
         break;
         
       case "processed-orders":
-        // Super admins, admins, and data_processors can access
-        if (isSuperAdmin || isAdmin || isDataProcessor) {
+        // Super admins, admins, data_processors, and moderators can access
+        if (isSuperAdmin || isAdmin || isDataProcessor || isModerator) {
           return <ProcessedOrdersApp />;
         }
         break;
@@ -2749,8 +2762,8 @@ function AppContent() {
         break;
         
       case "track-orders":
-        // Track orders tab is accessible to super admins, admins, and data_processors
-        if (isSuperAdmin || isAdmin || isDataProcessor) {
+        // Track orders tab is accessible to super admins, admins, data_processors, and moderators
+        if (isSuperAdmin || isAdmin || isDataProcessor || isModerator) {
           return <OrderTrackingApp />;
         }
         break;
@@ -2983,6 +2996,7 @@ function AppContent() {
               tabs={filteredTabs} 
               isAdmin={isAdmin}
               isSuperAdmin={isSuperAdmin}
+              isModerator={isModerator}
               history={history} 
             />
           </div>
