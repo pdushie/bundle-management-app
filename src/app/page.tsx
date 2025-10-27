@@ -1222,8 +1222,9 @@ function BundleAllocatorApp({
           worksheet.getCell(`E${totalRowNum}`).font = { bold: true };
           worksheet.getCell(`E${totalRowNum + 1}`).font = { bold: true };
           
-          // Use dynamic formulas that adjust when rows are deleted
-          worksheet.getCell(`F${totalRowNum}`).value = { formula: `SUM(D:D)-D1` }; // Sum entire column D minus header
+          // Use truly dynamic formulas that adjust when rows are deleted
+          // SUBTOTAL(109, range) ignores hidden/filtered rows and adjusts automatically when rows are deleted
+          worksheet.getCell(`F${totalRowNum}`).value = { formula: `SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))` }; // Dynamic sum from D2 to last data row
           worksheet.getCell(`F${totalRowNum + 1}`).value = { formula: `F${totalRowNum}/1024` }; // Convert MB to GB
           worksheet.getCell(`F${totalRowNum}`).font = { bold: true };
           worksheet.getCell(`F${totalRowNum + 1}`).font = { bold: true };
@@ -1316,8 +1317,9 @@ function BundleAllocatorApp({
         worksheet.getCell(`E${totalRowNum}`).font = { bold: true };
         worksheet.getCell(`E${totalRowNum + 1}`).font = { bold: true };
 
-        // Use dynamic formulas that adjust when rows are deleted
-        worksheet.getCell(`F${totalRowNum}`).value = { formula: `SUM(D:D)-D1` }; // Sum entire column D minus header
+        // Use truly dynamic formulas that adjust when rows are deleted
+        // SUBTOTAL(109, range) ignores hidden/filtered rows and adjusts automatically when rows are deleted
+        worksheet.getCell(`F${totalRowNum}`).value = { formula: `SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))` }; // Dynamic sum from D2 to last data row
         worksheet.getCell(`F${totalRowNum + 1}`).value = { formula: `F${totalRowNum}/1024` }; // Convert MB to GB
         worksheet.getCell(`F${totalRowNum}`).font = { bold: true };
         worksheet.getCell(`F${totalRowNum + 1}`).font = { bold: true };
