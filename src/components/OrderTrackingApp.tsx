@@ -50,7 +50,7 @@ export default function OrderTrackingApp() {
   const [endDate, setEndDate] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [processedByFilter, setProcessedByFilter] = useState<string>("all");
-  const [admins, setAdmins] = useState<Array<{id: string, name: string, email: string}>>([]);
+  const [admins, setAdmins] = useState<Array<{id: string, name: string, email: string, role: string}>>([]);
   const [isFiltering, setIsFiltering] = useState<boolean>(false);
   
   // Pagination states
@@ -350,7 +350,7 @@ export default function OrderTrackingApp() {
               <option value="all">All Admins</option>
               {admins.map((admin) => (
                 <option key={admin.id} value={admin.id}>
-                  {admin.name}
+                  {admin.name} ({admin.role})
                 </option>
               ))}
             </select>

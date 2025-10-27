@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { users, orders } from '@/lib/schema';
-import { eq, and, isNotNull } from 'drizzle-orm';
+import { eq, and, isNotNull, inArray } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,29 +17,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Database not available' }, { status: 500 });
     }
 
-    // Get all admin/superadmin users for the dropdown
-    const adminUsers = await db
+    // Get all admin-level users for the dropdown (including all roles that can process orders)
+    const allAdmins = await db
       .select({
         id: users.id,
         name: users.name,
-        email: users.email
+        email: users.email,
+        role: users.role
       })
       .from(users)
-      .where(eq(users.role, 'admin'))
+      .where(
+        inArray(users.role, [
+          'super_admin',
+          'admin', 
+          'standard_admin',
+          'moderator',
+          'data_processor'
+        ])
+      )
       .orderBy(users.name);
-
-    // Also get superadmin users
-    const superAdminUsers = await db
-      .select({
-        id: users.id,
-        name: users.name,
-        email: users.email
-      })
-      .from(users)
-      .where(eq(users.role, 'super_admin'))
-      .orderBy(users.name);
-
-    const allAdmins = [...adminUsers, ...superAdminUsers];
 
     return NextResponse.json({ admins: allAdmins });
   } catch (error) {
