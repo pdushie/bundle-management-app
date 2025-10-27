@@ -25,7 +25,7 @@ export async function requireAuth() {
 
 export async function requireAdmin() {
   const session = await requireAuth() as any
-  if (session.user?.role !== 'admin' && session.user?.role !== 'standard_admin' && session.user?.role !== 'super_admin' && session.user?.role !== 'data_processor') {
+  if (session.user?.role !== 'admin' && session.user?.role !== 'standard_admin' && session.user?.role !== 'super_admin' && session.user?.role !== 'data_processor' && session.user?.role !== 'moderator') {
     throw new Error('Admin access required')
   }
   return session
@@ -83,7 +83,7 @@ async function getUserRBACRoles(userId: number): Promise<string[]> {
   }
 }
 
-// Get the primary role for session (preferring super_admin > admin > standard_admin > data_processor > user > viewer)
+// Get the primary role for session (preferring super_admin > admin > standard_admin > data_processor > moderator > user > viewer)
 async function getPrimaryRole(userId: number): Promise<string> {
   const roles = await getUserRBACRoles(userId);
   
@@ -91,6 +91,7 @@ async function getPrimaryRole(userId: number): Promise<string> {
   if (roles.includes('admin')) return 'admin';
   if (roles.includes('standard_admin')) return 'standard_admin';
   if (roles.includes('data_processor')) return 'data_processor';
+  if (roles.includes('moderator')) return 'moderator';
   if (roles.includes('user')) return 'user';
   if (roles.includes('viewer')) return 'viewer';
   

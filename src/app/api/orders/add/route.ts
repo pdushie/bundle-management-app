@@ -9,6 +9,7 @@ import { validateOrderPricing } from '@/lib/entryCostCalculator';
 import { db } from '@/lib/db';
 import { pricingTiers } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
+import { neonClient } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,6 +20,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Order data is required' },
         { status: 400 }
+      );
+    }
+
+    // Check if orders are currently halted
+    const haltSettings = await neonClient`
+      SELECT key, value
+      FROM system_settings
+      WHERE key IN ('orders_halted', 'orders_halt_message')
+    `;
+    
+    const ordersHalted = haltSettings.find(s => s.key === 'orders_halted')?.value === 'true';
+    const haltMessage = haltSettings.find(s => s.key === 'orders_halt_message')?.value || 'Order processing is temporarily unavailable. Please try again later.';
+    
+    if (ordersHalted) {
+      return NextResponse.json(
+        { 
+          error: 'Orders temporarily halted',
+          message: haltMessage
+        },
+        { status: 503 } // Service Unavailable
       );
     }
     

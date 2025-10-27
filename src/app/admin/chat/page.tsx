@@ -5,23 +5,44 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import AdminChatPanel from "@/components/admin/AdminChatPanel";
 import { Metadata } from "next";
+import { neonClient } from "@/lib/db";
 
 export const metadata: Metadata = {
   title: "Chat Support | Admin",
   description: "Manage user chat support requests",
 };
 
+async function checkChatPermission(userId: string): Promise<boolean> {
+  try {
+    const result = await neonClient`
+      SELECT p.name 
+      FROM user_roles ur
+      JOIN role_permissions rp ON ur.role_id = rp.role_id
+      JOIN permissions p ON rp.permission_id = p.id
+      WHERE ur.user_id = ${parseInt(userId)} AND p.name = 'admin.chat'
+    `;
+    
+    return result.length > 0;
+  } catch (error) {
+    console.error('Error checking chat permission:', error);
+    return false;
+  }
+}
+
 export default async function AdminChatPage() {
   const session = await getServerSession(authOptions);
   
-  // Check RBAC permissions for chat access or super_admin role
+  // Check if user is authenticated
   if (!session?.user?.role) {
     redirect("/");
   }
   
-  // For now, only allow super_admin role since we need proper RBAC integration
-  // TODO: Integrate with RBAC permissions check for 'admin:chat'
-  if (session.user.role !== 'super_admin') {
+  // Allow super_admin role or check RBAC permissions
+  const userId = (session.user as any)?.id;
+  const isSuperAdmin = session.user.role === 'super_admin';
+  const hasChatPermission = userId ? await checkChatPermission(userId) : false;
+  
+  if (!isSuperAdmin && !hasChatPermission) {
     redirect("/admin");
   }
 

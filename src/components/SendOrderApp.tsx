@@ -10,6 +10,8 @@ import { notifyOrderSent, notifyCountUpdated } from "../lib/orderNotifications";
 import { getCurrentUserPricing, calculatePrice } from "../lib/pricingClient";
 import { getCurrentTimeSync, getCurrentDateStringSync, getCurrentTimeStringSync, getCurrentTimestampSync } from "../lib/timeService";
 import { validateOrderPricing, hasPricingForAllocation } from "../lib/entryCostCalculator";
+import OrderHaltBanner from "./OrderHaltBanner";
+import { useOrderHaltStatus } from "@/hooks/useOrderHaltStatus";
 
 type OrderStatus = "idle" | "preparing" | "sending" | "success" | "error";
 
@@ -74,6 +76,8 @@ export default function SendOrderApp() {
   const { data: session } = useSession();
   // Get the refreshOrderCount function from context
   const { refreshOrderCount } = useOrderCount();
+  // Check order halt status
+  const { ordersHalted, message } = useOrderHaltStatus();
   
   // Load saved order entries and manual text from localStorage on component mount
   useEffect(() => {
@@ -735,6 +739,12 @@ export default function SendOrderApp() {
   const handleSendOrder = async () => {
     if (orderEntries.length === 0) return;
     
+    // Check if orders are currently halted
+    if (ordersHalted) {
+      window.alert(`Order processing is currently halted.\n\n${message}`);
+      return;
+    }
+    
     // Check if user has a pricing profile assigned
     if (!pricingData?.hasProfile) {
       window.alert('Cannot send order: No pricing profile assigned to your account.\n\nPlease contact your administrator to assign a pricing profile before placing orders.');
@@ -1011,6 +1021,8 @@ export default function SendOrderApp() {
         }
       `}</style>
       <div className="max-w-4xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
+        {/* Order Halt Banner */}
+        <OrderHaltBanner />
         {/* Upload Section */}
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-4 sm:mb-8 transition-all hover:shadow-2xl">
           <div className="p-3 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
@@ -1197,6 +1209,7 @@ Multi-line format (phone on one line, data on next):
                   <button
                     onClick={handleSendOrder}
                     disabled={
+                      ordersHalted ||
                       orderEntries.length === 0 || 
                       invalidCount > 0 || 
                       !pricingData?.hasProfile ||
@@ -1206,7 +1219,9 @@ Multi-line format (phone on one line, data on next):
                       ))
                     }
                     title={
-                      !pricingData?.hasProfile 
+                      ordersHalted
+                        ? `Order processing is currently halted: ${message}`
+                        : !pricingData?.hasProfile 
                         ? "No pricing profile assigned - contact administrator" 
                         : invalidCount > 0 
                         ? `Please fix ${invalidCount} invalid entries before sending` 

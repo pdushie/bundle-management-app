@@ -14,6 +14,12 @@ export default function UserChat() {
   const [unreadCount, setUnreadCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [initialLoad, setInitialLoad] = useState(true);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Set hydrated state after component mounts
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   // Fetch messages on component mount and periodically
   useEffect(() => {
@@ -51,23 +57,19 @@ export default function UserChat() {
   }, [session]);
 
   const fetchMessages = async () => {
-    if (!session?.user) return;
-    
-    try {
+    if (!session?.user) {
+      return;
+    }    try {
       const response = await fetch("/api/chat");
       
       if (!response.ok) {
-        throw new Error("Failed to fetch messages");
-      }
-      
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Invalid response format from server');
+        throw new Error(`Failed to fetch messages: ${response.status} ${response.statusText}`);
       }
       
       const data = await response.json();
       
       if (data.success && data.messages) {
+        console.log("UserChat: Successfully loaded", data.messages.length, "messages");
         setMessages(data.messages);
         
         // Count unread messages from admin
@@ -87,7 +89,7 @@ export default function UserChat() {
         }
       }
     } catch (error) {
-      // console.error("Error fetching messages:", error);
+      console.error("Error fetching messages:", error);
     } finally {
       setLoading(false);
     }
@@ -99,47 +101,33 @@ export default function UserChat() {
     if (!newMessage.trim() || !session?.user) return;
     
     setLoading(true);
-    // console.log("Sending message:", newMessage);
-    // console.log("Session user:", session.user);
     
     try {
-      const messagePayload = { message: newMessage };
-      // console.log("Sending payload:", messagePayload);
-      
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(messagePayload),
+        body: JSON.stringify({ message: newMessage }),
       });
       
-      // console.log("Response status:", response.status);
-      const responseText = await response.text();
-      // console.log("Response text:", responseText);
-      
-      // Try to parse the response as JSON
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (parseError) {
-        // console.error("Failed to parse response as JSON:", parseError);
-        throw new Error("Invalid response format");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
       
+      const data = await response.json();
+      
       if (data.success && data.message) {
-        // console.log("Message sent successfully:", data.message);
         setMessages([...messages, data.message]);
         setNewMessage("");
         
         // Immediately fetch messages to ensure everything is in sync
         setTimeout(() => fetchMessages(), 300);
       } else {
-        // console.error("Message not successful:", data);
         throw new Error(data.error || "Failed to send message");
       }
     } catch (error) {
-      // console.error("Error sending message:", error);
+      console.error("Error sending message:", error);
       alert("Failed to send message. Please try again.");
     } finally {
       setLoading(false);
@@ -188,6 +176,8 @@ export default function UserChat() {
       {/* Chat Button */}
       <button
         onClick={toggleChat}
+        data-testid="user-chat-button"
+        title={isHydrated ? `Chat with admin${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}` : "Chat with admin"}
         className="fixed bottom-4 sm:bottom-6 left-4 sm:left-6 z-50 bg-blue-600 text-white p-2.5 sm:p-3 rounded-full shadow-lg hover:bg-blue-700 transition-all flex items-center justify-center"
       >
         <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6" />

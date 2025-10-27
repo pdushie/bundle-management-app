@@ -6,23 +6,44 @@ import { redirect } from "next/navigation";
 import AnnouncementManager from "@/components/admin/AnnouncementManager";
 import AnnouncementFeatureGuide from "@/components/admin/AnnouncementFeatureGuide";
 import { Metadata } from "next";
+import { neonClient } from "@/lib/db";
 
 export const metadata: Metadata = {
   title: "Announcements Management | Admin",
   description: "Create and manage system announcements",
 };
 
+async function checkAnnouncementsPermission(userId: string): Promise<boolean> {
+  try {
+    const result = await neonClient`
+      SELECT p.name 
+      FROM user_roles ur
+      JOIN role_permissions rp ON ur.role_id = rp.role_id
+      JOIN permissions p ON rp.permission_id = p.id
+      WHERE ur.user_id = ${parseInt(userId)} AND p.name = 'admin.announcements'
+    `;
+    
+    return result.length > 0;
+  } catch (error) {
+    console.error('Error checking announcements permission:', error);
+    return false;
+  }
+}
+
 export default async function AnnouncementsPage() {
   const session = await getServerSession(authOptions);
   
-  // Check RBAC permissions for announcements access or super_admin role
+  // Check if user is authenticated
   if (!session?.user?.role) {
     redirect("/");
   }
   
-  // For now, only allow super_admin role since we need proper RBAC integration
-  // TODO: Integrate with RBAC permissions check for 'admin:announcements' 
-  if (session.user.role !== 'super_admin') {
+  // Allow super_admin role or check RBAC permissions
+  const userId = (session.user as any)?.id;
+  const isSuperAdmin = session.user.role === 'super_admin';
+  const hasAnnouncementsPermission = userId ? await checkAnnouncementsPermission(userId) : false;
+  
+  if (!isSuperAdmin && !hasAnnouncementsPermission) {
     redirect("/admin");
   }
 

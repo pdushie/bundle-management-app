@@ -65,23 +65,49 @@ export default function AdminDashboardLink() {
     
     try {
       setIsLoadingChat(true);
+      
+      // Add timeout and better error handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
       const response = await fetch("/api/chat/unread", {
         method: "GET",
         headers: {
-          "Accept": "application/json"
-        }
+          "Accept": "application/json",
+          "Cache-Control": "no-cache"
+        },
+        signal: controller.signal
       });
       
+      clearTimeout(timeoutId);
+      
       if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setUnreadChatCount(data.unreadCount || 0);
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+          if (data.success) {
+            setUnreadChatCount(data.unreadCount || 0);
+          } else {
+            console.warn("Chat unread count API returned unsuccessful response:", data);
+          }
+        } else {
+          console.warn("Chat unread count API returned non-JSON response, content-type:", contentType);
         }
       } else {
-        console.error("Failed to fetch unread chat count:", response.statusText);
+        console.error("Failed to fetch unread chat count:", response.status, response.statusText);
       }
     } catch (error) {
-      console.error("Error fetching unread chat count:", error);
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          console.warn("Chat unread count fetch timed out");
+        } else if (error.message.includes('Failed to fetch')) {
+          console.warn("Network error fetching chat unread count - server may be unreachable");
+        } else {
+          console.error("Error fetching unread chat count:", error.message);
+        }
+      } else {
+        console.error("Unknown error fetching unread chat count:", error);
+      }
     } finally {
       setIsLoadingChat(false);
     }
@@ -128,8 +154,20 @@ export default function AdminDashboardLink() {
       return;
     }
     
-    // Initial fetch
-    fetchUnreadChatCount();
+    // Add a small delay to ensure the component is fully mounted and network is ready
+    const initialFetchTimer = setTimeout(() => {
+      // Check if document is ready and window is defined
+      if (typeof window !== 'undefined' && document.readyState === 'complete') {
+        fetchUnreadChatCount();
+      } else {
+        // If document is not ready, wait for it
+        const onReady = () => {
+          fetchUnreadChatCount();
+          document.removeEventListener('readystatechange', onReady);
+        };
+        document.addEventListener('readystatechange', onReady);
+      }
+    }, 1000); // 1 second delay
     
     // Dynamic polling based on window focus:
     // - Focused: 10 seconds (frequent for active admins)
@@ -141,6 +179,7 @@ export default function AdminDashboardLink() {
     }, pollingInterval);
 
     return () => {
+      clearTimeout(initialFetchTimer);
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
       }

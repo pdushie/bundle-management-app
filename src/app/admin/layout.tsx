@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Users, Bell, ArrowLeft, Shield, MessageSquare, Settings, UserCheck, DollarSign } from 'lucide-react';
+import { Shield, Users, DollarSign, UserCheck, Settings, Bell, MessageSquare, ArrowLeft, Package, FileBox, Eye, BarChart } from 'lucide-react';
 import AdminChatNotifier from '@/components/admin/AdminChatNotifier';
 import AdminOTPStatusIndicator from '@/components/admin/AdminOTPStatusIndicator';
 
@@ -232,6 +232,23 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </Link>
             )}
             
+            {/* Show System Settings link to super_admin only */}
+            {userRole === 'super_admin' && (
+              <Link
+                href="/admin/system-settings"
+                className={`px-3 py-4 text-sm font-medium ${
+                  isActive('/admin/system-settings')
+                    ? 'text-blue-600 border-b-2 border-blue-600'
+                    : 'text-gray-900 hover:text-blue-600'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <Settings className="w-4 h-4" />
+                  System Settings
+                </span>
+              </Link>
+            )}
+            
             {/* Show Announcements link to users with announcements permissions or super_admin role only */}
             {(hasAnyPermission(['admin.announcements']) || userRole === 'super_admin') && (
             <Link
@@ -245,6 +262,92 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <span className="flex items-center gap-2">
                 <Bell className="w-4 h-4" />
                 Announcements
+              </span>
+            </Link>
+            )}
+            
+            {/* Moderator-specific navigation links */}
+            {/* Show Bundle Allocator link to moderators */}
+            {(hasPermission('bundles:allocator') || userRole === 'moderator') && (
+            <Link
+              href="/?tab=bundle-allocator"
+              className={`px-3 py-4 text-sm font-medium ${
+                pathname.startsWith('/?tab=bundle-allocator')
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-900 hover:text-blue-600'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <Package className="w-4 h-4" />
+                Bundle Allocator
+              </span>
+            </Link>
+            )}
+            
+            {/* Show Bundle Categorizer link to moderators */}
+            {(hasPermission('bundles:categorizer') || userRole === 'moderator') && (
+            <Link
+              href="/?tab=bundle-categorizer"
+              className={`px-3 py-4 text-sm font-medium ${
+                pathname.startsWith('/?tab=bundle-categorizer')
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-900 hover:text-blue-600'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <FileBox className="w-4 h-4" />
+                Bundle Categorizer
+              </span>
+            </Link>
+            )}
+            
+            {/* Show Orders link to moderators */}
+            {(hasPermission('orders:view') || userRole === 'moderator') && (
+            <Link
+              href="/?tab=orders"
+              className={`px-3 py-4 text-sm font-medium ${
+                pathname.startsWith('/?tab=orders')
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-900 hover:text-blue-600'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <FileBox className="w-4 h-4" />
+                Orders
+              </span>
+            </Link>
+            )}
+            
+            {/* Show Processed Orders link to moderators */}
+            {(hasPermission('orders:processed:view') || userRole === 'moderator') && (
+            <Link
+              href="/?tab=processed-orders"
+              className={`px-3 py-4 text-sm font-medium ${
+                pathname.startsWith('/?tab=processed-orders')
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-900 hover:text-blue-600'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <Eye className="w-4 h-4" />
+                Processed Orders
+              </span>
+            </Link>
+            )}
+            
+            {/* Show Order Tracking link to moderators */}
+            {(hasPermission('orders:track') || userRole === 'moderator') && (
+            <Link
+              href="/?tab=track-orders"
+              className={`px-3 py-4 text-sm font-medium ${
+                pathname.startsWith('/?tab=track-orders')
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-900 hover:text-blue-600'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <BarChart className="w-4 h-4" />
+                Track Orders
               </span>
             </Link>
             )}

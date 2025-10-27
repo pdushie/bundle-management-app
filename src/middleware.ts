@@ -23,8 +23,8 @@ export default withAuth(
       if (pathname.startsWith('/admin')) {
         const userRole = token.role;
         
-        // Admin pages require admin, standard_admin, super_admin, or data_processor role
-        if (userRole !== 'admin' && userRole !== 'standard_admin' && userRole !== 'super_admin' && userRole !== 'data_processor') {
+        // Admin pages require admin, standard_admin, super_admin, data_processor, or moderator role
+        if (userRole !== 'admin' && userRole !== 'standard_admin' && userRole !== 'super_admin' && userRole !== 'data_processor' && userRole !== 'moderator') {
           console.log(`Unauthorized admin access attempt by user role: ${userRole}`);
           return NextResponse.redirect(new URL('/?error=unauthorized', req.url));
         }
@@ -74,8 +74,9 @@ export default withAuth(
 
         // Role-based authorization
         if (pathname.startsWith('/admin')) {
-          console.log(`Middleware auth check: path=${pathname}, role=${token.role}, hasAccess=${token.role === 'admin' || token.role === 'standard_admin' || token.role === 'super_admin'}`);
-          return token.role === 'admin' || token.role === 'standard_admin' || token.role === 'super_admin';
+          const hasAdminAccess = token.role === 'admin' || token.role === 'standard_admin' || token.role === 'super_admin' || token.role === 'data_processor' || token.role === 'moderator';
+          console.log(`Middleware auth check: path=${pathname}, role=${token.role}, hasAccess=${hasAdminAccess}`);
+          return hasAdminAccess;
         }
 
         return true;

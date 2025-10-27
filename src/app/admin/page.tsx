@@ -144,12 +144,29 @@ export default function AdminDashboard() {
         'pricing:view', 'pricing:create', 'pricing:update', 'pricing:delete'
       ]);
       
-      console.log('AdminDashboard: Non-admin user check - HasAdminPermissions:', hasAdminPermissions, 'Permissions:', permissions);
+      const hasAnnouncementsPermission = hasAnyPermission(['admin.announcements']);
+      const hasChatPermission = hasAnyPermission(['admin.chat']);
       
-      // If they don't have admin permissions, redirect to announcements
-      if (!hasAdminPermissions) {
-        console.log('AdminDashboard: No admin permissions found, redirecting to announcements');
+      console.log('AdminDashboard: Non-admin user check - HasAdminPermissions:', hasAdminPermissions, 'HasAnnouncementsPermission:', hasAnnouncementsPermission, 'HasChatPermission:', hasChatPermission, 'Permissions:', permissions);
+      
+      // If they have announcements permission but not general admin permissions, redirect to announcements
+      if (!hasAdminPermissions && hasAnnouncementsPermission) {
+        console.log('AdminDashboard: Has announcements permission, redirecting to announcements');
         router.push('/admin/announcements');
+        return;
+      }
+      
+      // If they have chat permission but not general admin permissions, redirect to chat
+      if (!hasAdminPermissions && hasChatPermission) {
+        console.log('AdminDashboard: Has chat permission, redirecting to chat');
+        router.push('/admin/chat');
+        return;
+      }
+      
+      // If they don't have any admin permissions, redirect to home
+      if (!hasAdminPermissions && !hasAnnouncementsPermission && !hasChatPermission) {
+        console.log('AdminDashboard: No admin permissions found, redirecting to home');
+        redirect("/");
       }
     }
     

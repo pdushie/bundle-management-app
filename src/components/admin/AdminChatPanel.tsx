@@ -17,7 +17,7 @@ export default function AdminChatPanel() {
 
   // Fetch threads on component mount and periodically
   useEffect(() => {
-    if (!session?.user || (session.user.role !== "admin" && session.user.role !== "superadmin")) return;
+    if (!session?.user || (session.user.role !== "admin" && session.user.role !== "super_admin")) return;
     
     fetchThreads();
     
@@ -60,32 +60,16 @@ export default function AdminChatPanel() {
     if (!session?.user || (session.user.role !== "admin" && session.user.role !== "super_admin")) return;
     
     try {
-      console.log("Fetching chat threads for admin...");
       const response = await fetch("/api/chat/threads");
-      
-      console.log("Threads response status:", response.status);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch threads: ${response.status}`);
       }
       
-      const responseText = await response.text();
-      console.log("Threads response text:", responseText);
-      
-      // Try to parse the response as JSON
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error("Failed to parse threads response as JSON:", parseError);
-        throw new Error("Invalid response format");
-      }
+      const data = await response.json();
       
       if (data.success && data.threads) {
-        console.log(`Fetched ${data.threads.length} threads successfully:`, data.threads);
         setThreads(data.threads);
-      } else {
-        console.error("No threads data returned:", data);
       }
     } catch (error) {
       console.error("Error fetching threads:", error);
