@@ -19,9 +19,10 @@ async function checkChatPermission(userId: string): Promise<boolean> {
       FROM user_roles ur
       JOIN role_permissions rp ON ur.role_id = rp.role_id
       JOIN permissions p ON rp.permission_id = p.id
-      WHERE ur.user_id = ${parseInt(userId)} AND p.name = 'admin.chat'
+      WHERE ur.user_id = ${parseInt(userId)} AND p.name = 'admin.chat' AND ur.is_active = true
     `;
     
+    console.log(`Chat permission check for user ${userId}:`, result);
     return result.length > 0;
   } catch (error) {
     console.error('Error checking chat permission:', error);

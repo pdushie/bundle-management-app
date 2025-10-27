@@ -1,10 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db, neonClient } from "@/lib/db";
 import { announcements } from "@/lib/schema";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { getCurrentTime } from "@/lib/timeService";
+
+// Helper function to check if user has announcements permissions via direct database query
+async function hasAdminAnnouncementsPermission(userId: string): Promise<boolean> {
+  try {
+    const result = await neonClient`
+      SELECT p.name 
+      FROM user_roles ur
+      JOIN role_permissions rp ON ur.role_id = rp.role_id
+      JOIN permissions p ON rp.permission_id = p.id
+      WHERE ur.user_id = ${parseInt(userId)} AND p.name = 'admin.announcements' AND ur.is_active = true
+    `;
+    
+    return result.length > 0;
+  } catch (error) {
+    console.error('Error checking announcements permission:', error);
+    return false;
+  }
+}
 
 // Helper function to parse date string without timezone conversion
 function parseLocalDate(dateString: string): Date {
@@ -34,8 +52,12 @@ export async function GET(
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
     
-    // Only allow admins and superadmins to get specific announcements
-    if (session.user.role !== "admin" && session.user.role !== "superadmin") {
+    // Check RBAC permissions for viewing specific announcements
+    const sessionUserId = (session.user as any)?.id;
+    const isSuperAdmin = session.user.role === "super_admin";
+    const hasPermission = sessionUserId ? await hasAdminAnnouncementsPermission(sessionUserId) : false;
+    
+    if (!isSuperAdmin && !hasPermission) {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
     
@@ -83,8 +105,12 @@ export async function PUT(
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
     
-    // Only allow admins and superadmins to update announcements
-    if (session.user.role !== "admin" && session.user.role !== "superadmin") {
+    // Check RBAC permissions for updating announcements
+    const sessionUserId = (session.user as any)?.id;
+    const isSuperAdmin = session.user.role === "super_admin";
+    const hasPermission = sessionUserId ? await hasAdminAnnouncementsPermission(sessionUserId) : false;
+    
+    if (!isSuperAdmin && !hasPermission) {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
     
@@ -171,8 +197,12 @@ export async function DELETE(
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
     
-    // Only allow admins and superadmins to delete announcements
-    if (session.user.role !== "admin" && session.user.role !== "superadmin") {
+    // Check RBAC permissions for deleting announcements
+    const sessionUserId = (session.user as any)?.id;
+    const isSuperAdmin = session.user.role === "super_admin";
+    const hasPermission = sessionUserId ? await hasAdminAnnouncementsPermission(sessionUserId) : false;
+    
+    if (!isSuperAdmin && !hasPermission) {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
     
