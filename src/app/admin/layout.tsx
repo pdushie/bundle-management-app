@@ -81,7 +81,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   // Fetch unread message count for the navigation badge
   useEffect(() => {
     const fetchUnreadCount = async () => {
-      if (!session?.user || (session.user.role !== 'admin' && session.user.role !== 'standard_admin' && session.user.role !== 'super_admin')) {
+      if (!session?.user || (session.user.role !== 'admin' && session.user.role !== 'standard_admin' && session.user.role !== 'super_admin' && session.user.role !== 'moderator')) {
         return;
       }
       
