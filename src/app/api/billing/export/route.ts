@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
@@ -9,7 +9,7 @@ import { eq, and, gte, lte, desc } from 'drizzle-orm';
 export async function GET(request: NextRequest) {
   // Check if database is available
   if (!db) {
-    console.error('Database connection is not available');
+    // Console statement removed for security
     return NextResponse.json({ 
       error: 'Database connection unavailable'
     }, { status: 500 });
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
         });
       }
     } catch (dbError) {
-      console.error('Database error while fetching orders:', dbError);
+      // Console statement removed for security
       return NextResponse.json({ 
         error: 'Failed to fetch orders from database', 
         details: dbError instanceof Error ? dbError.message : String(dbError)
@@ -113,10 +113,11 @@ export async function GET(request: NextRequest) {
       headers
     });
   } catch (error) {
-    console.error('Error exporting billing data:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Failed to export billing information' },
       { status: 500 }
     );
   }
 }
+

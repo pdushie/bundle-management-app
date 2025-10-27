@@ -1,4 +1,4 @@
-import { neon } from '@neondatabase/serverless';
+﻿import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';  // Use neon-http adapter
 import * as schema from './schema';
 
@@ -7,17 +7,17 @@ const createNeonClient = () => {
   try {
     // Validate DATABASE_URL before using it
     if (!process.env.DATABASE_URL) {
-      console.error('DATABASE_URL environment variable is not defined');
+      // Console statement removed for security
       throw new Error('DATABASE_URL environment variable is not defined');
     }
     
     // Check if the DATABASE_URL has the correct format
     const dbUrl = process.env.DATABASE_URL;
     if (!dbUrl.startsWith('postgresql://')) {
-      console.error('DATABASE_URL must start with postgresql://');
+      // Console statement removed for security
       // Create a mock client for development that won't throw errors
       if (process.env.NODE_ENV === 'development') {
-        console.warn('Using mock database client for development');
+        // Console statement removed for security
         return createMockNeonClient();
       }
       throw new Error('Database connection string format for `neon()` should be: postgresql://user:password@host.tld/dbname?option=value');
@@ -32,14 +32,14 @@ const createNeonClient = () => {
       }
     });
   } catch (error) {
-    console.error('Failed to create Neon SQL client:', error);
+    // Console statement removed for security
     
     // In development, use a mock client instead of crashing
     if (process.env.NODE_ENV === 'development') {
       if (error instanceof Error) {
-        console.warn('Using mock database client for development due to error:', error.message);
+        // Console statement removed for security
       } else {
-        console.warn('Using mock database client for development due to error:', String(error));
+        // Console statement removed for security
       }
       return createMockNeonClient();
     }
@@ -52,7 +52,7 @@ const createNeonClient = () => {
 const createMockNeonClient = () => {
   // Create a tagged template function that mimics the neon client
   const mockClient = (strings: TemplateStringsArray, ...values: any[]) => {
-    console.log('Mock DB Query:', strings.join('?'), values);
+    // Console log removed for security
     return Promise.resolve([]);
   };
   
@@ -90,7 +90,7 @@ export const testConnection = async (retries = 2) => {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       if (attempt > 0) {
-        console.log(`Database connection test attempt ${attempt + 1}/${retries + 1}`);
+        // Console log removed for security
         // Add delay with exponential backoff between retries
         await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 500));
       }
@@ -100,13 +100,13 @@ export const testConnection = async (retries = 2) => {
       return { success: true, result };
     } catch (error) {
       lastError = error;
-      console.error(`Database connection test failed (attempt ${attempt + 1}/${retries + 1}):`, error);
+      // Console statement removed for security
       
       // Check for specific error types that might indicate a need for different handling
       if (error instanceof Error) {
         const errorMsg = error.message.toLowerCase();
         if (errorMsg.includes('timeout') || errorMsg.includes('econnreset')) {
-          console.log('Network-related error detected, will retry with longer timeout');
+          // Console log removed for security
         }
       }
     }
@@ -114,3 +114,5 @@ export const testConnection = async (retries = 2) => {
   
   return { success: false, error: lastError };
 };
+
+

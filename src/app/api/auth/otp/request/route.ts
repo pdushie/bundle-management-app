@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 import { OTPService } from '@/lib/otpService';
@@ -100,9 +100,9 @@ export async function POST(request: NextRequest) {
       }
 
       // Generate OTP
-      console.log('User ID type and value:', typeof user.id, user.id);
+      // User ID type and value - logging removed for security
       const otpResult = await OTPService.generateOTPForUser(user.id);
-      console.log('OTP generation result:', otpResult);
+      // Console log removed for security
       if (!otpResult.success) {
         return NextResponse.json(
           { error: otpResult.message },
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (!emailResult.success) {
-        console.error('Failed to send OTP email:', emailResult.error);
+        // Console statement removed for security
         // Clear the OTP if email failed
         await OTPService.clearOTP(user.id);
         return NextResponse.json(
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      console.log('OTP request successful for user:', user.id);
+      // OTP request successful - logging removed for security
       
       return NextResponse.json({
         success: true,
@@ -156,10 +156,11 @@ export async function POST(request: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error('OTP request error:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
+

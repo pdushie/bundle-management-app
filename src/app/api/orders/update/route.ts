@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { updateOrder, Order as DbOrder } from '@/lib/orderDbOperations';
 import { createHistoryEntryFromOrder } from '@/lib/historyDbOperations';
 import { getServerSession } from 'next-auth';
@@ -25,11 +25,11 @@ export async function PUT(request: NextRequest) {
     if (order.status === "processed" && session?.user) {
       order.processedBy = userId;
       order.processedAt = new Date().toISOString();
-      console.log(`Order ${order.id} processed by admin ${userId} (${session.user.email}) at ${order.processedAt}`);
+      // Order processed by admin - logging removed for security
     }
     
     // Ensure the order has accurate tier-based pricing for all entries
-    console.log(`Updating order ${order.id} with accurate tier pricing calculations`);
+    // Console log removed for security
     const orderWithCost = await ensureOrderCosts(order, userId);
     
     // Cast to the database order type
@@ -39,15 +39,15 @@ export async function PUT(request: NextRequest) {
     // If the order is being processed and already has costs, don't zero them out
     if (typedOrderWithCost.status === "processed" && 
         (order.cost !== undefined || order.estimatedCost !== undefined)) {
-      console.log(`Order ${order.id} being processed - preserving existing costs`);
-      console.log(`Original cost: ${order.cost}, estimatedCost: ${order.estimatedCost}`);
-      console.log(`Calculated cost: ${typedOrderWithCost.cost}, estimatedCost: ${typedOrderWithCost.estimatedCost}`);
+      // Console log removed for security
+      // Console log removed for security
+      // Console log removed for security
       
       // Use the calculated cost if the original cost is 0 or null, otherwise preserve original
       if (!order.cost || parseFloat(order.cost.toString()) === 0) {
-        console.log(`Using calculated cost since original is 0 or null`);
+        // Console log removed for security
       } else {
-        console.log(`Preserving original cost since it's not zero`);
+        // Console log removed for security
         typedOrderWithCost.cost = order.cost;
         typedOrderWithCost.estimatedCost = order.estimatedCost || order.cost;
       }
@@ -66,7 +66,7 @@ export async function PUT(request: NextRequest) {
         // Create the history entry with the user ID if available and with accurate costs
         await createHistoryEntryFromOrder(typedOrderWithCost, historyUserId);
       } catch (historyError) {
-        console.error('Error creating history entry:', historyError);
+        // Console statement removed for security
         return NextResponse.json(
           { error: 'Failed to create history entry', details: historyError instanceof Error ? historyError.message : String(historyError) },
           { status: 500 }
@@ -76,10 +76,12 @@ export async function PUT(request: NextRequest) {
     
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error in update order route:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Failed to update order' },
       { status: 500 }
     );
   }
 }
+
+

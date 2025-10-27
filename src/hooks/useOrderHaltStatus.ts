@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 
 interface OrderHaltStatus {
   ordersHalted: boolean;
@@ -44,7 +44,7 @@ export function useOrderHaltStatus(): OrderHaltStatus {
           }));
         }
       } catch (error) {
-        console.error('Error fetching order halt status:', error);
+        // Console statement removed for security
         setStatus(prev => ({
           ...prev,
           loading: false,
@@ -63,3 +63,4 @@ export function useOrderHaltStatus(): OrderHaltStatus {
 
   return status;
 }
+

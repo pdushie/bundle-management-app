@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { 
@@ -60,11 +60,11 @@ export default function UserManagement() {
           const data = await response.json();
           setUsers(data.users || []);
         } else {
-          console.error('Invalid response format from server');
+          // Console statement removed for security
         }
       }
     } catch (error) {
-      console.error("Failed to fetch users:", error);
+      // Console statement removed for security
     } finally {
       setIsLoading(false);
     }
@@ -84,7 +84,7 @@ export default function UserManagement() {
         }
       }
     } catch (error) {
-      console.error("Failed to fetch roles:", error);
+      // Console statement removed for security
     } finally {
       setRolesLoading(false);
     }
@@ -827,3 +827,4 @@ export default function UserManagement() {
     </div>
   );
 }
+

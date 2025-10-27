@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { Pool } from 'pg';
 import { sendVerificationEmail, generateVerificationToken, getVerificationTokenExpiry } from '@/lib/email';
@@ -103,11 +103,11 @@ export async function POST(req: NextRequest) {
       });
 
       if (!emailResult.success) {
-        console.error('Failed to send verification email:', emailResult.error);
+        // Console statement removed for security
         // Don't fail registration if email fails, but log it
       }
     } catch (emailError) {
-      console.error('Email service error during registration:', emailError);
+      // Console statement removed for security
       // Continue with registration even if email fails
     }
 
@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Registration error:", error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -129,3 +129,4 @@ export async function POST(req: NextRequest) {
     client.release();
   }
 }
+

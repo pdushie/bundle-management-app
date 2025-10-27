@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -15,30 +15,30 @@ function usePermissions() {
   useEffect(() => {
     const fetchPermissions = async () => {
       const userId = (session?.user as any)?.id;
-      console.log('AdminDashboard: Fetching permissions for user ID:', userId, 'Role:', session?.user?.role);
+      // Console log removed for security
       if (!userId) {
-        console.log('AdminDashboard: No user ID found, stopping permission fetch');
+        // Console log removed for security
         setLoading(false);
         return;
       }
 
       try {
-        console.log('AdminDashboard: Making request to:', `/api/admin/rbac/users/${userId}/permissions`);
+        // AdminDashboard: Making request to permissions API - logging removed for security
         const response = await fetch(`/api/admin/rbac/users/${userId}/permissions`);
-        console.log('AdminDashboard: Permission API response status:', response.status);
+        // AdminDashboard: Permission API response status - logging removed for security
         if (response.ok) {
           const data = await response.json();
-          console.log('AdminDashboard: Permission API response data:', data);
+          // AdminDashboard: Permission API response data - logging removed for security
           if (data.success) {
             const permissionNames = data.permissions.map((p: any) => p.name);
-            console.log('AdminDashboard: Setting permissions:', permissionNames);
+            // Console log removed for security
             setPermissions(permissionNames);
           }
         } else {
-          console.log('AdminDashboard: Permission API request failed with status:', response.status);
+          // AdminDashboard: Permission API request failed - logging removed for security
         }
       } catch (error) {
-        console.error('AdminDashboard: Error fetching permissions:', error);
+        // Console statement removed for security
       } finally {
         setLoading(false);
       }
@@ -129,11 +129,11 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    console.log('AdminDashboard: UseEffect triggered - Status:', status, 'Role:', session?.user?.role, 'PermissionsLoading:', permissionsLoading);
+    // Console log removed for security
     
     // Redirect unauthenticated users
     if (status === "unauthenticated") {
-      console.log('AdminDashboard: Redirecting unauthenticated user');
+      // Console log removed for security
       redirect("/");
     }
     
@@ -147,32 +147,32 @@ export default function AdminDashboard() {
       const hasAnnouncementsPermission = hasAnyPermission(['admin.announcements']);
       const hasChatPermission = hasAnyPermission(['admin.chat']);
       
-      console.log('AdminDashboard: Non-admin user check - HasAdminPermissions:', hasAdminPermissions, 'HasAnnouncementsPermission:', hasAnnouncementsPermission, 'HasChatPermission:', hasChatPermission, 'Permissions:', permissions);
+      // Console log removed for security
       
       // If they have announcements permission but not general admin permissions, redirect to announcements
       if (!hasAdminPermissions && hasAnnouncementsPermission) {
-        console.log('AdminDashboard: Has announcements permission, redirecting to announcements');
+        // Console log removed for security
         router.push('/admin/announcements');
         return;
       }
       
       // If they have chat permission but not general admin permissions, redirect to chat
       if (!hasAdminPermissions && hasChatPermission) {
-        console.log('AdminDashboard: Has chat permission, redirecting to chat');
+        // Console log removed for security
         router.push('/admin/chat');
         return;
       }
       
       // If they don't have any admin permissions, redirect to home
       if (!hasAdminPermissions && !hasAnnouncementsPermission && !hasChatPermission) {
-        console.log('AdminDashboard: No admin permissions found, redirecting to home');
+        // Console log removed for security
         redirect("/");
       }
     }
     
     // Regular users get redirected to home
     if (session && session.user?.role !== 'super_admin' && session.user?.role !== 'admin' && session.user?.role !== 'standard_admin') {
-      console.log('AdminDashboard: Non-admin user detected, redirecting to home');
+      // Console log removed for security
       redirect("/");
     }
   }, [status, session, router, permissionsLoading, hasAnyPermission, permissions]);
@@ -188,7 +188,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!permissionsLoading && session && !userHasSelectedTab) {
       const defaultTab = getDefaultTab();
-      console.log('AdminDashboard: Setting default tab to:', defaultTab, 'Current tab:', activeTab, 'User has selected tab:', userHasSelectedTab);
+      // Console log removed for security
       // Only set the default tab if user hasn't manually selected one
       if (defaultTab !== activeTab) {
         setActiveTab(defaultTab as 'pending' | 'users' | 'pricing' | 'minimum-entries' | 'orders');
@@ -204,7 +204,7 @@ export default function AdminDashboard() {
         setPendingUsers(data.users);
       }
     } catch (error) {
-      console.error('Failed to fetch pending users:', error);
+      // Console statement removed for security
     } finally {
       setIsLoading(false);
     }
@@ -223,7 +223,7 @@ export default function AdminDashboard() {
         });
       }
     } catch (error) {
-      console.error('Failed to fetch user stats:', error);
+      // Console statement removed for security
     }
   };
 
@@ -242,7 +242,7 @@ export default function AdminDashboard() {
         fetchUserStats();
       }
     } catch (error) {
-      console.error('Failed to approve user:', error);
+      // Console statement removed for security
     } finally {
       setActionLoading(null);
     }
@@ -265,7 +265,7 @@ export default function AdminDashboard() {
         fetchUserStats();
       }
     } catch (error) {
-      console.error('Failed to reject user:', error);
+      // Console statement removed for security
     } finally {
       setActionLoading(null);
     }
@@ -657,3 +657,5 @@ export default function AdminDashboard() {
     </div>
   );
 }
+
+

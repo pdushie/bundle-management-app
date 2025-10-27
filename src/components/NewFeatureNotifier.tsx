@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
@@ -18,17 +18,17 @@ export default function NewFeatureNotifier() {
     if (isAdmin && !isInitialized) {
       try {
         const announcementFeatureDismissed = localStorage.getItem("announcementFeatureDismissed");
-        console.log("NewFeatureNotifier: Checking localStorage, dismissed =", announcementFeatureDismissed);
+        // Console log removed for security
         
         if (!announcementFeatureDismissed || announcementFeatureDismissed !== "true") {
-          console.log("NewFeatureNotifier: Showing notification");
+          // Console log removed for security
           setDismissed(false);
         } else {
-          console.log("NewFeatureNotifier: Notification previously dismissed");
+          // Console log removed for security
           setDismissed(true);
         }
       } catch (error) {
-        console.error("NewFeatureNotifier: Error accessing localStorage:", error);
+        // Console statement removed for security
         setDismissed(false); // Show by default if localStorage fails
       }
       setIsInitialized(true);
@@ -40,19 +40,19 @@ export default function NewFeatureNotifier() {
   if (dismissed || !isAdmin || !isInitialized) return null;
   
   const handleDismiss = (permanent = false) => {
-    console.log("NewFeatureNotifier: Dismissing notification, permanent =", permanent);
+    // Console log removed for security
     setDismissed(true);
     
     if (permanent) {
       try {
         localStorage.setItem("announcementFeatureDismissed", "true");
-        console.log("NewFeatureNotifier: Set localStorage announcementFeatureDismissed = true");
+        // Console log removed for security
         
         // Verify it was set correctly
         const check = localStorage.getItem("announcementFeatureDismissed");
-        console.log("NewFeatureNotifier: Verification check, localStorage value =", check);
+        // Console log removed for security
       } catch (error) {
-        console.error("NewFeatureNotifier: Error setting localStorage:", error);
+        // Console statement removed for security
       }
     }
   };
@@ -110,3 +110,5 @@ export default function NewFeatureNotifier() {
     </div>
   );
 }
+
+

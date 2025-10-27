@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 // Create a history viewing component that displays order processing history
 import React, { useState, useEffect } from "react";
@@ -54,11 +54,11 @@ export default function HistoryViewer() {
         setPhoneEntriesCount(historyData.phoneEntriesCount);
         setProcessedOrderEntriesCount(historyData.processedOrderEntriesCount);
         
-        // console.log('Total database entries:', historyData.totalEntries);
-        // console.log('Phone entries count:', historyData.phoneEntriesCount);
-        // console.log('Processed order entries count:', historyData.processedOrderEntriesCount);
+        // // Console log removed for security
+        // // Console log removed for security
+        // // Console log removed for security
       } catch (error) {
-        // console.error("Failed to load history:", error);
+        // // Console statement removed for security
       } finally {
         setIsLoading(false);
       }
@@ -82,7 +82,7 @@ export default function HistoryViewer() {
       const entries = await getPhoneEntriesForHistory(historyId);
       setPhoneEntries(entries);
     } catch (error) {
-      // console.error("Failed to load phone entries:", error);
+      // // Console statement removed for security
     } finally {
       setIsLoadingPhones(false);
     }
@@ -527,3 +527,5 @@ export default function HistoryViewer() {
     </div>
   );
 }
+
+

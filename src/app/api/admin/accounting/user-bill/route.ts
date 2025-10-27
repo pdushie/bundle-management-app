@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   try {
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       return NextResponse.json({ 
         error: 'Database connection unavailable'
       }, { status: 500 });
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user details first to get their email for filtering orders
-    console.log(`Fetching user details for ID: ${userIdInt}`);
+    // Console log removed for security
     const userDetailsResult = await db!.execute(sql`
       SELECT id, name, email FROM users WHERE id = ${userIdInt} LIMIT 1
     `);
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
     }));
     
     if (userDetails.length === 0) {
-      console.log(`No user found with ID: ${userIdInt}`);
+      // Console log removed for security
       return NextResponse.json({ 
         error: 'User not found'
       }, { status: 404 });
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
     const user = userDetails[0];
     const userEmail = user.email;
     
-    console.log(`User found: ${user.name} (${userEmail})`);
+    // Console log removed for security
 
     // Parse date as UTC and get UNIX timestamps
     const startTimestamp = new Date(date + 'T00:00:00.000Z').getTime();
@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
       )
       .orderBy(ordersTable.timestamp);
       
-    console.log(`Found ${userOrders.length} orders for user ${userId} on ${date}`);
+    // Console log removed for security
     
     // If no orders found, return empty UserBillData structure
     if (userOrders.length === 0) {
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
       let userName = user.name;
       if (!userName || userName.trim() === '') {
         userName = user.email;
-        console.log('Using email as fallback for empty name in empty orders response');
+        // Console log removed for security
       }
       
       return NextResponse.json({ 
@@ -161,31 +161,20 @@ export async function GET(request: NextRequest) {
       0
     );
     
-    console.log(`Total amount: ${totalAmount}, Total data: ${totalData}`);
+    // Console log removed for security
     
     // Make sure we have a proper userName by using email as fallback
     // Extra debugging to check name type and value
-    console.log('Before userName determination:', { 
-      user_name: user.name,
-      name_type: typeof user.name,
-      name_null: user.name === null,
-      name_undefined: user.name === undefined,
-      name_empty: user.name === '',
-      user_email: user.email
-    });
+    // Console log removed for security
     
     // Force use the name if it exists and is not empty, otherwise use email
     let userName = user.name;
     if (!userName || userName.trim() === '') {
       userName = user.email;
-      console.log('Using email as fallback for empty name');
+      // Console log removed for security
     }
     
-    console.log('Final userName determination:', { 
-      original_name: user.name,
-      fallback_email: user.email,
-      final: userName || 'Unknown User'
-    });
+    // Console log removed for security
     
     const response = {
       userId: user.id,
@@ -197,15 +186,17 @@ export async function GET(request: NextRequest) {
       totalData
     };
     
-    console.log('Sending response with userName:', response.userName);
+    // Console log removed for security
     
     return NextResponse.json(response);
     
   } catch (error) {
-    console.error('Error generating user bill:', error);
+    // Console statement removed for security
     return NextResponse.json({ 
       error: 'Failed to generate bill',
       details: error instanceof Error ? error.message : String(error)
     }, { status: 500 });
   }
 }
+
+

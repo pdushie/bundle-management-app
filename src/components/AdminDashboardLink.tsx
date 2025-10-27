@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useSession } from "next-auth/react";
 import { Shield, ExternalLink, MessageCircle } from "lucide-react";
@@ -32,7 +32,7 @@ function usePermissions() {
           }
         }
       } catch (error) {
-        console.error('Error fetching permissions:', error);
+        // Console statement removed for security
       } finally {
         setLoading(false);
       }
@@ -88,25 +88,25 @@ export default function AdminDashboardLink() {
           if (data.success) {
             setUnreadChatCount(data.unreadCount || 0);
           } else {
-            console.warn("Chat unread count API returned unsuccessful response:", data);
+            // Console statement removed for security
           }
         } else {
-          console.warn("Chat unread count API returned non-JSON response, content-type:", contentType);
+          // Console statement removed for security
         }
       } else {
-        console.error("Failed to fetch unread chat count:", response.status, response.statusText);
+        // Console statement removed for security
       }
     } catch (error) {
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          console.warn("Chat unread count fetch timed out");
+          // Console statement removed for security
         } else if (error.message.includes('Failed to fetch')) {
-          console.warn("Network error fetching chat unread count - server may be unreachable");
+          // Console statement removed for security
         } else {
-          console.error("Error fetching unread chat count:", error.message);
+          // Console statement removed for security
         }
       } else {
-        console.error("Unknown error fetching unread chat count:", error);
+        // Console statement removed for security
       }
     } finally {
       setIsLoadingChat(false);
@@ -239,3 +239,4 @@ export default function AdminDashboardLink() {
     </div>
   );
 }
+

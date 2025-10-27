@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -18,32 +18,32 @@ function usePermissions() {
     const fetchPermissions = async () => {
       const userId = (session?.user as any)?.id;
       const userRole = (session?.user as any)?.role;
-      console.log('Fetching permissions for user:', { userId, userRole });
+      // Console log removed for security
       
       if (!userId) {
-        console.log('No userId found, setting loading to false');
+        // Console log removed for security
         setLoading(false);
         return;
       }
 
       try {
         const response = await fetch(`/api/admin/rbac/users/${userId}/permissions`);
-        console.log('Permissions API response status:', response.status);
+        // Permissions API response status - logging removed for security
         
         if (response.ok) {
           const data = await response.json();
-          console.log('Permissions API response:', data);
+          // Permissions API response - logging removed for security
           
           if (data.success) {
             const permissionNames = data.permissions.map((p: any) => p.name);
-            console.log('Setting permissions:', permissionNames);
+            // Console log removed for security
             setPermissions(permissionNames);
           }
         } else {
-          console.error('Permissions API failed with status:', response.status);
+          // Console statement removed for security
         }
       } catch (error) {
-        console.error('Error fetching permissions:', error);
+        // Console statement removed for security
       } finally {
         setLoading(false);
       }
@@ -98,7 +98,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           }
         }
       } catch (error) {
-        console.error("Error fetching unread count:", error);
+        // Console statement removed for security
       }
     };
     
@@ -387,3 +387,5 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     </div>
   );
 }
+
+

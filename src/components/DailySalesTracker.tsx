@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -115,7 +115,7 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
       const data = await response.json();
       setDailySummary(data);
     } catch (error) {
-      // console.error('Error loading daily sales summary:', error);
+      // // Console statement removed for security
       setError('Failed to load sales data');
     } finally {
       setIsLoading(false);
@@ -142,7 +142,7 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
       setDailyDetails(data);
       setView('details');
     } catch (error) {
-      // console.error('Error loading daily sales details:', error);
+      // // Console statement removed for security
       setError('Failed to load daily sales details');
     } finally {
       setIsLoading(false);
@@ -535,3 +535,4 @@ export default function DailySalesTracker({ onBack }: DailySalesTrackerProps) {
     </div>
   );
 }
+

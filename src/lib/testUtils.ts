@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Test utilities for simulating order notifications and updates
  * Used for testing notification badges, sounds and browser alerts
  */
@@ -25,17 +25,17 @@ export async function simulateNewOrders(options: {
   // Simulate the events that would be fired when orders are updated
   if (triggerEvent) {
     if (orderCount !== undefined) {
-      console.log(`Simulating ${orderCount} ${orderCount === 0 ? 'zero' : 'new'} orders`);
+      // Console log removed for security
       notifyOrderUpdated({ type: 'new', count: orderCount });
     }
     
     if (processedCount !== undefined) {
-      console.log(`Simulating ${processedCount} ${processedCount === 0 ? 'zero' : 'newly processed'} orders`);
+      // Console log removed for security
       notifyOrderProcessed();
     }
     
     if (sentCount !== undefined) {
-      console.log(`Simulating ${sentCount} ${sentCount === 0 ? 'zero' : 'newly sent'} orders`);
+      // Console log removed for security
       notifyOrderSent();
     }
     
@@ -43,7 +43,7 @@ export async function simulateNewOrders(options: {
     notifyCountUpdated();
   }
   
-  console.log('Simulated new orders - triggered notification events');
+  // Console log removed for security
   return { success: true };
 }
 
@@ -54,7 +54,7 @@ export async function simulateNewOrders(options: {
 export function testNotificationSystem() {
   // Test browser notification permission
   if ('Notification' in window) {
-    console.log(`Notification permission status: ${Notification.permission}`);
+    // Console log removed for security
     
     if (Notification.permission === 'granted') {
       // Test notification
@@ -65,10 +65,10 @@ export function testNotificationSystem() {
       
       setTimeout(() => testNotification.close(), 5000);
     } else {
-      console.log('Notification permission not granted. Request permission first.');
+      // Console log removed for security
     }
   } else {
-    console.log('Notifications not supported in this browser');
+    // Console log removed for security
   }
   
   // Test sound
@@ -76,10 +76,11 @@ export function testNotificationSystem() {
     const audio = new Audio('/notification-sound.mp3');
     audio.volume = 0.5;
     audio.play()
-      .then(() => console.log('Test notification sound played successfully'))
-      .catch(err => console.error('Error playing test sound:', err));
+      .then(() => {
+        // Console log removed for security
+      });
   } catch (error) {
-    console.error('Error testing notification sound:', error);
+    // Console statement removed for security
   }
   
   return { 
@@ -88,3 +89,5 @@ export function testNotificationSystem() {
     audioTested: true
   };
 }
+
+

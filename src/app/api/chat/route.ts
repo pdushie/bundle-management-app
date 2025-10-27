@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { neonClient } from "@/lib/db";
@@ -16,7 +16,7 @@ async function hasAdminChatPermission(userId: string): Promise<boolean> {
     
     return result.length > 0;
   } catch (error) {
-    console.error('Error checking chat permission:', error);
+    // Console statement removed for security
     return false;
   }
 }
@@ -97,7 +97,7 @@ export async function GET(req: NextRequest) {
     
     return NextResponse.json({ success: true, messages: formattedMessages });
   } catch (error) {
-    console.error("Error fetching messages:", error);
+    // Console statement removed for security
     return NextResponse.json(
       { success: false, error: "Failed to fetch messages" },
       { status: 500 }
@@ -175,10 +175,11 @@ export async function POST(req: NextRequest) {
     
     return NextResponse.json({ success: true, message: formattedMessage });
   } catch (error) {
-    console.error("Error sending message:", error);
+    // Console statement removed for security
     return NextResponse.json(
       { success: false, error: "Failed to send message" },
       { status: 500 }
     );
   }
 }
+

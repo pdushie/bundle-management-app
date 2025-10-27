@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { requireSuperAdmin, getAllPermissions } from '@/lib/rbac';
 
 // GET /api/admin/rbac/permissions - Get all permissions
@@ -13,7 +13,7 @@ export async function GET() {
       data: permissionsData
     });
   } catch (error) {
-    console.error('Error fetching permissions:', error);
+    // Console statement removed for security
     
     if (error instanceof Error) {
       if (error.message.includes('Authentication required') || error.message.includes('Super admin access required')) {
@@ -30,3 +30,4 @@ export async function GET() {
     );
   }
 }
+

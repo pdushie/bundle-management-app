@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 // Helper functions for browser notifications
 let notificationPermission: NotificationPermission | null = null;
@@ -7,7 +7,7 @@ const LAST_NOTIFIED_KEY = 'last_notified_timestamp';
 // Request notification permission 
 export const requestNotificationPermission = async (): Promise<boolean> => {
   if (!("Notification" in window)) {
-    console.log("This browser does not support desktop notification");
+    // Console log removed for security
     return false;
   }
   
@@ -26,7 +26,7 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
     notificationPermission = permission;
     return permission === "granted";
   } catch (error) {
-    console.error("Error requesting notification permission:", error);
+    // Console statement removed for security
     return false;
   }
 };
@@ -75,7 +75,7 @@ export const sendNotification = (
     new Notification(title, defaultOptions);
     return true;
   } catch (error) {
-    console.error("Error sending notification:", error);
+    // Console statement removed for security
     return false;
   }
 };
@@ -88,7 +88,7 @@ export const playNotificationSound = async (volume = 0.5): Promise<boolean> => {
     await audio.play();
     return true;
   } catch (error) {
-    console.error("Error playing notification sound:", error);
+    // Console statement removed for security
     return false;
   }
 };
@@ -118,9 +118,11 @@ export const sendThrottledNotification = (
   minInterval = 30000
 ): boolean => {
   if (shouldThrottleNotification(minInterval)) {
-    console.log("Notification throttled");
+    // Console log removed for security
     return false;
   }
   
   return sendNotification(title, options);
 };
+
+

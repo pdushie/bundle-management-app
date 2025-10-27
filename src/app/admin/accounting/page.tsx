@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
@@ -26,32 +26,32 @@ function usePermissions() {
     const fetchPermissions = async () => {
       const userId = (session?.user as any)?.id;
       const userRole = (session?.user as any)?.role;
-      console.log('Fetching permissions for user:', { userId, userRole });
+      // Console log removed for security
       
       if (!userId) {
-        console.log('No userId found, setting loading to false');
+        // Console log removed for security
         setLoading(false);
         return;
       }
 
       try {
         const response = await fetch(`/api/admin/rbac/users/${userId}/permissions`);
-        console.log('Permissions API response status:', response.status);
+        // Console log removed for security
         
         if (response.ok) {
           const data = await response.json();
-          console.log('Permissions API response:', data);
+          // Console log removed for security
           
           if (data.success) {
             const permissionNames = data.permissions.map((p: any) => p.name);
-            console.log('Setting permissions:', permissionNames);
+            // Console log removed for security
             setPermissions(permissionNames);
           }
         } else {
-          console.error('Permissions API failed with status:', response.status);
+          // Console statement removed for security
         }
       } catch (error) {
-        console.error('Error fetching permissions:', error);
+        // Console statement removed for security
       } finally {
         setLoading(false);
       }
@@ -123,7 +123,7 @@ export default function AccountingPage() {
       const data = await response.json();
       setUsers(data.users);
     } catch (error) {
-      console.error('Error loading users:', error);
+      // Console statement removed for security
       setErrorMessage('Failed to load users. Please try again.');
     } finally {
       setIsUserListLoading(false);
@@ -159,7 +159,7 @@ export default function AccountingPage() {
       setTotalAmount(data.totalAmount || 0);
       setTotalData(data.totalData || 0);
     } catch (error) {
-      console.error('Error generating bill:', error);
+      // Console statement removed for security
       setErrorMessage('Failed to generate bill. Please try again.');
     } finally {
       setIsLoadingBill(false);
@@ -432,3 +432,5 @@ export default function AccountingPage() {
     </div>
   );
 }
+
+

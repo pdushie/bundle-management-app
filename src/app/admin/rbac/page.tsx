@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -29,7 +29,7 @@ function usePermissions() {
           }
         }
       } catch (error) {
-        console.error('Error fetching permissions:', error);
+        // Console statement removed for security
       } finally {
         setLoading(false);
       }
@@ -104,3 +104,4 @@ export default function AdminRBACPage() {
     </div>
   );
 }
+

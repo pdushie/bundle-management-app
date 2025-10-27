@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { db } from "../../../../../lib/db";
 import { users } from "../../../../../lib/schema";
 import { getServerSession } from "next-auth";
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
       users: allUsers
     });
   } catch (error) {
-    console.error("Error fetching users minimum entries:", error);
+    // Console statement removed for security
     return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
   }
 }
@@ -85,7 +85,8 @@ export async function POST(req: NextRequest) {
       message: `Minimum order entries updated to ${minimumOrderEntries} for ${result[0].name}`
     });
   } catch (error) {
-    console.error("Error updating user minimum entries:", error);
+    // Console statement removed for security
     return NextResponse.json({ error: "Failed to update minimum entries" }, { status: 500 });
   }
 }
+

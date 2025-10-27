@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { historyEntries } from '@/lib/schema';
 import { desc, sql } from 'drizzle-orm';
@@ -7,20 +7,20 @@ export async function GET(request: NextRequest) {
   try {
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       return NextResponse.json({ 
         error: 'Database connection unavailable'
       }, { status: 500 });
     }
 
-    console.log('Testing history table access...');
+    // Console log removed for security
 
     // Test connection first
     try {
       const testResult = await db.execute(sql`SELECT 1 as test`);
-      console.log('DB connection test result:', testResult);
+      // Console log removed for security
     } catch (error) {
-      console.error('DB connection test failed:', error);
+      // Console statement removed for security
       return NextResponse.json(
         { 
           error: 'Database connection test failed', 
@@ -33,9 +33,9 @@ export async function GET(request: NextRequest) {
     // Try to count history entries first (less data to transfer)
     try {
       const countResult = await db.select({ count: sql`count(*)` }).from(historyEntries);
-      console.log('History entries count result:', countResult);
+      // Console log removed for security
     } catch (error) {
-      console.error('Failed to count history entries:', error);
+      // Console statement removed for security
       return NextResponse.json(
         { 
           error: 'Failed to count history entries', 
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
         .orderBy(desc(historyEntries.timestamp))
         .limit(5);
       
-      console.log('Sample history entries:', entries);
+      // Console log removed for security
       
       return NextResponse.json({ 
         success: true,
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
         message: 'Successfully retrieved history entries'
       });
     } catch (error) {
-      console.error('Failed to fetch history entries:', error);
+      // Console statement removed for security
       return NextResponse.json(
         { 
           error: 'Failed to fetch history entries', 
@@ -75,10 +75,12 @@ export async function GET(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('Error in debug history route:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Failed to debug history connection', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
 }
+
+

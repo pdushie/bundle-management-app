@@ -1,4 +1,4 @@
-// Client-side wrapper for history operations
+﻿// Client-side wrapper for history operations
 import { HistoryEntry, PhoneEntry } from './historyDbOperations';
 
 // Define the return type for getHistoryEntries
@@ -42,7 +42,7 @@ export const getHistoryEntries = async (): Promise<HistoryResponse> => {
       processedOrderEntriesCount: data.processedOrderEntriesCount || 0
     };
   } catch (error) {
-    console.error('Failed to load history entries:', error);
+    // Console statement removed for security
     return {
       historyEntries: [],
       totalEntries: 0,
@@ -70,7 +70,8 @@ export const getPhoneEntriesForHistory = async (historyId: string): Promise<Phon
     const data = await response.json();
     return data.phoneEntries || [];
   } catch (error) {
-    console.error('Failed to load phone entries:', error);
+    // Console statement removed for security
     return [];
   }
 };
+

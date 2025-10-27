@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+﻿import NextAuth from "next-auth";
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { getServerSession } from 'next-auth/next'
@@ -175,18 +175,13 @@ function buildProviders() {
               'UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = $1',
               [user.id]
             );
-            console.log(`Updated last login timestamp for user ${user.id}`);
+            // Updated last login timestamp - logging removed for security
           } catch (error) {
-            console.error('Error updating last login timestamp:', error);
+            // Console statement removed for security
             // Don't fail the login if this update fails
           }
 
-          console.log('User authenticated:', { 
-            id: user.id, 
-            email: user.email, 
-            name: user.name, 
-            role: user.role 
-          });
+          // User authenticated - logging removed for security
           
           // Get RBAC role for session
           const primaryRole = await getPrimaryRole(user.id);
@@ -243,12 +238,7 @@ function buildProviders() {
 
             const user = userResult.rows[0];
             
-            console.log('OTP User authenticated:', { 
-              id: user.id, 
-              email: user.email, 
-              name: user.name, 
-              role: user.role 
-            });
+            // OTP User authenticated - logging removed for security
             
             // Get RBAC role for session
             const primaryRole = await getPrimaryRole(user.id);
@@ -316,7 +306,7 @@ export const authOptions: NextAuthOptions = {
           .digest('hex').substring(0, 16);
           
         if (token.sec !== expectedHash) {
-          console.error('JWT security hash mismatch - possible tampering detected');
+          // Console statement removed for security
           return null;
         }
       }
@@ -333,7 +323,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, trigger }) {
       // On initial sign in
       if (user) {
-        console.log('JWT callback - user data:', { id: user.id, role: user.role });
+        // JWT callback - user data - logging removed for security
         return {
           ...token,
           id: user.id,
@@ -350,12 +340,12 @@ export const authOptions: NextAuthOptions = {
       if (token?.id && (trigger === 'update' || !roleVerifiedAt || 
           (now - roleVerifiedAt) > 900)) { // Verify every 15 minutes
         
-        console.log('Verifying user role from database for user:', token.id);
+        // Verifying user role from database - logging removed for security
         
         // First check if user is still active
         const legacyRole = await verifyUserRole(token.id as string);
         if (legacyRole === null) {
-          console.error('User not found or inactive during role verification:', token.id);
+          // Console statement removed for security
           return {
             ...token,
             invalid: true
@@ -366,7 +356,7 @@ export const authOptions: NextAuthOptions = {
         const currentRole = await getPrimaryRole(parseInt(token.id as string));
         
         if (currentRole !== token.role) {
-          console.log(`RBAC role updated! Token role: ${token.role}, New RBAC role: ${currentRole}`);
+          // RBAC role updated - logging removed for security
           token.role = currentRole;
         }
         
@@ -379,11 +369,11 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       // Additional security check: verify token is valid
       if (!token || !token.id || (token as any).invalid) {
-        console.error('Invalid token in session callback');
+        // Console statement removed for security
         throw new Error('Session invalid - please sign in again');
       }
       
-      console.log('Session callback - token data:', { id: token.id, role: token.role });
+      // Session callback - token data - logging removed for security
       
       const sessionData = {
         ...session,
@@ -403,10 +393,11 @@ export const authOptions: NextAuthOptions = {
           .update(`${token.id}:${token.role}:${session.expires}:${process.env.NEXTAUTH_SECRET}`)
           .digest('hex').substring(0, 12);
       } catch (error) {
-        console.error('Error creating session signature:', error);
+        // Console statement removed for security
       }
       
       return sessionData;
     },
   },
 };
+

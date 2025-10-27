@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { db, neonClient } from "@/lib/db";
 import { orders, orderEntries, users } from "@/lib/schema";
 import { getServerSession } from "next-auth";
@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
       }, { status: 400 });
     }
 
-    console.log('User package breakdown request:', { userId, date: dateParam });
+    // Console log removed for security
 
     // First try using Drizzle ORM if available
     if (db) {
@@ -102,11 +102,7 @@ export async function GET(req: NextRequest) {
 
         const user = userInfo[0];
         
-        console.log('Found user:', { 
-          id: user.id, 
-          name: user.name, 
-          email: user.email 
-        });
+        // Console log removed for security
 
         // Get all order entries for this user on this specific date
         // Check both user_id and user_email for backward compatibility
@@ -215,21 +211,12 @@ export async function GET(req: NextRequest) {
           }
         };
 
-        console.log('User package breakdown response:', { 
-          userId, 
-          userName: user.name,
-          userEmail: user.email,
-          date: dateParam, 
-          ordersFound: userOrdersWithEntries.length,
-          packagesFound: packages.length,
-          totalQuantity,
-          entriesWithData: userOrdersWithEntries.filter(row => row.allocationGB).length
-        });
+        // Console log removed for security
 
         return NextResponse.json(response);
 
       } catch (drizzleError) {
-        console.error("Drizzle query failed:", drizzleError);
+        // Console statement removed for security
         // Continue to fallback method
       }
     }
@@ -289,17 +276,18 @@ export async function GET(req: NextRequest) {
       });
 
     } catch (sqlError) {
-      console.error("Direct SQL query failed:", sqlError);
+      // Console statement removed for security
       return NextResponse.json({ 
         error: 'Database connection error' 
       }, { status: 500 });
     }
 
   } catch (error) {
-    console.error("Error in user package breakdown API:", error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: "Failed to fetch user package breakdown" }, 
       { status: 500 }
     );
   }
 }
+

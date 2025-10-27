@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
@@ -72,7 +72,7 @@ export default function AdminChatPanel() {
         setThreads(data.threads);
       }
     } catch (error) {
-      console.error("Error fetching threads:", error);
+      // Console statement removed for security
     }
   };
 
@@ -104,7 +104,7 @@ export default function AdminChatPanel() {
         ));
       }
     } catch (error) {
-      console.error("Error fetching messages:", error);
+      // Console statement removed for security
     } finally {
       setLoading(false);
     }
@@ -156,7 +156,7 @@ export default function AdminChatPanel() {
         }));
       }
     } catch (error) {
-      console.error("Error sending message:", error);
+      // Console statement removed for security
     } finally {
       setLoading(false);
     }
@@ -176,14 +176,14 @@ export default function AdminChatPanel() {
       
       // Check if date is valid
       if (isNaN(date.getTime())) {
-        console.error('Invalid date:', timestamp);
+        // Console statement removed for security
         return '';
       }
       
       // Format the time
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     } catch (error) {
-      console.error('Error formatting timestamp:', error);
+      // Console statement removed for security
       return '';
     }
   };
@@ -383,3 +383,4 @@ export default function AdminChatPanel() {
     </div>
   );
 }
+

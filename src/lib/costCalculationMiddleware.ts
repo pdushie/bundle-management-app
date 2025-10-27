@@ -1,4 +1,4 @@
-import { PricingProfile, PricingTier, getUserPricingProfile } from './pricingUtils';
+﻿import { PricingProfile, PricingTier, getUserPricingProfile } from './pricingUtils';
 import { calculateEntryCost, calculateEntryCosts } from './entryCostCalculator';
 import { db } from './db';
 import { pricingTiers } from './schema';
@@ -41,11 +41,11 @@ export interface Order {
  */
 export async function ensureOrderCosts(order: Order, userId?: number | null): Promise<Order> {
   try {
-    console.log(`Ensuring costs for order ${order.id} (userId: ${userId || 'none'})`);
+    // Ensuring costs for order - logging removed for security
     
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       // Return original order if database is not available
       return order;
     }
@@ -57,10 +57,10 @@ export async function ensureOrderCosts(order: Order, userId?: number | null): Pr
     const userPricingProfile = await getUserPricingProfile(effectiveUserId, true);
     if (!userPricingProfile) {
       // This should not happen with allowDefault=true, but just in case
-      console.error('No pricing profile available for cost calculation');
+      // Console statement removed for security
       return order;
     }
-    console.log(`Using pricing profile: ${userPricingProfile.name} (ID: ${userPricingProfile.id})`);
+    // Console log removed for security
     
     // Always ensure we're using tiered pricing
     userPricingProfile.isTiered = true;
@@ -71,11 +71,11 @@ export async function ensureOrderCosts(order: Order, userId?: number | null): Pr
       const tierResults = await db.select().from(pricingTiers)
         .where(eq(pricingTiers.profileId, userPricingProfile.id));
       
-      console.log(`Found ${tierResults.length} tiers for profile ${userPricingProfile.id}`);
+      // Console log removed for security
       
       // If no tiers found for this profile, log a warning but continue with default tiers
       if (tierResults.length === 0) {
-        console.warn(`No pricing tiers found for profile ${userPricingProfile.id}. Using default tiers.`);
+        // Console statement removed for security
         // Use default tiers
         tiers = userPricingProfile.tiers || [
           { dataGB: "1", price: "5.00" },
@@ -92,7 +92,7 @@ export async function ensureOrderCosts(order: Order, userId?: number | null): Pr
         }));
       }
     } catch (tierError) {
-      console.error(`Error fetching tiers for profile ${userPricingProfile.id}:`, tierError);
+      // Console statement removed for security
       // Use default tiers as fallback
       tiers = userPricingProfile.tiers || [
         { dataGB: "1", price: "5.00" },
@@ -111,13 +111,13 @@ export async function ensureOrderCosts(order: Order, userId?: number | null): Pr
           cost: cost
         };
       } catch (calcError) {
-        console.error(`Error calculating cost for entry ${entry.number}:`, calcError);
+        // Console statement removed for security
         // Use a fallback calculation based on the highest tier
         const highestTier = [...tiers].sort((a, b) => 
           parseFloat(b.dataGB) - parseFloat(a.dataGB)
         )[0];
         const fallbackCost = parseFloat(highestTier.price);
-        console.log(`Using fallback cost for entry ${entry.number}: GHS ${fallbackCost}`);
+        // Using fallback cost for entry - logging removed for security
         return {
           ...entry,
           cost: fallbackCost
@@ -131,33 +131,33 @@ export async function ensureOrderCosts(order: Order, userId?: number | null): Pr
       0
     );
     
-    console.log(`Entry costs breakdown for order ${order.id}:`);
+    // Console log removed for security
     entriesWithCosts.forEach((entry, index) => {
-      console.log(`  Entry ${index + 1} (${entry.allocationGB}GB): GHS ${entry.cost || 0}`);
+      // Console log removed for security
     });
-    console.log(`Sum of all entry costs: GHS ${orderTotalCost}`);
+    // Console log removed for security
     
     // Apply minimum charge if needed
     const minCharge = parseFloat(userPricingProfile.minimumCharge || "0");
     const finalCost = Math.max(orderTotalCost, minCharge);
     
-    console.log(`Minimum charge: GHS ${minCharge}`);
-    console.log(`Final cost (after min charge): GHS ${finalCost}`);
+    // Console log removed for security
+    // Console log removed for security
     
     // Round to 2 decimal places
     const roundedCost = Math.round(finalCost * 100) / 100;
     
-    console.log(`Calculated total cost for order ${order.id}: GHS ${roundedCost}`);
+    // Console log removed for security
     
     // Safety check - don't allow costs to be zero unless it's genuinely correct
     if (roundedCost === 0 && order.totalData > 0) {
-      console.warn(`WARNING: Calculated cost is 0 for order ${order.id} with ${order.totalData}GB data. This might be an error.`);
-      console.warn(`Profile: ${userPricingProfile.name}, Entries: ${order.entries.length}, Total data: ${order.totalData}`);
+      // Console statement removed for security
+      // Console statement removed for security
       
       // If we have existing costs and the calculated cost is 0, preserve the existing costs
       if ((order.cost && parseFloat(order.cost.toString()) > 0) || 
           (order.estimatedCost && parseFloat(order.estimatedCost.toString()) > 0)) {
-        console.warn(`Preserving existing costs instead of zero: cost=${order.cost}, estimatedCost=${order.estimatedCost}`);
+        // Console statement removed for security
         return {
           ...order,
           entries: entriesWithCosts,
@@ -180,8 +180,10 @@ export async function ensureOrderCosts(order: Order, userId?: number | null): Pr
       pricingProfileName: userPricingProfile.name
     };
   } catch (error) {
-    console.error('Error ensuring order costs:', error);
+    // Console statement removed for security
     // Return original order if an error occurs
     return order;
   }
 }
+
+

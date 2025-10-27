@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { userPricingProfiles } from "@/lib/schema";
 import { getServerSession } from "next-auth";
@@ -17,7 +17,7 @@ export async function PUT(request: NextRequest) {
   try {
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       return NextResponse.json({ 
         error: 'Database connection unavailable'
       }, { status: 500 });
@@ -76,7 +76,7 @@ export async function PUT(request: NextRequest) {
       assignment: newAssignment
     });
   } catch (error) {
-    console.error("Error assigning user to pricing profile:", error);
+    // Console statement removed for security
     return NextResponse.json({ error: "Failed to assign user to pricing profile" }, { status: 500 });
   }
 }
@@ -86,7 +86,7 @@ export async function DELETE(request: NextRequest) {
   try {
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       return NextResponse.json({ 
         error: 'Database connection unavailable'
       }, { status: 500 });
@@ -132,7 +132,8 @@ export async function DELETE(request: NextRequest) {
       deletedAssignment: deletedAssignment[0]
     });
   } catch (error) {
-    console.error("Error removing user from pricing profile:", error);
+    // Console statement removed for security
     return NextResponse.json({ error: "Failed to remove user from pricing profile" }, { status: 500 });
   }
 }
+

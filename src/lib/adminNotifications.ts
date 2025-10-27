@@ -1,4 +1,4 @@
-import { Order } from './orderDbOperations';
+﻿import { Order } from './orderDbOperations';
 
 // Interface for admin notification configuration
 export interface AdminNotificationConfig {
@@ -38,7 +38,7 @@ export async function sendTelegramNotification(
   try {
     // Check if Telegram bot token is configured
     if (!process.env.TELEGRAM_BOT_TOKEN) {
-      console.error('Telegram bot token not configured');
+      // Console statement removed for security
       return false;
     }
     
@@ -58,7 +58,7 @@ export async function sendTelegramNotification(
     const config = getAdminNotificationConfig();
     
     if (!config.telegramEnabled || config.telegramChatIds.length === 0) {
-      console.log('Telegram notifications are disabled or no admin chat IDs configured');
+      // Console log removed for security
       return false;
     }
     
@@ -71,7 +71,7 @@ export async function sendTelegramNotification(
     
     return true;
   } catch (error) {
-    console.error('Error sending Telegram notification:', error);
+    // Console statement removed for security
     return false;
   }
 }
@@ -82,7 +82,7 @@ export async function notifyAdminAboutNewOrder(order: Order): Promise<void> {
     const config = getAdminNotificationConfig();
     
     // Format the message (using Markdown for Telegram)
-    const message = `🔔 *New Order Received!*\n\n` +
+    const message = `ðŸ”” *New Order Received!*\n\n` +
       `*Order ID:* \`${order.id}\`\n` +
       `*From:* ${order.userName} (${order.userEmail})\n` +
       `*Total Data:* ${order.totalData} GB\n` +
@@ -100,8 +100,10 @@ export async function notifyAdminAboutNewOrder(order: Order): Promise<void> {
     //   await sendEmailNotification(message, config.adminEmails);
     // }
     
-    console.log('Admin notifications sent for new order:', order.id);
+    // Console log removed for security
   } catch (error) {
-    console.error('Failed to notify admin about new order:', error);
+    // Console statement removed for security
   }
 }
+
+

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getUserOrdersOldestFirst } from '@/lib/orderDbOperations';
 
 export async function POST(request: NextRequest) {
@@ -17,10 +17,11 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({ orders: userOrders });
   } catch (error) {
-    console.error('Error in user orders route:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Failed to retrieve user orders' },
       { status: 500 }
     );
   }
 }
+

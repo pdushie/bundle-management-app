@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { getCurrentUserPricing, calculatePrice } from '@/lib/pricingClient';
 
 interface PricingDisplayProps {
@@ -26,7 +26,7 @@ export default function PricingDisplay({
         setError(null);
       } catch (err: any) {
         setError(err.message || 'Failed to load pricing information');
-        console.error('Error loading pricing:', err);
+        // Console statement removed for security
       } finally {
         setLoading(false);
       }
@@ -130,3 +130,4 @@ export default function PricingDisplay({
     </div>
   );
 }
+

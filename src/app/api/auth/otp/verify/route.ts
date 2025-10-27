@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { OTPService } from '@/lib/otpService';
 import { OTPConfig } from '@/lib/otpConfig';
 
@@ -13,12 +13,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    console.log('OTP Verify Request Body:', body);
+    // Console log removed for security
     
     const { userId, otpCode } = body;
 
     if (!userId || !otpCode) {
-      console.log('Missing required fields:', { userId: !!userId, otpCode: !!otpCode });
+      // Missing required fields - logging removed for security
       return NextResponse.json(
         { error: 'User ID and OTP code are required' },
         { status: 400 }
@@ -27,18 +27,18 @@ export async function POST(request: NextRequest) {
 
     // Validate OTP format (6 digits)
     if (!/^\d{6}$/.test(otpCode)) {
-      console.log('Invalid OTP format:', otpCode);
+      // Invalid OTP format - logging removed for security
       return NextResponse.json(
         { error: 'Invalid OTP format. Please enter a 6-digit code.' },
         { status: 400 }
       );
     }
 
-    console.log('Verifying OTP for user:', userId, 'with code:', otpCode);
+    // Verifying OTP for user - logging removed for security
     
     // Verify OTP
     const result = await OTPService.verifyOTP(userId, otpCode);
-    console.log('OTP verification result:', result);
+    // Console log removed for security
 
     if (!result.success) {
       const status = result.locked ? 429 : 400;
@@ -60,10 +60,11 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('OTP verification error:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
+

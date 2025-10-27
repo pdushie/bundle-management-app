@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { db } from "../../../../lib/db";
 import { users } from "../../../../lib/schema";
 import { getServerSession } from "next-auth";
@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   try {
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       return NextResponse.json({ 
         error: 'Database connection unavailable'
       }, { status: 500 });
@@ -52,7 +52,8 @@ export async function GET(req: NextRequest) {
       }
     });
   } catch (error) {
-    console.error("Error getting user settings:", error);
+    // Console statement removed for security
     return NextResponse.json({ error: "Failed to get user settings" }, { status: 500 });
   }
 }
+

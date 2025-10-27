@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { requireSuperAdmin } from '@/lib/rbac';
 import { db } from '@/lib/db';
 import { users } from '@/lib/schema';
@@ -36,7 +36,7 @@ export async function GET() {
       }))
     });
   } catch (error) {
-    console.error('Error fetching users:', error);
+    // Console statement removed for security
     
     if (error instanceof Error) {
       if (error.message.includes('Authentication required') || error.message.includes('Super admin access required')) {
@@ -53,3 +53,4 @@ export async function GET() {
     );
   }
 }
+

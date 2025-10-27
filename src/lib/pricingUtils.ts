@@ -1,4 +1,4 @@
-import { db } from './db';
+﻿import { db } from './db';
 import { pricingProfiles, userPricingProfiles, pricingTiers } from './schema';
 import { eq } from 'drizzle-orm';
 
@@ -60,7 +60,7 @@ export async function getUserPricingProfile(userId: number, allowDefault: boolea
 
   // Check if database is available
   if (!db) {
-    console.error('Database connection is not available');
+    // Console statement removed for security
     return allowDefault ? DEFAULT_PRICING : null;
   }
 
@@ -120,7 +120,7 @@ export async function getUserPricingProfile(userId: number, allowDefault: boolea
     // Fall back to default pricing
     return DEFAULT_PRICING;
   } catch (error) {
-    console.error(`Error getting pricing profile for user ${userId}:`, error);
+    // Console statement removed for security
     return DEFAULT_PRICING;
   }
 }
@@ -135,7 +135,7 @@ export async function calculateOrderCost(userId: number, totalData: number): Pro
   try {
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       // Use default calculation
       const defaultCost = 10 + (totalData * 5);
       return Math.round(defaultCost * 100) / 100;
@@ -161,7 +161,7 @@ export async function calculateOrderCost(userId: number, totalData: number): Pro
 
     // Handle cases where tiers might not be available yet
     if (tiers.length === 0) {
-      console.error('No pricing tiers found for profile:', pricingProfile.name);
+      // Console statement removed for security
       throw new Error(`No pricing tiers available for profile: ${pricingProfile.name}`);
     }
 
@@ -203,7 +203,7 @@ export async function calculateOrderCost(userId: number, totalData: number): Pro
     // Round to 2 decimal places
     return Math.round(finalCost * 100) / 100;
   } catch (error) {
-    console.error(`Error calculating order cost for user ${userId}:`, error);
+    // Console statement removed for security
     
     // Default calculation if error
     const defaultCost = 10 + (totalData * 5);
@@ -219,7 +219,7 @@ export async function getAllPricingProfiles(): Promise<PricingProfile[]> {
   try {
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       return [DEFAULT_PRICING];
     }
 
@@ -228,7 +228,8 @@ export async function getAllPricingProfiles(): Promise<PricingProfile[]> {
     
     return profiles;
   } catch (error) {
-    console.error("Error fetching pricing profiles:", error);
+    // Console statement removed for security
     return [DEFAULT_PRICING];
   }
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useRef, useEffect } from "react";
 import { Send, Upload, Download, CheckCircle, AlertCircle, Loader, FileText, DollarSign } from "lucide-react";
@@ -35,7 +35,7 @@ const saveOrderEntriesToStorage = (entries: OrderEntry[], manualText: string) =>
     localStorage.setItem(SEND_ORDER_STORAGE_KEY, JSON.stringify(entries));
     localStorage.setItem(SEND_ORDER_TEXT_KEY, manualText);
   } catch (error) {
-    // console.error('Failed to save order entries to localStorage:', error);
+    // // Console statement removed for security
   }
 };
 
@@ -51,7 +51,7 @@ const loadOrderEntriesFromStorage = (): { entries: OrderEntry[], manualText: str
       };
     }
   } catch (error) {
-    // console.error('Failed to load order entries from localStorage:', error);
+    // // Console statement removed for security
   }
   
   return { entries: [], manualText: '' };
@@ -100,9 +100,9 @@ export default function SendOrderApp() {
         setLoadingPricing(true);
         const data = await getCurrentUserPricing();
         setPricingData(data);
-        // console.log("User pricing data loaded:", data);
+        // // Console log removed for security
       } catch (error) {
-        // console.error("Error loading user pricing:", error);
+        // // Console statement removed for security
       } finally {
         setLoadingPricing(false);
       }
@@ -118,7 +118,7 @@ export default function SendOrderApp() {
           }
         }
       } catch (error) {
-        // console.error('Failed to load user settings:', error);
+        // // Console statement removed for security
       }
     }
     
@@ -134,7 +134,7 @@ export default function SendOrderApp() {
   const validateNumber = (num: string): { isValid: boolean; correctedNumber: string; wasFixed: boolean } => {
     // Handle empty strings or nulls
     if (!num || typeof num !== 'string' || num.trim() === '') {
-      // console.log('Invalid number: empty or null');
+      // // Console log removed for security
       return { isValid: false, correctedNumber: num || '', wasFixed: false };
     }
     
@@ -145,7 +145,7 @@ export default function SendOrderApp() {
     // Check if there were non-digits that we stripped
     if (digitsOnly.length !== num.length) {
       wasFixed = true;
-      // console.log(`Fixed number by removing non-digits (dots, hyphens, etc): '${num}' -> '${digitsOnly}'`);
+      // // Console log removed for security
     }
     
     // First case: Already valid 10 digits starting with 0
@@ -157,29 +157,29 @@ export default function SendOrderApp() {
     if (digitsOnly.length === 9) {
       // Don't add extra 0 if it already starts with 0
       if (digitsOnly.startsWith('0')) {
-        // console.log(`9-digit number already starts with 0, marking as invalid: '${digitsOnly}'`);
+        // // Console log removed for security
         return { isValid: false, correctedNumber: digitsOnly, wasFixed: wasFixed };
       }
       const withZero = '0' + digitsOnly;
-      // console.log(`Fixed number by adding leading zero: '${digitsOnly}' -> '${withZero}'`);
+      // // Console log removed for security
       return { isValid: true, correctedNumber: withZero, wasFixed: true };
     }
     
     // Third case: 10 digits but doesn't start with 0 - replace first digit with 0
     if (digitsOnly.length === 10 && !digitsOnly.startsWith('0')) {
       const withZero = '0' + digitsOnly.substring(1);
-      // console.log(`Fixed number by replacing first digit with 0: '${digitsOnly}' -> '${withZero}'`);
+      // // Console log removed for security
       return { isValid: true, correctedNumber: withZero, wasFixed: true };
     }
     
     // Invalid cases - number doesn't match required pattern and can't be fixed
     // Log specific reasons for debugging
     if (digitsOnly.length < 9) {
-      // console.log(`Invalid number: too short (${digitsOnly.length} digits)`);
+      // // Console log removed for security
     } else if (digitsOnly.length > 10) {
-      // console.log(`Invalid number: too long (${digitsOnly.length} digits)`);
+      // // Console log removed for security
     } else {
-      // console.log(`Invalid number: unknown validation failure for '${digitsOnly}'`);
+      // // Console log removed for security
     }
     
     // Return as invalid with the original digits-only string
@@ -377,7 +377,7 @@ export default function SendOrderApp() {
         }
 
         
-        // console.log(`Skipping line "${line}" - unrecognized format`);
+        // // Console log removed for security
       }
       
       // First pass: collect all phone number + allocation combinations and identify duplicates
@@ -412,7 +412,7 @@ export default function SendOrderApp() {
       processedEntries.forEach(({phoneRaw, allocRaw, allocGB}) => {
         // Use comprehensive validation that checks both phone number AND data allocation
         const entryValidation = validateEntry(phoneRaw, allocGB);
-        // console.log(`Manual input: Entry validation for ${phoneRaw} with ${allocGB}GB:`, entryValidation);
+        // // Console log removed for security
         
         const uniqueKey = `${entryValidation.phoneValidation.correctedNumber}-${allocGB}`;
         
@@ -439,7 +439,7 @@ export default function SendOrderApp() {
           
           // Log validation details for debugging if needed
           if (!finalValid) {
-            console.log(`Entry marked invalid: ${entryValidation.reason}`);
+            // Entry marked invalid - logging removed for security
           }
         } else {
           // Count duplicates that are removed
@@ -451,7 +451,7 @@ export default function SendOrderApp() {
       const alertMessages: string[] = [];
       
       if (totalDuplicates > 0) {
-        alertMessages.push(`🗑️ Removed ${totalDuplicates} duplicate entry(ies).\n\nDuplicates are identified by matching both phone number AND data allocation.\nOnly the first occurrence of each combination was kept.`);
+        alertMessages.push(`ðŸ—‘ï¸ Removed ${totalDuplicates} duplicate entry(ies).\n\nDuplicates are identified by matching both phone number AND data allocation.\nOnly the first occurrence of each combination was kept.`);
       }
       
       if (fixedNumbers > 0) {
@@ -464,7 +464,7 @@ export default function SendOrderApp() {
       
       return parsed;
     } catch (error) {
-      console.error("Error processing input:", error);
+      // Console statement removed for security
       return [];
     } finally {
       setIsProcessing(false);
@@ -564,15 +564,15 @@ export default function SendOrderApp() {
                 
                 // Critical bug fix: Check if this looks like a phone number being interpreted as allocation
                 if (allocationResult.allocGB >= 10000000 && allocationResult.allocGB <= 999999999 && allocRawInput.startsWith('0') && allocRawInput.length === 10) {
-                  console.log(`Excel input: CRITICAL BUG DETECTED - '${allocRawInput}' looks like a phone number (${allocationResult.allocGB} GB = ${(allocationResult.allocGB/1024).toFixed(2)} TB), not data allocation. Skipping this entry.`);
-                  console.log(`This suggests columns might be swapped in the Excel file. Please check that phone numbers are in column 1 and data allocations are in column 2.`);
+                  // CRITICAL BUG DETECTED - Phone number misinterpreted as allocation - logging removed for security
+                  // This suggests columns might be swapped in the Excel file
                 } else if (!isNaN(allocationResult.allocGB) && allocationResult.allocGB > 0) {
                   dataAllocation = allocationResult.allocGB;
                   if (allocationResult.wasConverted) {
-                    console.log(`Excel input: Converted '${allocRawInput}' to ${allocationResult.allocGB}GB`);
+                    // Excel input converted - logging removed for security
                   }
                 } else {
-                  console.log(`Excel input: Invalid allocation value '${allocRawInput}' - could not parse`);
+                  // Excel input invalid allocation - logging removed for security
                 }
               }
               // Fall back to the old format with MB in column 4 if present
@@ -584,15 +584,15 @@ export default function SendOrderApp() {
                 
                 // Critical bug fix: Check if this looks like a phone number being interpreted as allocation
                 if (allocationResult.allocGB >= 10000000 && allocationResult.allocGB <= 999999999 && allocRawInput.startsWith('0') && allocRawInput.length === 10) {
-                  console.log(`Excel input: CRITICAL BUG DETECTED - '${allocRawInput}' looks like a phone number, not allocation. Skipping this entry.`);
-                  console.log(`This suggests columns might be swapped in the Excel file. Please check that phone numbers are in column 1 and allocations are in column 4.`);
+                  // CRITICAL BUG DETECTED - Phone number misinterpreted as allocation - logging removed for security
+                  // This suggests columns might be swapped in the Excel file
                 } else if (!isNaN(allocationResult.allocGB) && allocationResult.allocGB > 0) {
                   dataAllocation = allocationResult.allocGB;
                   if (allocationResult.wasConverted) {
-                    console.log(`Excel input: Converted '${allocRawInput}' to ${allocationResult.allocGB}GB`);
+                    // Excel input converted - logging removed for security
                   }
                 } else {
-                  console.log(`Excel input: Invalid allocation value '${allocRawInput}' - could not parse`);
+                  // Excel input invalid allocation - logging removed for security
                 }
               }
               
@@ -602,10 +602,10 @@ export default function SendOrderApp() {
                 // We'll still log the issue here for debugging purposes
                 const containsNonDigits = /[^\d]/.test(phoneNumber);
                 if (containsNonDigits) {
-                  console.log(`Excel input: Phone number ${phoneNumber} contains non-numeric characters - will be flagged invalid`);
+                  // Excel input: Phone number contains non-numeric characters - logging removed for security
                 }
                 if (phoneNumber.length !== 10) {
-                  console.log(`Excel input: Phone number ${phoneNumber} is not 10 digits (length: ${phoneNumber.length}) - will be flagged invalid`);
+                  // Excel input: Phone number is not 10 digits - logging removed for security
                 }
                 
                 const entryValidation = validateEntry(phoneNumber, dataAllocation);
@@ -613,7 +613,7 @@ export default function SendOrderApp() {
                   fixedNumbers++;
                 }
                 
-                console.log(`Entry validation for ${phoneNumber} with ${dataAllocation}GB:`, entryValidation);
+                // Entry validation - logging removed for security
                 
                 tempEntries.push({
                   phoneNumber: entryValidation.phoneValidation.correctedNumber,
@@ -629,11 +629,11 @@ export default function SendOrderApp() {
           });
           
           // Add a console log to see all temp entries
-          console.log('All temp entries before processing:', tempEntries);
+          // Console log removed for security
           
           // Check how many invalid entries we have
           const invalidCount = tempEntries.filter(entry => !entry.validation.isValid).length;
-          console.log(`Found ${invalidCount} invalid entries before deduplication`);
+          // Found invalid entries before deduplication - logging removed for security
           
           // Detect duplicates using the same algorithm as BundleAllocator
           const phoneAllocCombinations = new Set<string>();
@@ -667,7 +667,7 @@ export default function SendOrderApp() {
               
               // Final validation combines phone format, entry validation, AND data allocation
               const finalValid = isValidNumber && entry.validation.isValid;
-              console.log(`Final validation for ${entry.phoneNumber}: regex=${isValidNumber}, entry validation=${entry.validation.isValid}, final=${finalValid}`);
+              // Final validation - logging removed for security
               
               const newEntry = {
                 number: entry.phoneNumber,
@@ -682,7 +682,7 @@ export default function SendOrderApp() {
               
               // Log if there's a difference between our validation function and this check
               if (isValidNumber !== entry.validation.isValid) {
-                console.log(`Validation mismatch for ${entry.phoneNumber}: validation function=${entry.validation.isValid}, regex check=${isValidNumber}`);
+                // Validation mismatch - logging removed for security
               }
             } else {
               // Count duplicates that are removed
@@ -694,7 +694,7 @@ export default function SendOrderApp() {
           const alertMessages: string[] = [];
           
           if (totalDuplicates > 0) {
-            alertMessages.push(`🗑️ Removed ${totalDuplicates} duplicate entry(ies).\n\nDuplicates are identified by matching both phone number AND data allocation.\nOnly the first occurrence of each combination was kept.`);
+            alertMessages.push(`ðŸ—‘ï¸ Removed ${totalDuplicates} duplicate entry(ies).\n\nDuplicates are identified by matching both phone number AND data allocation.\nOnly the first occurrence of each combination was kept.`);
           }
           
           if (fixedNumbers > 0) {
@@ -704,7 +704,7 @@ export default function SendOrderApp() {
           // Store messages to be displayed after file processing (in the handler)
           if (alertMessages.length > 0) {
             // We'll trigger the alert in the handler function instead
-            console.info("Alert messages:", alertMessages);
+            // Console statement removed for security
           }
           
           resolve(entries);
@@ -741,7 +741,7 @@ export default function SendOrderApp() {
       const alertMessages: string[] = [];
       
       if (duplicateCount > 0) {
-        alertMessages.push(`🗑️ Removed ${duplicateCount} duplicate entry(ies).\n\nDuplicates are identified by matching both phone number AND data allocation.\nOnly the first occurrence of each combination was kept.`);
+        alertMessages.push(`ðŸ—‘ï¸ Removed ${duplicateCount} duplicate entry(ies).\n\nDuplicates are identified by matching both phone number AND data allocation.\nOnly the first occurrence of each combination was kept.`);
       }
       
       if (fixedCount > 0) {
@@ -756,7 +756,7 @@ export default function SendOrderApp() {
       setStatus("idle");
       e.target.value = '';
     } catch (error) {
-      console.error("Error reading file:", error);
+      // Console statement removed for security
       setErrorMessage("Failed to process the file. Please make sure it's a valid Excel file.");
       setStatus("error");
     }
@@ -792,7 +792,7 @@ export default function SendOrderApp() {
       const alertMessages: string[] = [];
       
       if (duplicateCount > 0) {
-        alertMessages.push(`🗑️ Removed ${duplicateCount} duplicate entry(ies).\n\nDuplicates are identified by matching both phone number AND data allocation.\nOnly the first occurrence of each combination was kept.`);
+        alertMessages.push(`ðŸ—‘ï¸ Removed ${duplicateCount} duplicate entry(ies).\n\nDuplicates are identified by matching both phone number AND data allocation.\nOnly the first occurrence of each combination was kept.`);
       }
       
       if (fixedCount > 0) {
@@ -806,7 +806,7 @@ export default function SendOrderApp() {
       setOrderEntries(entries);
       setStatus("idle");
     } catch (error) {
-      console.error("Error reading file:", error);
+      // Console statement removed for security
       setErrorMessage("Failed to process the file. Please make sure it's a valid Excel file.");
       setStatus("error");
     }
@@ -848,9 +848,9 @@ export default function SendOrderApp() {
       
       // Log any discrepancies for debugging
       if (isInvalidFlag && !isInvalidFormat) {
-        console.log(`Validation mismatch for ${entry.number}: flag=invalid but format=valid`);
+        // Validation mismatch: flag=invalid but format=valid - logging removed for security
       } else if (!isInvalidFlag && isInvalidFormat) {
-        console.log(`Validation mismatch for ${entry.number}: flag=valid but format=invalid`);
+        // Validation mismatch: flag=valid but format=invalid - logging removed for security
       }
       
       return isInvalidFlag || isInvalidFormat;
@@ -929,7 +929,7 @@ export default function SendOrderApp() {
       await addOrder(newOrder);
       
       // Notify that orders have been sent using the notification system
-      console.log("SendOrderApp: Notifying that orders have been sent");
+      // Console log removed for security
       notifyOrderSent(); // Dispatch ORDER_SENT_EVENT
       notifyCountUpdated(); // Also dispatch COUNT_UPDATED_EVENT for immediate updates
       
@@ -945,7 +945,7 @@ export default function SendOrderApp() {
       
       // Reset the interface to initial state after a delay (5 seconds)
       setTimeout(() => {
-        console.log("SendOrderApp: Auto-resetting interface after successful order submission");
+        // Console log removed for security
         setOrderEntries([]);
         setStatus("idle");
         setErrorMessage("");
@@ -1040,7 +1040,7 @@ export default function SendOrderApp() {
     
     // Log any discrepancies for debugging
     if (!isInvalidByFlag && isInvalidByFormat) {
-      console.log(`Found unmarked invalid entry: ${entry.number} (isValid flag=${entry.isValid}, regex check=false)`);
+      // Found unmarked invalid entry - logging removed for security
     }
     
     // Be strict - either flag is false or regex fails means invalid
@@ -1075,7 +1075,7 @@ export default function SendOrderApp() {
       setTotalCost(roundedCost);
       
       const totalGB = orderEntries.reduce((sum, entry) => sum + entry.allocationGB, 0);
-      console.log("Calculated total cost:", roundedCost, "for", totalGB, "GB (applying pricing to each allocation)");
+      // Calculated total cost - logging removed for security
     } else {
       setTotalCost(null);
     }
@@ -1084,17 +1084,7 @@ export default function SendOrderApp() {
   // Debug logging to help identify button disabled reasons
   useEffect(() => {
     if (orderEntries.length > 0) {
-      console.log('Send Order Button Status:', {
-        ordersHalted,
-        orderEntriesCount: orderEntries.length,
-        invalidCount,
-        hasPricingProfile: pricingData?.hasProfile,
-        minimumOrderEntries,
-        meetsMinimum: orderEntries.length >= minimumOrderEntries,
-        pricingTiers: pricingData?.profile?.tiers?.length || 0,
-        entriesWithoutPricing: pricingData?.profile?.tiers ? 
-          orderEntries.filter(entry => !hasPricingForAllocation(entry.allocationGB, pricingData.profile.tiers || [])).length : 0
-      });
+      // Console log removed for security
     }
   }, [orderEntries, invalidCount, pricingData, ordersHalted, minimumOrderEntries]);
 
@@ -1554,9 +1544,9 @@ Supports: 25gig, 25gb, 25g, 25, 1024mb, 1024m`}
                       
                       // Log validation for debugging if there's a mismatch
                       if (isValidFormat && isInvalidFlag) {
-                        console.log(`Entry #${idx}: ${entry.number} has validation mismatch - regex=valid, flag=invalid`);
+                        // Entry has validation mismatch - regex=valid, flag=invalid - logging removed for security
                       } else if (!isValidFormat && !isInvalidFlag) {
-                        console.log(`Entry #${idx}: ${entry.number} has validation mismatch - regex=invalid, flag=valid`);
+                        // Entry has validation mismatch - regex=invalid, flag=valid - logging removed for security
                       }
                       
                       // Only store refs for invalid entries
@@ -1677,3 +1667,5 @@ Supports: 25gig, 25gb, 25g, 25, 1024mb, 1024m`}
     </div>
   );
 }
+
+

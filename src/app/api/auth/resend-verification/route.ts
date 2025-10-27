@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
 import { sendVerificationEmail, generateVerificationToken, getVerificationTokenExpiry } from '@/lib/email';
 
@@ -86,10 +86,11 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Resend verification email error:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Failed to resend verification email' },
       { status: 500 }
     );
   }
 }
+

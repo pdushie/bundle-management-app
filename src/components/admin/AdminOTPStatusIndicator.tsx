@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { ShieldCheck, ShieldAlert } from 'lucide-react';
@@ -20,7 +20,7 @@ export default function AdminOTPStatusIndicator() {
         const data = await response.json();
         setOtpStatus(data);
       } catch (error) {
-        console.error('Error fetching OTP status:', error);
+        // Console statement removed for security
       } finally {
         setIsLoading(false);
       }
@@ -61,3 +61,4 @@ export default function AdminOTPStatusIndicator() {
     </div>
   );
 }
+

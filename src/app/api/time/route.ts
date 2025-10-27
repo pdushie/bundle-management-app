@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
 /**
  * Server Time API Endpoint
@@ -22,10 +22,11 @@ export async function GET(req: NextRequest) {
       }
     });
   } catch (error) {
-    // console.error("Error getting server time:", error);
+    // // Console statement removed for security
     return NextResponse.json(
       { error: "Failed to get server time" }, 
       { status: 500 }
     );
   }
 }
+

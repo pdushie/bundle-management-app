@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import * as XLSX from 'xlsx';
 
@@ -138,9 +138,10 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({ tiers }, { status: 200 });
   } catch (error) {
-    console.error('Error processing Excel file:', error);
+    // Console statement removed for security
     return NextResponse.json({ 
       error: `Failed to process Excel file: ${error instanceof Error ? error.message : 'Unknown error'}`
     }, { status: 500 });
   }
 }
+

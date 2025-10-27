@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getServerAuthSession } from '@/lib/auth';
 import fs from 'fs/promises';
 import path from 'path';
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error toggling OTP:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -103,10 +103,11 @@ export async function GET() {
     });
     
   } catch (error) {
-    console.error('Error getting OTP status:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
+

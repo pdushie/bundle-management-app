@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
@@ -48,7 +48,7 @@ export default function AnnouncementManager() {
         const data = await response.json();
         setAnnouncements(data.announcements || []);
       } catch (error) {
-        console.error("Error fetching announcements:", error);
+        // Console statement removed for security
       } finally {
         setIsLoading(false);
       }
@@ -140,7 +140,7 @@ export default function AnnouncementManager() {
       });
       window.dispatchEvent(event);
     } catch (error) {
-      console.error("Error toggling announcement:", error);
+      // Console statement removed for security
     }
   };
 
@@ -164,7 +164,7 @@ export default function AnnouncementManager() {
       });
       window.dispatchEvent(event);
     } catch (error) {
-      console.error("Error deleting announcement:", error);
+      // Console statement removed for security
     }
   };
 
@@ -219,7 +219,7 @@ export default function AnnouncementManager() {
       // Close the modal
       setShowModal(false);
     } catch (error) {
-      console.error("Error saving announcement:", error);
+      // Console statement removed for security
       alert("Failed to save announcement. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -448,3 +448,4 @@ export default function AnnouncementManager() {
     </div>
   );
 }
+

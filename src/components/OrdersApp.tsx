@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { Download, Clock, FileText, User, Database, CheckCircle, XCircle, Loader, Search, SlidersHorizontal, Check, CheckSquare, Square, Archive, DollarSign } from "lucide-react";
@@ -35,7 +35,7 @@ export default function OrdersApp() {
       setOrders(allOrders);
       refreshOrderCount(); // Update order counts in the context
     } catch (error) {
-      // console.error("Failed to fetch orders:", error);
+      // // Console statement removed for security
     } finally {
       setIsLoading(false);
     }
@@ -43,20 +43,20 @@ export default function OrdersApp() {
 
   // Set up polling for real-time updates
   useEffect(() => {
-    // console.log('OrdersApp: Setting up event listeners');
+    // // Console log removed for security
     
     // Fetch orders immediately
     fetchOrders();
     
     // Set up event listener for order updates
     const handleOrderUpdate = () => {
-      // console.log('OrdersApp: ORDER_UPDATED_EVENT received');
+      // // Console log removed for security
       fetchOrders();
     };
     
     // Create a more specific handler for order processed events
     const handleOrderProcessed = () => {
-      // console.log('OrdersApp: ORDER_PROCESSED_EVENT received');
+      // // Console log removed for security
       fetchOrders();
       // Force a count update notification
       notifyCountUpdated();
@@ -70,7 +70,7 @@ export default function OrdersApp() {
     const intervalId = setInterval(() => {
       // Only poll if window is visible to further reduce API calls
       if (document.visibilityState === 'visible') {
-        // console.log('OrdersApp: Low-frequency polling triggered');
+        // // Console log removed for security
         fetchOrders();
       }
     }, 300000); // 5 minutes
@@ -105,7 +105,7 @@ export default function OrdersApp() {
           refreshOrderCount();
         }
       } catch (error) {
-        // console.error("Error loading orders:", error);
+        // // Console statement removed for security
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -269,7 +269,7 @@ export default function OrdersApp() {
     
     // For a single order, check if it exceeds the threshold
     if (order.totalData > MAX_DATA_GB) {
-      // console.log(`Order ${order.id} exceeds 1.5 TB threshold (${order.totalData} GB). Splitting into multiple files.`);
+      // // Console log removed for security
       // Use the splitting function and return a zip file
       const result = await splitAndZipLargeOrderData([order], MAX_DATA_GB);
       return { 
@@ -461,7 +461,7 @@ export default function OrdersApp() {
       try {
         await updateEntryStatuses(order.id, 'sent');
       } catch (error) {
-        // console.warn('Failed to update entry statuses:', error);
+        // // Console statement removed for security
       }
       
       // Notify that the order has been processed
@@ -474,7 +474,7 @@ export default function OrdersApp() {
       refreshOrderCount();
       
     } catch (error) {
-      // console.error("Error downloading order:", error);
+      // // Console statement removed for security
       alert("Failed to download order. Please try again.");
     }
   };
@@ -488,14 +488,14 @@ export default function OrdersApp() {
         totalDataGB += order.totalData;
       }
       
-      // console.log(`Total data allocation: ${totalDataGB.toFixed(2)} GB`);
+      // // Console log removed for security
       
       // Check if we need to split files (1.5 TB = 1,536 GB)
       const MAX_DATA_GB = 1536; // 1.5 TB in GB
       
       // If total data is over 1.5 TB, we need to split and return a zip file
       if (totalDataGB > MAX_DATA_GB) {
-        console.log(`Total data (${totalDataGB.toFixed(2)} GB) exceeds ${MAX_DATA_GB} GB (1.5 TB). Splitting into multiple files.`);
+        // Console log removed for security
         return await splitAndZipLargeOrderData(ordersToMerge, MAX_DATA_GB);
       }
       
@@ -618,7 +618,7 @@ export default function OrdersApp() {
       const buffer = await workbook.xlsx.writeBuffer();
       return { buffer, isZip: false };
     } catch (error) {
-      console.error("Error merging orders:", error);
+      // Console statement removed for security
       throw error;
     }
   };
@@ -656,7 +656,7 @@ export default function OrdersApp() {
           
           zip.file(`UploadTemplate_Batch${batchNumber}_${formattedDate}_${formattedTime}.xlsx`, batchBuffer);
           
-          console.log(`Created batch ${batchNumber} with ${currentBatchEntries.length} entries and ${currentBatchData.toFixed(2)} GB`);
+          // Console log removed for security
           
           // Reset for next batch
           currentBatchEntries = [];
@@ -687,7 +687,7 @@ export default function OrdersApp() {
         
         zip.file(`UploadTemplate_Batch${batchNumber}_${formattedDate}_${formattedTime}.xlsx`, batchBuffer);
         
-        console.log(`Created final batch ${batchNumber} with ${currentBatchEntries.length} entries and ${currentBatchData.toFixed(2)} GB`);
+        // Console log removed for security
       }
       
       // No README file as requested
@@ -696,7 +696,7 @@ export default function OrdersApp() {
       const zipBuffer = await zip.generateAsync({ type: "arraybuffer" });
       return { buffer: zipBuffer, isZip: true };
     } catch (error) {
-      console.error("Error splitting and zipping large orders:", error);
+      // Console statement removed for security
       throw error;
     }
   };
@@ -919,14 +919,14 @@ export default function OrdersApp() {
         
         // Update all entry statuses to 'sent' for processed orders
         const entryUpdatePromises = selectedOrderIds.map(orderId => 
-          updateEntryStatuses(orderId, 'sent').catch(error => 
-            console.warn(`Failed to update entry statuses for order ${orderId}:`, error)
-          )
+          updateEntryStatuses(orderId, 'sent').catch(error => {
+            // Console statement removed for security
+          })
         );
         await Promise.all(entryUpdatePromises);
         
         // Notify that orders have been processed using our notification system
-        console.log("OrdersApp: Notifying that orders have been processed");
+        // Console log removed for security
         selectedOrderIds.forEach(orderId => {
           notifyOrderProcessed(orderId); // Dispatch ORDER_PROCESSED_EVENT for each order
         });
@@ -964,7 +964,7 @@ export default function OrdersApp() {
               
             zip.file(filename, buffer);
           } catch (error) {
-            console.error(`Error processing order ${order.id}:`, error);
+            // Console statement removed for security
           }
         });
         
@@ -1026,9 +1026,9 @@ export default function OrdersApp() {
       
       // Update all entry statuses to 'sent' for processed orders
       const entryUpdatePromises = selectedOrderIds.map(orderId => 
-        updateEntryStatuses(orderId, 'sent').catch(error => 
-          console.warn(`Failed to update entry statuses for order ${orderId}:`, error)
-        )
+        updateEntryStatuses(orderId, 'sent').catch(error => {
+          // Console statement removed for security
+        })
       );
       await Promise.all(entryUpdatePromises);
       
@@ -1047,7 +1047,7 @@ export default function OrdersApp() {
       setIsLoading(false);        alert(`Successfully downloaded ${selectedOrders.length} orders as separate files.`);
       }
     } catch (error) {
-      console.error("Error downloading selected orders:", error);
+      // Console statement removed for security
       alert("Failed to download selected orders. Please try again.");
       setIsLoading(false);
     }
@@ -1096,7 +1096,7 @@ export default function OrdersApp() {
         const allOrders = await getOrdersOldestFirst();
         setOrders(allOrders);
       } catch (error) {
-        console.error("Error refreshing orders:", error);
+        // Console statement removed for security
       } finally {
         setIsLoading(false);
       }
@@ -1488,3 +1488,6 @@ export default function OrdersApp() {
     </div>
   );
 }
+
+
+

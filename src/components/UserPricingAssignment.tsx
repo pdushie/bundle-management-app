@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from 'react';
 import { 
@@ -72,7 +72,7 @@ export default function UserPricingAssignment({ profileId, onClose }: UserPricin
         }
       }
     } catch (error) {
-      console.error('Failed to fetch profile data:', error);
+      // Console statement removed for security
     }
   };
 
@@ -90,7 +90,7 @@ export default function UserPricingAssignment({ profileId, onClose }: UserPricin
         }
       }
     } catch (error) {
-      console.error('Failed to fetch users:', error);
+      // Console statement removed for security
     } finally {
       setIsLoading(false);
     }
@@ -113,7 +113,7 @@ export default function UserPricingAssignment({ profileId, onClose }: UserPricin
         }
       }
     } catch (error) {
-      console.error('Failed to assign user:', error);
+      // Console statement removed for security
     } finally {
       setAssignmentLoading(null);
     }
@@ -130,7 +130,7 @@ export default function UserPricingAssignment({ profileId, onClose }: UserPricin
         setAssignedUsers(prev => prev.filter(user => user.id !== userId));
       }
     } catch (error) {
-      console.error('Failed to unassign user:', error);
+      // Console statement removed for security
     } finally {
       setAssignmentLoading(null);
     }
@@ -264,3 +264,4 @@ export default function UserPricingAssignment({ profileId, onClose }: UserPricin
     </div>
   );
 }
+

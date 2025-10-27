@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { requireSuperAdmin, getAllRoles, getAllPermissions } from '@/lib/rbac';
@@ -19,11 +19,11 @@ export async function GET() {
     // Later we can enhance this with specific permission checks
     const allowedRoles = ['super_admin', 'admin', 'standard_admin'];
     if (!allowedRoles.includes(session.user.role as string)) {
-      console.log('Roles API: Access denied for role:', session.user.role);
+      // Console log removed for security
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
     
-    console.log('Roles API: Access granted for role:', session.user.role);
+    // Console log removed for security
     const rolesData = await getAllRoles();
     
     return NextResponse.json({
@@ -31,7 +31,7 @@ export async function GET() {
       data: rolesData
     });
   } catch (error) {
-    console.error('Error fetching roles:', error);
+    // Console statement removed for security
     
     if (error instanceof Error) {
       if (error.message.includes('Authentication required') || error.message.includes('Super admin access required')) {
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
       data: newRole
     });
   } catch (error) {
-    console.error('Error creating role:', error);
+    // Console statement removed for security
     
     if (error instanceof Error) {
       if (error.message.includes('Authentication required') || error.message.includes('Super admin access required')) {
@@ -136,3 +136,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+

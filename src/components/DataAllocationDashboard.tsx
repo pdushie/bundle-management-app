@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -100,7 +100,7 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
       const startDate = format(dateRange.from, 'yyyy-MM-dd');
       const endDate = format(dateRange.to, 'yyyy-MM-dd');
       
-      // console.log('Loading data allocation stats for:', { startDate, endDate });
+      // // Console log removed for security
       
       const response = await fetch(
         `/api/admin/accounting/data-allocation?startDate=${startDate}&endDate=${endDate}`
@@ -108,7 +108,7 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
       
       if (!response.ok) {
         const errorText = await response.text();
-        // console.error('API Error:', errorText);
+        // // Console statement removed for security
         throw new Error(`Failed to load data allocation statistics: ${response.status}`);
       }
       
@@ -118,10 +118,10 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
       }
       
       const responseData = await response.json();
-      // console.log('Received data:', responseData);
+      // // Console log removed for security
       setData(responseData);
     } catch (error) {
-      // console.error('Error loading data allocation stats:', error);
+      // // Console statement removed for security
       setError(`Failed to load data allocation statistics: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
@@ -565,3 +565,5 @@ export default function DataAllocationDashboard({ onBack }: DataAllocationDashbo
     </div>
   );
 }
+
+

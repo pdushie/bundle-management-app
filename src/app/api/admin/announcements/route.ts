@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { db, neonClient } from "@/lib/db";
 import { announcements, users } from "@/lib/schema";
 import { getServerSession } from "next-auth";
@@ -19,7 +19,7 @@ async function hasAdminAnnouncementsPermission(userId: string): Promise<boolean>
     
     return result.length > 0;
   } catch (error) {
-    console.error('Error checking announcements permission:', error);
+    // Console statement removed for security
     return false;
   }
 }
@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
         
         return NextResponse.json({ announcements: result }, { headers });
       } catch (drizzleError) {
-        console.error("Drizzle query failed:", drizzleError);
+        // Console statement removed for security
         // Continue to fallback method
       }
     }
@@ -125,7 +125,7 @@ export async function GET(req: NextRequest) {
       
       return NextResponse.json({ announcements: formattedResults }, { headers });
     } catch (sqlError) {
-      console.error("Direct SQL query failed:", sqlError);
+      // Console statement removed for security
       return NextResponse.json({ 
         announcements: [],
         error: 'Database connection error' 
@@ -133,7 +133,7 @@ export async function GET(req: NextRequest) {
     }
     
   } catch (error) {
-    console.error("Error fetching announcements:", error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: "Failed to fetch announcements", announcements: [] }, 
       { status: 500, headers: { 'Content-Type': 'application/json' } }
@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
   try {
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       return NextResponse.json({ 
         error: 'Database connection unavailable'
       }, { status: 500 });
@@ -226,7 +226,8 @@ export async function POST(req: NextRequest) {
       announcement: newAnnouncement
     });
   } catch (error) {
-    console.error("Error creating announcement:", error);
+    // Console statement removed for security
     return NextResponse.json({ error: "Failed to create announcement" }, { status: 500 });
   }
 }
+

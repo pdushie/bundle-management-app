@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from 'react';
 import { Calendar, DollarSign, Download, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowLeft, ArrowRight, FileText, User, Package, CheckCircle, Clock, AlertCircle, Eye, X, Search } from 'lucide-react';
@@ -48,14 +48,14 @@ export default function BillingApp() {
         // Format the date as YYYY-MM-DD for the API using local time
         const dateString = formatDateForInput(selectedDate);
         const data = await getUserBilling(dateString);
-        // console.log("Billing data received:", data);
-        // console.log("Total amount:", data.totalAmount);
+        // // Console log removed for security
+        // // Console log removed for security
         
         // Debug order costs
         if (data && data.orders) {
-          // console.log("Orders with costs:");
+          // // Console log removed for security
           data.orders.forEach(order => {
-            // console.log(`- ${order.id}: estimatedCost=${order.estimatedCost}, status=${order.status}`);
+            // // Console log removed for security
           });
           
           // Calculate total ourselves to verify
@@ -63,18 +63,18 @@ export default function BillingApp() {
             return total + (Number(order.estimatedCost) || 0);
           }, 0);
           
-          // console.log(`API reports totalAmount: ${data.totalAmount}, Calculated: ${calculatedTotal}`);
+          // // Console log removed for security
           
           // If there's a significant difference, use our calculation
           if (Math.abs(data.totalAmount - calculatedTotal) > 0.01) {
-            // console.log(`Fixing total amount from ${data.totalAmount} to ${calculatedTotal}`);
+            // // Console log removed for security
             data.totalAmount = calculatedTotal;
           }
         }
         
         setBillingData(data);
       } catch (err: any) {
-        // console.error('Error fetching billing data:', err);
+        // // Console statement removed for security
         setError(err.message || 'Failed to load billing information');
         setBillingData(null);
       } finally {
@@ -331,7 +331,7 @@ export default function BillingApp() {
                         document.body.removeChild(link);
                         window.URL.revokeObjectURL(url);
                       } catch (error) {
-                        // console.error('Error downloading PDF:', error);
+                        // // Console statement removed for security
                         alert('Failed to download PDF. Please try again.');
                       }
                     }}
@@ -610,3 +610,5 @@ export default function BillingApp() {
     </div>
   );
 }
+
+

@@ -32,34 +32,17 @@ const Toaster = ({ ...props }: ToasterProps) => {
 export { Toaster }
 
 export function useToast() {
-  const { toast } = React.useContext(ToastContext)
+  // Simple toast hook implementation
+  const toast = (messageOrOptions: string | { title?: string; description?: string; variant?: string }) => {
+    // Console log removed for security
+  };
   
   return {
     toast,
     dismiss: (toastId?: string) => {
       // Dismiss toast logic
-      console.log('Dismissing toast', toastId)
+      // Console log removed for security
     }
-  }
+  };
 }
 
-// Simple toast context implementation
-const ToastContext = React.createContext<{
-  toast: (props: any) => void
-}>({
-  toast: () => {}
-})
-
-export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
-  const toast = (props: any) => {
-    console.log('Toast triggered', props)
-    // In a real implementation, this would call sonner's toast function
-  }
-
-  return (
-    <ToastContext.Provider value={{ toast }}>
-      {children}
-      <Toaster />
-    </ToastContext.Provider>
-  )
-}

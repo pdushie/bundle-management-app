@@ -1,4 +1,4 @@
-// Client-side wrapper for order operations
+﻿// Client-side wrapper for order operations
 import { notifyOrderUpdated } from './orderNotifications';
 
 // Define Order type to match the one in orderDbOperations.ts
@@ -72,7 +72,7 @@ const fetchWithRetry = async (url: string, options: RequestInit, maxRetries = 3)
       }
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
-      console.warn(`API request failed (attempt ${retries + 1}/${maxRetries + 1}):`, lastError.message);
+      // Console statement removed for security
     }
     
     // Only do exponential backoff if we're going to retry
@@ -105,7 +105,7 @@ export const saveOrders = async (orders: Order[]): Promise<void> => {
     // Notify that orders have been updated
     notifyOrderUpdated();
   } catch (error) {
-    console.error('Failed to save orders:', error);
+    // Console statement removed for security
     throw error;
   }
 };
@@ -127,7 +127,7 @@ export const loadOrders = async (): Promise<Order[]> => {
     const data = await response.json();
     return data.orders || [];
   } catch (error) {
-    console.error('Failed to load orders:', error);
+    // Console statement removed for security
     return [];
   }
 };
@@ -150,7 +150,7 @@ export const addOrder = async (order: Order): Promise<void> => {
     // Notify that orders have been updated
     notifyOrderUpdated();
   } catch (error) {
-    console.error('Failed to add order:', error);
+    // Console statement removed for security
     throw error;
   }
 };
@@ -173,7 +173,7 @@ export const getOrdersOldestFirst = async (): Promise<Order[]> => {
     const data = await response.json();
     return data.orders || [];
   } catch (error) {
-    console.error('Failed to get orders:', error);
+    // Console statement removed for security
     return [];
   }
 };
@@ -196,7 +196,7 @@ export const getPendingOrdersOldestFirst = async (): Promise<Order[]> => {
     const data = await response.json();
     return data.orders || [];
   } catch (error) {
-    console.error('Failed to get pending orders:', error);
+    // Console statement removed for security
     return [];
   }
 };
@@ -219,7 +219,7 @@ export const getProcessedOrdersOldestFirst = async (): Promise<Order[]> => {
     const data = await response.json();
     return data.orders || [];
   } catch (error) {
-    console.error('Failed to get processed orders:', error);
+    // Console statement removed for security
     return [];
   }
 };
@@ -241,7 +241,7 @@ export const getProcessedOrdersWithAdminInfo = async (): Promise<Order[]> => {
     const data = await response.json();
     return data.orders || [];
   } catch (error) {
-    console.error('Failed to get processed orders with admin info:', error);
+    // Console statement removed for security
     // Fallback to regular processed orders if admin API fails
     return await getProcessedOrdersOldestFirst();
   }
@@ -267,7 +267,7 @@ export const getUserOrdersOldestFirst = async (userEmail: string): Promise<Order
     const data = await response.json();
     return data.orders || [];
   } catch (error) {
-    console.error('Failed to get user orders:', error);
+    // Console statement removed for security
     return [];
   }
 };
@@ -290,7 +290,7 @@ export const updateOrder = async (order: Order): Promise<void> => {
     // Notify that orders have been updated
     notifyOrderUpdated();
   } catch (error) {
-    console.error('Failed to update order:', error);
+    // Console statement removed for security
     throw error;
   }
 };
@@ -312,7 +312,7 @@ export const clearOrders = async (): Promise<void> => {
     // Notify that orders have been updated
     notifyOrderUpdated();
   } catch (error) {
-    console.error('Failed to clear orders:', error);
+    // Console statement removed for security
     throw error;
   }
 };
@@ -332,9 +332,9 @@ export const updateEntryStatuses = async (orderId: string, status: OrderEntrySta
       throw new Error('Failed to update entry statuses');
     }
 
-    console.log(`Updated entry statuses for order ${orderId} to ${status}`);
+    // Console log removed for security
   } catch (error) {
-    console.error('Failed to update entry statuses:', error);
+    // Console statement removed for security
     throw error;
   }
 };
@@ -355,7 +355,7 @@ export const getOrderCounts = async (userEmail?: string): Promise<{
     // Prepare the request body, ensuring it's never empty JSON
     const requestBody = userEmail ? JSON.stringify({ userEmail }) : JSON.stringify({ });
     
-    console.log('Fetching order counts for user:', userEmail || 'anonymous');
+    // Fetching order counts for user - logging removed for security
     
     // Use our fetchWithRetry utility
     const response = await fetchWithRetry(
@@ -374,7 +374,7 @@ export const getOrderCounts = async (userEmail?: string): Promise<{
     
     // Check if the response contains an error flag from our enhanced API
     if (data.connectionError) {
-      console.warn('Database connection error reported by API');
+      // Console statement removed for security
       return defaultCounts;
     }
     
@@ -385,17 +385,19 @@ export const getOrderCounts = async (userEmail?: string): Promise<{
       userOrderCount: typeof data.userOrderCount === 'number' ? data.userOrderCount : 0,
     };
     
-    console.log('Received order counts from API:', sanitizedData);
+    // Received order counts from API - logging removed for security
     
     return sanitizedData;
   } catch (error) {
-    console.error('Failed to get order counts after retries:', error);
+    // Console statement removed for security
     
     // Handle different types of errors
     if (error instanceof TypeError && error.message.includes('fetch')) {
-      console.warn('Network error when getting order counts - possibly offline');
+      // Console statement removed for security
     }
     
     return defaultCounts;
   }
 };
+
+

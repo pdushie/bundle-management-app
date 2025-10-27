@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { saveOrderWithCost, Order as DbOrder } from '@/lib/orderDbOperations';
 import { notifyAdminAboutNewOrder } from '@/lib/adminNotifications';
 import { getServerSession } from 'next-auth';
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions) as any;
     const userId = session?.user?.id ? parseInt(session.user.id) : null;
     
-    // console.log(`Processing new order from user ID ${userId || 'unknown'}`);
+    // // Console log removed for security
     
     // Validate that the user has a pricing profile assigned
     if (!userId) {
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
       await notifyAdminAboutNewOrder(typedOrderWithCost);
     } catch (notificationError) {
       // Log but don't fail the request if notification sending fails
-      // console.error('Failed to send admin notification:', notificationError);
+      // // Console statement removed for security
     }
     
     return NextResponse.json({ 
@@ -122,10 +122,12 @@ export async function POST(request: NextRequest) {
       cost: typedOrderWithCost.cost 
     });
   } catch (error) {
-    // console.error('Error in add order route:', error);
+    // // Console statement removed for security
     return NextResponse.json(
       { error: 'Failed to add order' },
       { status: 500 }
     );
   }
 }
+
+

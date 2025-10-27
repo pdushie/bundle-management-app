@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Pool } from "pg";
@@ -57,12 +57,12 @@ export async function POST(req: NextRequest) {
       } catch (updateError: any) {
         // Check if this is the constraint error
         if (updateError.code === '23514' && updateError.constraint === 'users_role_check') {
-          console.log('Detected users_role_check constraint error. Attempting to remove constraint...');
+          // Console log removed for security
           
           try {
             // Drop the constraint
             await client.query('ALTER TABLE users DROP CONSTRAINT users_role_check');
-            console.log('Successfully removed users_role_check constraint');
+            // Console log removed for security
             
             // Retry the update
             result = await client.query(
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
               [role, userId]
             );
           } catch (constraintError) {
-            console.error('Failed to remove constraint or retry update:', constraintError);
+            // Console statement removed for security
             throw updateError; // Re-throw original error
           }
         } else {
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error("Database error:", error);
+    // Console statement removed for security
     
     // Check if this is specifically the constraint error and provide helpful message
     if ((error as any).code === '23514' && (error as any).constraint === 'users_role_check') {
@@ -117,3 +117,5 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+

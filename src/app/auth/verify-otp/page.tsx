@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -88,27 +88,27 @@ export default function VerifyOTPPage() {
         callbackUrl: "/" // Explicitly set callback URL to dashboard
       });
 
-      console.log('NextAuth signIn result:', result);
+      // Console log removed for security
 
       if (result?.error) {
-        console.error('NextAuth error:', result.error);
+        // Console statement removed for security
         setError("Authentication failed. Please try again.");
         setIsLoading(false);
         return;
       }
 
       if (result?.ok) {
-        console.log('Authentication successful, redirecting to dashboard');
+        // Console log removed for security
         // Use window.location for hard redirect to ensure session is properly established
         window.location.href = '/';
         return;
       } else {
-        console.error('Unexpected NextAuth result:', result);
+        // Console statement removed for security
         setError("Authentication failed. Please try again.");
         setIsLoading(false);
       }
     } catch (error) {
-      console.error("OTP verification error:", error);
+      // Console statement removed for security
       setError("An error occurred. Please try again.");
       setIsLoading(false);
     }
@@ -243,7 +243,7 @@ export default function VerifyOTPPage() {
               href="/auth/signin"
               className="text-sm text-blue-600 hover:text-blue-700 font-medium"
             >
-              ← Back to Sign In
+              ← Back to Sign In
             </Link>
           </div>
         </form>
@@ -251,3 +251,4 @@ export default function VerifyOTPPage() {
     </div>
   );
 }
+

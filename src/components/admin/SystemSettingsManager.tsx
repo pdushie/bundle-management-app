@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -53,7 +53,7 @@ export default function SystemSettingsManager() {
         setError('Failed to load system settings');
       }
     } catch (error) {
-      console.error('Error fetching settings:', error);
+      // Console statement removed for security
       setError('Error loading system settings');
     } finally {
       setLoading(false);
@@ -98,7 +98,7 @@ export default function SystemSettingsManager() {
         setError('Failed to update setting');
       }
     } catch (error) {
-      console.error('Error updating setting:', error);
+      // Console statement removed for security
       setError('Error updating setting');
     } finally {
       setSaving(false);
@@ -261,3 +261,4 @@ export default function SystemSettingsManager() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+﻿import { Pool } from 'pg';
 import crypto from 'crypto';
 
 const pool = new Pool({
@@ -33,7 +33,7 @@ export class OTPService {
     const client = await pool.connect();
     
     try {
-      console.log('generateOTPForUser called with userId:', userId, 'type:', typeof userId);
+      // generateOTPForUser called - logging removed for security
       
       // Check if user is currently locked
       const lockCheck = await client.query(
@@ -73,15 +73,15 @@ export class OTPService {
         [otp, expiresAt, userId]
       );
       
-      console.log('OTP update query result - rows affected:', updateResult.rowCount);
-      console.log('Generated OTP for user:', userId, 'OTP:', otp, 'Expires:', expiresAt);
+      // Console log removed for security
+      // Generated OTP for user - logging removed for security
 
       return {
         success: true,
         message: 'OTP generated successfully',
       };
     } catch (error) {
-      console.error('Error generating OTP:', error);
+      // Console statement removed for security
       return { success: false, message: 'Failed to generate OTP' };
     } finally {
       client.release();
@@ -92,7 +92,7 @@ export class OTPService {
    * Verify OTP for a user
    */
   static async verifyOTP(userId: string | number, providedOTP: string): Promise<OTPResult> {
-    console.log('OTPService.verifyOTP called with:', { userId, providedOTP });
+    // OTPService.verifyOTP called - logging removed for security
     const client = await pool.connect();
 
     try {
@@ -101,20 +101,15 @@ export class OTPService {
         [userId]
       );
 
-      console.log('Database query result rows:', result.rows.length);
+      // Console log removed for security
       
       if (result.rows.length === 0) {
-        console.log('User not found in database');
+        // User not found in database - logging removed for security
         return { success: false, message: 'User not found' };
       }
 
       const user = result.rows[0];
-      console.log('User OTP data:', {
-        hasOtpSecret: !!user.otp_secret,
-        otpExpires: user.otp_expires,
-        attempts: user.otp_attempts,
-        lockedUntil: user.otp_locked_until
-      });
+      // User OTP data - logging removed for security
       
       const now = new Date();
 
@@ -154,7 +149,7 @@ export class OTPService {
            WHERE id = $1`,
           [userId]
         );
-        console.log(`Updated last login timestamp for user ${userId} via OTP verification`);
+        // Updated last login timestamp via OTP verification - logging removed for security
         return { success: true, message: 'OTP verified successfully' };
       } else {
         // Failed attempt - increment counter
@@ -192,7 +187,7 @@ export class OTPService {
         }
       }
     } catch (error) {
-      console.error('Error verifying OTP:', error);
+      // Console statement removed for security
       return { success: false, message: 'Failed to verify OTP' };
     } finally {
       client.release();
@@ -239,7 +234,7 @@ export class OTPService {
         attempts: user.otp_attempts || 0
       };
     } catch (error) {
-      console.error('Error getting OTP status:', error);
+      // Console statement removed for security
       return { hasActiveOTP: false, isLocked: false, attempts: 0 };
     } finally {
       client.release();
@@ -262,12 +257,12 @@ export class OTPService {
           'UPDATE users SET otp_secret = NULL, otp_expires = NULL WHERE id = $1',
           [userId]
         );
-        console.log('OTP consumed for user:', userId);
+        // OTP consumed for user - logging removed for security
       }
       
       return result;
     } catch (error) {
-      console.error('Error verifying and consuming OTP:', error);
+      // Console statement removed for security
       return { success: false, message: 'Failed to verify OTP' };
     } finally {
       client.release();
@@ -287,10 +282,11 @@ export class OTPService {
       );
       return true;
     } catch (error) {
-      console.error('Error clearing OTP:', error);
+      // Console statement removed for security
       return false;
     } finally {
       client.release();
     }
   }
 }
+

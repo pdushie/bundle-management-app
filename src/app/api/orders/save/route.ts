@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { saveOrders } from '@/lib/orderDbOperations';
 
 export async function POST(request: NextRequest) {
@@ -17,10 +17,11 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error in save orders route:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Failed to save orders' },
       { status: 500 }
     );
   }
 }
+

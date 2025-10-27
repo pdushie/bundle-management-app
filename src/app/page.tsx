@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
@@ -140,7 +140,7 @@ function HistoryManager({
   const clearHistory = async () => {
     // Only allow superadmin to clear history
     if (!isSuperAdmin) {
-      window.alert && window.alert("❌ Only superadmin can clear history data.");
+      window.alert && window.alert("âŒ Only superadmin can clear history data.");
       return;
     }
     
@@ -151,8 +151,8 @@ function HistoryManager({
         setHistory([]);
         setSelectedDate("");
       } catch (error) {
-        // console.error('Failed to clear history:', error);
-        window.alert && window.alert('❌ Error clearing history. Please try again.');
+        // // Console statement removed for security
+        window.alert && window.alert('âŒ Error clearing history. Please try again.');
       }
     }
   };
@@ -244,8 +244,8 @@ function HistoryManager({
 
       window.alert && window.alert("✅ History exported successfully!");
     } catch (error) {
-      console.error('Export error:', error);
-      window.alert && window.alert('❌ Error exporting history. Please try again.');
+      // Console statement removed for security
+      window.alert && window.alert('âŒ Error exporting history. Please try again.');
     }
   };
 
@@ -831,8 +831,8 @@ function BundleAllocatorApp({
                 // Critical bug fix: Check if this looks like a phone number being interpreted as allocation
                 // Phone numbers in Kenya start with 0 and are 10 digits
                 if (cellValue.startsWith('0') && cellValue.length === 10 && /^\d+$/.test(cellValue)) {
-                  // console.log(`Excel input: CRITICAL BUG DETECTED - '${cellValue}' looks like a phone number in column 2 (allocation column). Skipping this entry.`);
-                  // console.log(`This suggests columns might be swapped in the Excel file. Please check that phone numbers are in column 1 and data allocations are in column 2.`);
+                  // // Console log removed for security
+                  // // Console log removed for security
                 } else {
                   dataAllocation = cellValue;
                 }
@@ -844,8 +844,8 @@ function BundleAllocatorApp({
                 
                 // Critical bug fix: Check if this looks like a phone number being interpreted as MB allocation
                 if (mbValue >= 10000000 && mbValue <= 999999999 && cellValue.startsWith('0') && cellValue.length === 10) {
-                  // console.log(`Excel input: CRITICAL BUG DETECTED - '${cellValue}' looks like a phone number in column 4 (MB allocation column). Skipping this entry.`);
-                  // console.log(`This suggests columns might be swapped in the Excel file. Please check that phone numbers are in column 1 and MB allocations are in column 4.`);
+                  // // Console log removed for security
+                  // // Console log removed for security
                 } else if (!isNaN(mbValue) && mbValue > 0) {
                   // Convert MB to GB
                   dataAllocation = (mbValue / 1024).toFixed(2) + 'GB';
@@ -914,7 +914,7 @@ function BundleAllocatorApp({
           
           if (!isNaN(allocGB) && allocGB > 0) {
             processedEntries.push({ phoneRaw, allocRaw, allocGB });
-            // console.log(`Main page single-line format: Phone="${phoneRaw}", Data="${allocRaw}"`);
+            // // Console log removed for security
             continue;
           }
         }
@@ -943,7 +943,7 @@ function BundleAllocatorApp({
                       allocRaw: possibleAlloc, 
                       allocGB 
                     });
-                    // console.log(`Main page multi-line format: Phone="${possiblePhone}", Data="${possibleAlloc}"`);
+                    // // Console log removed for security
                     i++; // Skip the next line since we've processed it
                     continue;
                   }
@@ -953,7 +953,7 @@ function BundleAllocatorApp({
           }
         }
         
-        // console.log(`Main page: Skipping line "${line}" - unrecognized format`);
+        // // Console log removed for security
       }
 
       const phoneAllocCombinations = new Set<string>();
@@ -1008,7 +1008,7 @@ function BundleAllocatorApp({
       const totalDuplicates = processedEntries.length - parsed.length;
       
       if (totalDuplicates > 0) {
-        alertMessages.push(`🗑️ Removed ${totalDuplicates} duplicate entry(ies).\n\nDuplicates are identified by matching both phone number AND data allocation.\nOnly the first occurrence of each combination was kept.`);
+        alertMessages.push(`ðŸ—‘ï¸ Removed ${totalDuplicates} duplicate entry(ies).\n\nDuplicates are identified by matching both phone number AND data allocation.\nOnly the first occurrence of each combination was kept.`);
       }
       
       if (fixedNumbers > 0) {
@@ -1040,8 +1040,8 @@ function BundleAllocatorApp({
         
         processInput(content);
       } catch (error) {
-        // console.error('Error reading file:', error);
-        window.alert && window.alert(`❌ Error reading file "${file.name}". Please make sure it's a valid Excel (.xlsx), CSV (.csv), or text (.txt) file.`);
+        // // Console statement removed for security
+        window.alert && window.alert(`âŒ Error reading file "${file.name}". Please make sure it's a valid Excel (.xlsx), CSV (.csv), or text (.txt) file.`);
       }
     }
   }, []);
@@ -1361,8 +1361,8 @@ function BundleAllocatorApp({
       setEntries([]);
 
     } catch (error) {
-      console.error('Export error:', error);
-      window.alert && window.alert('❌ Error exporting to Excel. Please try again.');
+      // Console statement removed for security
+      window.alert && window.alert('âŒ Error exporting to Excel. Please try again.');
     } finally {
       setIsExporting(false);
     }
@@ -2017,9 +2017,9 @@ function TabNavigation({
     const initTime = async () => {
       try {
         await initializeTimeService();
-        // console.log('✅ External time service initialized successfully');
+        // // Console log removed for security
       } catch (error) {
-        // console.warn('⚠️ Time service initialization failed, using local time as fallback:', error);
+        // // Console statement removed for security
       }
     };
     
@@ -2028,11 +2028,7 @@ function TabNavigation({
   
   // Initialize order tracking when component mounts
   useEffect(() => {
-    // console.log('Initializing order tracking component with counts:', {
-    //   orderCount,
-    //   processedOrderCount, 
-    //   sentOrderCount
-    // });
+    // // Console log removed for security
     
     // Ensure counts are valid numbers
     const safeOrderCount = orderCount || 0;
@@ -2054,11 +2050,7 @@ function TabNavigation({
     const processedUnread = orderTrackingUtils.getUnreadProcessedOrders();
     const sentUnread = orderTrackingUtils.getUnreadSentOrders();
     
-    // console.log('Initial unread counts:', {
-    //   pendingUnread,
-    //   processedUnread,
-    //   sentUnread
-    // });
+    // // Console log removed for security
     
     setUnreadPendingOrders(pendingUnread);
     setUnreadProcessedOrders(processedUnread);
@@ -2076,11 +2068,7 @@ function TabNavigation({
     
     // Only set unread counts if explicitly requested, starting with 0 by default
     // Removing auto-assignment of unread counts on component mount
-    console.log('Initial counts maintained at:', {
-      pendingUnread,
-      processedUnread,
-      sentUnread
-    });
+    // Initial counts maintained - logging removed for security
     
   }, [orderCount, processedOrderCount, sentOrderCount, activeTab]);
   
@@ -2089,14 +2077,7 @@ function TabNavigation({
     // Set the active tab in tracking system
     orderTrackingUtils.setActiveTab(activeTab);
     
-    console.log('Current counts in TabNavigation:', { 
-      orderCount, 
-      processedOrderCount, 
-      sentOrderCount,
-      prevOrderCount,
-      prevProcessedOrderCount,
-      prevSentOrderCount
-    });
+    // Current counts in TabNavigation - logging removed for security
     
     // Ensure all counts are valid numbers, defaulting to 0 if undefined
     const safeOrderCount = orderCount || 0;
@@ -2111,7 +2092,7 @@ function TabNavigation({
         safeProcessedOrderCount !== safePrevProcessedOrderCount || 
         safeSentOrderCount !== safePrevSentOrderCount) {
       
-      // console.log('Detected count change, updating tracking system');
+      // // Console log removed for security
       
       // Update the tracking system
       const { hasNewPending, hasNewProcessed, hasNewSent } = orderTrackingUtils.updateOrderCounts(
@@ -2125,14 +2106,7 @@ function TabNavigation({
       const updatedProcessedUnread = orderTrackingUtils.getUnreadProcessedOrders();
       const updatedSentUnread = orderTrackingUtils.getUnreadSentOrders();
       
-      console.log('Updated unread counts:', {
-        pendingUnread: updatedPendingUnread,
-        processedUnread: updatedProcessedUnread,
-        sentUnread: updatedSentUnread,
-        hasNewPending,
-        hasNewProcessed,
-        hasNewSent
-      });
+      // Console log removed for security
       
       setUnreadPendingOrders(updatedPendingUnread);
       setUnreadProcessedOrders(updatedProcessedUnread);
@@ -2146,7 +2120,7 @@ function TabNavigation({
         }, 5000);
         
         // Play notification sound
-        playNotificationSound(0.3).catch(err => {}); // console.log('Error playing sound:', err));
+        playNotificationSound(0.3).catch(err => {}); // // Console log removed for security
         
         // Show browser notification if we have permission
         if (hasNotificationPermission()) {
@@ -2172,7 +2146,7 @@ function TabNavigation({
       // Notify for new processed orders
       if (hasNewProcessed && activeTab !== 'processed-orders') {
         // Play notification sound at lower volume for processed orders
-        playNotificationSound(0.9).catch(err => {}); // console.log('Error playing sound:', err));
+        playNotificationSound(0.9).catch(err => {}); // // Console log removed for security
         
         // Show browser notification if we have permission
         if (hasNotificationPermission()) {
@@ -2221,7 +2195,7 @@ function TabNavigation({
     // Initialize notification counters with zero values
     // This ensures badges start with 0 instead of 1
     if (orderCount === 0 && processedOrderCount === 0 && sentOrderCount === 0) {
-      // console.log('No counts found, initializing notification badges to zero');
+      // // Console log removed for security
       orderTrackingUtils.updateOrderCounts(0, 0, 0);
       setUnreadPendingOrders(0);
       setUnreadProcessedOrders(0);
@@ -2230,7 +2204,7 @@ function TabNavigation({
     
     // Set up ORDER_UPDATED_EVENT listener
     const handleOrderUpdate = () => {
-      // console.log('TabNavigation: ORDER_UPDATED_EVENT received, refreshing counts');
+      // // Console log removed for security
       refreshOrderCount();
     };
     
@@ -2240,14 +2214,7 @@ function TabNavigation({
     // This significantly reduces bandwidth usage and function invocations
     const intervalId = setInterval(() => {
       refreshOrderCount();
-      // console.log('Low-frequency poll refresh - Current counts:', {
-      //   pending: orderCount, 
-      //   processed: processedOrderCount, 
-      //   sent: sentOrderCount,
-      //   unreadPending: unreadPendingOrders,
-      //   unreadProcessed: unreadProcessedOrders,
-      //   unreadSent: unreadSentOrders
-      // });
+      // // Console log removed for security
     }, 180000); // 3 minutes
     
     // Clean up event listener and interval on unmount
@@ -2543,7 +2510,7 @@ function AppContent() {
           body: JSON.stringify(newEntry),
         });
       } catch (error) {
-        // console.error('Failed to save history to database:', error);
+        // // Console statement removed for security
       }
     }
   };
@@ -2566,13 +2533,13 @@ function AppContent() {
             setPhoneEntriesCount(data.phoneEntriesCount || 0);
             setProcessedOrderEntriesCount(data.processedOrderEntriesCount || 0);
             
-            // console.log('Total database entries:', data.totalEntries);
-            // console.log('Phone entries count:', data.phoneEntriesCount);
-            // console.log('Processed order entries count:', data.processedOrderEntriesCount);
+            // // Console log removed for security
+            // // Console log removed for security
+            // // Console log removed for security
           }
         }
       } catch (error) {
-        // console.error('Failed to load history from database:', error);
+        // // Console statement removed for security
       }
     };
 
@@ -3038,3 +3005,5 @@ export default function Home() {
     </AppWithProviders>
   );
 }
+
+

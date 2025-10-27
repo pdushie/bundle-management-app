@@ -39,18 +39,13 @@ export default function TabVisibilityDebugger() {
     const filtered = baseTabs.filter(tab => {
       // Add debugging for the history tab specifically
       if (tab.id === 'history') {
-        console.log('TabVisibilityDebugger - History tab check:', {
-          isSuperAdmin,
-          isAdmin,
-          role: session?.user?.role,
-          shouldShow: isSuperAdmin || isAdmin
-        });
+        // Console log removed for security
       }
       
       // Super admin users have access to all tabs
       if (isSuperAdmin) {
         if (tab.id === 'history') {
-          console.log('TabVisibilityDebugger - Superadmin should see history tab');
+          // Console log removed for security
         }
         return true; // Superadmins should see all tabs including history
       }
@@ -71,7 +66,7 @@ export default function TabVisibilityDebugger() {
               tab.id === 'accounting'; // Explicitly include accounting tab for admins
         
         if (tab.id === 'history') {
-          console.log('TabVisibilityDebugger - Admin access to history:', hasAccess);
+          // Console log removed for security
         }
         return hasAccess;
       }
@@ -115,3 +110,4 @@ export default function TabVisibilityDebugger() {
     </div>
   );
 }
+

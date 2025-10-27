@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { db, neonClient } from "@/lib/db";
 import { orders, orderEntries, users } from "@/lib/schema";
 import { getServerSession } from "next-auth";
@@ -81,9 +81,9 @@ export async function GET(req: NextRequest) {
     const startDate = startDateParam || format(subDays(new Date(), 30), 'yyyy-MM-dd');
     const endDate = endDateParam || format(new Date(), 'yyyy-MM-dd');
     
-        console.log('Data categorizer request:', { startDate, endDate });
+        // Console log removed for security
         
-        console.log('Attempting to fetch orders with entries...');    // First try using Drizzle ORM if available
+        // Console log removed for security    // First try using Drizzle ORM if available
     if (db) {
       try {
         // Get all processed orders with entries in the date range
@@ -110,14 +110,8 @@ export async function GET(req: NextRequest) {
           )
           .orderBy(desc(orders.timestamp));
 
-        console.log(`Found ${ordersWithEntries.length} order entries`);
-        console.log('Sample order entries:', ordersWithEntries.slice(0, 3).map(row => ({
-          orderId: row.orderId,
-          userId: row.userId,
-          userEmail: row.userEmail,
-          allocationGB: row.allocationGB,
-          entryCost: row.entryCost
-        })));
+        // Console log removed for security
+        // Console log removed for security
 
         // Process the data to create categories
         const categoryMap = new Map<string, {
@@ -141,7 +135,7 @@ export async function GET(req: NextRequest) {
         }>();
 
         // Process each order entry
-        console.log('Starting to process order entries...');
+        // Console log removed for security
         let processedCount = 0;
         let skippedCount = 0;
         
@@ -218,7 +212,7 @@ export async function GET(req: NextRequest) {
           userCategory.totalValue += entryCost;
         }
         
-        console.log(`Processing completed: ${processedCount} processed, ${skippedCount} skipped`);
+        // Console log removed for security
 
         // Convert maps to arrays and calculate summary stats
         const categories: DataPackageCategory[] = Array.from(categoryMap.values()).map(cat => ({
@@ -270,15 +264,11 @@ export async function GET(req: NextRequest) {
           }
         };
 
-        console.log('Data categorizer response summary:', {
-          ...response.summary,
-          rawOrdersCount: ordersWithEntries.length,
-          processedOrdersCount: ordersWithEntries.filter(r => r.allocationGB).length
-        });
+        // Console log removed for security
         return NextResponse.json(response);
 
       } catch (drizzleError) {
-        console.error("Drizzle query failed:", drizzleError);
+        // Console statement removed for security
         // Continue to fallback method
       }
     }
@@ -340,17 +330,18 @@ export async function GET(req: NextRequest) {
       });
 
     } catch (sqlError) {
-      console.error("Direct SQL query failed:", sqlError);
+      // Console statement removed for security
       return NextResponse.json({ 
         error: 'Database connection error' 
       }, { status: 500 });
     }
 
   } catch (error) {
-    console.error("Error in data categorizer API:", error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: "Failed to fetch data categorizer statistics" }, 
       { status: 500 }
     );
   }
 }
+

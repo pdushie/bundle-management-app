@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
@@ -80,7 +80,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
         setErrorMessage('Failed to load users');
       }
     } catch (error) {
-      // console.error('Error fetching users:', error);
+      // // Console statement removed for security
       setErrorMessage('Error loading users');
     } finally {
       setLoadingUsers(false);
@@ -106,19 +106,19 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
           throw new Error('Invalid response format from server');
         }
         const data = await response.json();
-        // console.log('Bill data received:', data);
-        // console.log('Username from API:', data.userName);
-        // console.log('User Email from API:', data.userEmail);
+        // // Console log removed for security
+        // // Console log removed for security
+        // // Console log removed for security
         
         // More detailed debugging of the name field
         if (data.userName === 'Unknown User') {
-          // console.log('WARNING: API returned "Unknown User" - checking why...');
-          // console.log('Selected User ID:', selectedUserId);
+          // // Console log removed for security
+          // // Console log removed for security
         }
         
         // Ensure userName is never empty or undefined by using email as fallback
         if (!data.userName || data.userName === 'Unknown User') {
-          // console.log('Using email as fallback for userName');
+          // // Console log removed for security
           data.userName = data.userEmail || 'Customer';
         }
         
@@ -141,7 +141,7 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
         }
       }
     } catch (error) {
-      // console.error('Error fetching bill data:', error);
+      // // Console statement removed for security
       setErrorMessage('An error occurred while fetching bill data');
     } finally {
       setLoading(false);
@@ -206,13 +206,13 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
           : billData.userName
       };
       
-      // console.log('Generating PDF for:', dataToSend.userName);
+      // // Console log removed for security
       
       // Generate the PDF with the updated data
       generateInvoicePDF(dataToSend);
       setErrorMessage(null);
     } catch (error) {
-      // console.error('Error generating PDF:', error);
+      // // Console statement removed for security
       setErrorMessage('Failed to generate PDF invoice');
     }
   };
@@ -486,3 +486,5 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
     </div>
   );
 }
+
+

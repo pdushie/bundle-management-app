@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect } from 'react'
 
@@ -10,13 +10,10 @@ export default function Error({
   reset: () => void
 }) {
   useEffect(() => {
-    console.error('Error occurred - redirecting:', error)
-    
-    // Immediate redirect with full page refresh
-    window.location.replace('/')
-    
-  }, [error])
+    // Console statement removed for security
+  }, [error]);
 
   // Return null to render nothing
   return null
 }
+

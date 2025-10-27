@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from 'react';
 import { 
@@ -137,7 +137,7 @@ export default function PricingProfiles() {
       const res = await fetch(`/api/admin/pricing-profiles/${profileId}`);
       
       if (!res.ok) {
-        console.warn(`Failed to fetch profile ${profileId} details: ${res.status} ${res.statusText}`);
+        // Console statement removed for security
         
         // Only show toast for non-auth errors to avoid disrupting the edit flow
         if (res.status !== 401 && res.status !== 403) {
@@ -157,7 +157,7 @@ export default function PricingProfiles() {
       
       return data;
     } catch (error) {
-      console.error(`Error fetching profile ${profileId} details:`, error);
+      // Console statement removed for security
       
       // Don't show error toast for network errors that might be temporary
       if (error instanceof TypeError && error.message === 'Failed to fetch') {
@@ -186,7 +186,7 @@ export default function PricingProfiles() {
       const data = await res.json();
       setAllUsers(data.users || []);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      // Console statement removed for security
       toast({
         title: 'Error',
         description: 'Failed to load users. Please try again.',
@@ -266,7 +266,7 @@ export default function PricingProfiles() {
         setPricingTiers([{ dataGB: '1', price: '10.00' }]);
       }
     } catch (error) {
-      console.error('Failed to fetch detailed profile data, using defaults:', error);
+      // Console statement removed for security
       // Use default tiers if fetch fails
       setPricingTiers([{ dataGB: '1', price: '10.00' }]);
     }
@@ -394,7 +394,7 @@ export default function PricingProfiles() {
         variant: 'default'
       });
     } catch (error) {
-      console.error('Error saving pricing profile:', error);
+      // Console statement removed for security
       toast({
         title: 'Error',
         description: `Failed to save pricing profile: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -439,7 +439,7 @@ export default function PricingProfiles() {
         variant: 'default'
       });
     } catch (error) {
-      console.error('Error deleting pricing profile:', error);
+      // Console statement removed for security
       toast({
         title: 'Error',
         description: `Failed to delete pricing profile: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -469,7 +469,7 @@ export default function PricingProfiles() {
         variant: 'default'
       });
     } catch (error) {
-      console.error('Error assigning user to pricing profile:', error);
+      // Console statement removed for security
       toast({
         title: 'Error',
         description: `Failed to assign user: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -499,7 +499,7 @@ export default function PricingProfiles() {
         variant: 'default'
       });
     } catch (error) {
-      console.error('Error removing user from pricing profile:', error);
+      // Console statement removed for security
       toast({
         title: 'Error',
         description: `Failed to remove user: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -582,7 +582,7 @@ export default function PricingProfiles() {
       }
       setExcelFile(null);
     } catch (error) {
-      console.error('Error importing Excel file:', error);
+      // Console statement removed for security
       setImportError(error instanceof Error ? error.message : 'Unknown error processing Excel file');
     }
   };
@@ -1022,3 +1022,4 @@ export default function PricingProfiles() {
     </div>
   );
 }
+

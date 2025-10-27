@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { db } from "../../../../lib/db";
 import { userPricingProfiles, pricingProfiles, pricingTiers, users } from "../../../../lib/schema";
 import { getServerSession } from "next-auth";
@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   try {
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       return NextResponse.json({ 
         error: 'Database connection unavailable'
       }, { status: 500 });
@@ -70,7 +70,8 @@ export async function GET(req: NextRequest) {
       assignedAt: userProfile[0].assignment.createdAt,
     });
   } catch (error) {
-    console.error("Error getting current user pricing profile:", error);
+    // Console statement removed for security
     return NextResponse.json({ error: "Failed to get pricing profile" }, { status: 500 });
   }
 }
+

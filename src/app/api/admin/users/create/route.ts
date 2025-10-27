@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Pool } from "pg";
@@ -94,10 +94,11 @@ export async function POST(req: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error("Database error:", error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: "Failed to create user" },
       { status: 500 }
     );
   }
 }
+

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { Pool } from 'pg';
 
 const pool = new Pool({
@@ -23,7 +23,7 @@ export async function DELETE() {
     
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Database error:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Failed to clear history' },
       { status: 500 }
@@ -32,3 +32,4 @@ export async function DELETE() {
     client.release();
   }
 }
+

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getOrdersWithAdminInfo } from '@/lib/orderDbOperations';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ orders });
   } catch (error) {
-    console.error('Error fetching admin orders:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Failed to fetch orders' },
       { status: 500 }
@@ -102,10 +102,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ orders });
   } catch (error) {
-    console.error('Error processing admin orders request:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Failed to process request' },
       { status: 500 }
     );
   }
 }
+

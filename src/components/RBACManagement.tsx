@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -99,7 +99,7 @@ export default function RBACManagement() {
       if (usersData.success) setUsers(usersData.data);
 
     } catch (err) {
-      console.error('Error fetching RBAC data:', err);
+      // Console statement removed for security
       setError('Failed to load RBAC data');
     } finally {
       setLoading(false);
@@ -150,7 +150,7 @@ export default function RBACManagement() {
       <div className="flex items-center justify-center min-h-screen">
         <Card className="w-96">
           <CardContent className="pt-6 text-center">
-            <div className="text-red-600 text-xl mb-4">⚠️</div>
+            <div className="text-red-600 text-xl mb-4">âš ï¸</div>
             <h2 className="text-lg font-semibold mb-2">Error</h2>
             <p className="text-gray-600 mb-4">{error}</p>
             <Button onClick={fetchInitialData} variant="outline">
@@ -306,3 +306,4 @@ export default function RBACManagement() {
     </div>
   );
 }
+

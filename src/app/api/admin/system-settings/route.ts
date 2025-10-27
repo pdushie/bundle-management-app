@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { neonClient } from "@/lib/db";
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
       settings: settingsObject
     });
   } catch (error) {
-    console.error("Error fetching system settings:", error);
+    // Console statement removed for security
     return NextResponse.json(
       { success: false, error: "Failed to fetch system settings" }, 
       { status: 500 }
@@ -96,10 +96,11 @@ export async function POST(req: NextRequest) {
       }
     });
   } catch (error) {
-    console.error("Error updating system setting:", error);
+    // Console statement removed for security
     return NextResponse.json(
       { success: false, error: "Failed to update system setting" }, 
       { status: 500 }
     );
   }
 }
+

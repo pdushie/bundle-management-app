@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { neonClient } from '@/lib/db';
 import { executeDbQuery } from '@/lib/dbUtils';
 import { getServerSession } from 'next-auth/next';
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
     const userId = (session?.user as any)?.id ? parseInt((session?.user as any)?.id) : null;
     
-    console.log(`Bundle allocator data processed by user ${userId} (${session?.user?.email}) at ${new Date().toISOString()}`);
+    // Bundle allocator data processed by user - logging removed for security
 
     // Prevent bundle-categorizer data from being saved to database
     if (type === 'bundle-categorizer') {
@@ -67,10 +67,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result.data);
     
   } catch (error) {
-    // console.error('Error in history save route:', error);
+    // // Console statement removed for security
     return NextResponse.json({ 
       error: 'Failed to process request', 
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
 }
+

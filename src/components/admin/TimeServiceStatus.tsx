@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Time Service Status Component
  * Shows the current status of the external time service
  */
@@ -40,9 +40,9 @@ export default function TimeServiceStatus() {
     try {
       await forceTimeSync();
       setSyncStatus(getTimeSyncStatus());
-      console.log('✅ Time sync completed');
+      // Console log removed for security
     } catch (error) {
-      console.error('❌ Time sync failed:', error);
+      // Console statement removed for security
     } finally {
       setSyncing(false);
     }
@@ -116,3 +116,5 @@ export default function TimeServiceStatus() {
     </div>
   );
 }
+
+

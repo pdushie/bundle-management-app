@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   try {
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       return NextResponse.json({ 
         error: 'Database connection unavailable'
       }, { status: 500 });
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Error fetching daily sales:', error);
+    // Console statement removed for security
     return NextResponse.json({ 
       error: 'Failed to fetch daily sales data',
       details: error instanceof Error ? error.message : String(error)
@@ -153,7 +153,7 @@ async function getDailySalesDetails(date: string) {
     });
 
   } catch (error) {
-    console.error('Error getting daily sales details:', error);
+    // Console statement removed for security
     throw error;
   }
 }
@@ -209,7 +209,8 @@ async function getDailySalesSummary(startDate: string, endDate: string) {
     });
 
   } catch (error) {
-    console.error('Error getting daily sales summary:', error);
+    // Console statement removed for security
     throw error;
   }
 }
+

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   try {
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       return NextResponse.json({ 
         error: 'Database connection unavailable'
       }, { status: 500 });
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
       // Set end date to the end of the day (in UTC to match database)
       end.setUTCHours(23, 59, 59, 999);
       
-      console.log(`Date filter: ${start.toISOString()} to ${end.toISOString()}`);
+      // Console log removed for security
       
       orderDateCondition = and(
         gte(orderEntries.createdAt, start),
@@ -84,13 +84,13 @@ export async function POST(req: NextRequest) {
       const start = new Date(startDate);
       // Set start date to the beginning of the day (in UTC to match database)
       start.setUTCHours(0, 0, 0, 0);
-      console.log(`Start date filter: ${start.toISOString()}`);
+      // Console log removed for security
       orderDateCondition = gte(orderEntries.createdAt, start);
     } else if (endDate) {
       const end = new Date(endDate);
       // Set end date to the end of the day (in UTC to match database)
       end.setUTCHours(23, 59, 59, 999);
-      console.log(`End date filter: ${end.toISOString()}`);
+      // Console log removed for security
       orderDateCondition = lte(orderEntries.createdAt, end);
     }
     
@@ -164,9 +164,9 @@ export async function POST(req: NextRequest) {
           .limit(1);
         
         let adminInfo = null;
-        console.log('Filter API - Order result for entry:', entry.id, 'orderResult:', orderResult);
+        // Console log removed for security
         if (orderResult.length > 0 && orderResult[0].processedBy) {
-          console.log('Filter API - Looking up admin for processedBy:', orderResult[0].processedBy);
+          // Console log removed for security
           const adminResult = await db
             .select({
               adminName: users.name,
@@ -176,10 +176,10 @@ export async function POST(req: NextRequest) {
             .where(eq(users.id, orderResult[0].processedBy))
             .limit(1);
           
-          console.log('Filter API - Admin lookup result:', adminResult);
+          // Console log removed for security
           adminInfo = adminResult.length > 0 ? adminResult[0] : null;
         } else {
-          console.log('Filter API - No processedBy found for order:', orderResult.length > 0 ? orderResult[0] : 'no order');
+          // Console log removed for security
         }
         
         orderEntriesData.push({
@@ -189,7 +189,7 @@ export async function POST(req: NextRequest) {
         });
       }
     } catch (orderError) {
-      console.error('Error fetching order entries:', orderError);
+      // Console statement removed for security
       return NextResponse.json(
         { error: 'Failed to fetch order entries', details: orderError instanceof Error ? orderError.message : String(orderError) },
         { status: 500 }
@@ -293,7 +293,7 @@ export async function POST(req: NextRequest) {
           .limit(500);
       }
     } catch (phoneError) {
-      console.warn('Error fetching phone entries, continuing without them:', phoneError);
+      // Console statement removed for security
       phoneEntriesData = [];
     }
     
@@ -316,10 +316,12 @@ export async function POST(req: NextRequest) {
     });
     
   } catch (error) {
-    console.error("Error filtering order entries:", error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: "Failed to filter order entries", details: (error as Error).message },
       { status: 500 }
     );
   }
 }
+
+

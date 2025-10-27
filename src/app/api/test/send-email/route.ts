@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { sendVerificationEmail, generateVerificationToken } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
@@ -37,10 +37,11 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Test email error:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Failed to send test email' },
       { status: 500 }
     );
   }
 }
+

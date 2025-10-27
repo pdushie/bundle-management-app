@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
@@ -9,7 +9,7 @@ export async function GET() {
   try {
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       return NextResponse.json({ 
         error: 'Database connection unavailable'
       }, { status: 500 });
@@ -45,7 +45,8 @@ export async function GET() {
       }
     });
   } catch (error) {
-    console.error('Error in user debugging API:', error);
+    // Console statement removed for security
     return NextResponse.json({ error: String(error) }, { status: 500 });
   }
 }
+

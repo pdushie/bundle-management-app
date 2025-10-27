@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -32,12 +32,9 @@ export default function UpdateEntryCostsPage() {
       }
       
       setResult(data);
-      toast({
-        title: 'Success!',
-        description: `Updated ${data.updatedCount} orders with tier-based pricing`,
-      });
+      toast(`Success! Updated ${data.updatedCount} orders with tier-based pricing`);
     } catch (error) {
-      console.error('Error updating entry costs:', error);
+      // Console statement removed for security
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       setError(errorMessage);
       toast({
@@ -139,3 +136,4 @@ export default function UpdateEntryCostsPage() {
     </div>
   );
 }
+

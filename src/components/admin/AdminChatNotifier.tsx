@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -58,14 +58,14 @@ export default function AdminChatNotifier() {
         if (!response.ok) {
           // Only log error if it's not a 401/403 (authentication/authorization)
           if (response.status !== 401 && response.status !== 403) {
-            // console.error("Failed to fetch unread messages count:", response.status);
+            // // Console statement removed for security
           }
           return;
         }
         
         const contentType = response.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
-          // console.error("Invalid response type from chat unread endpoint");
+          // // Console statement removed for security
           return;
         }
         
@@ -77,7 +77,7 @@ export default function AdminChatNotifier() {
             setHasNewMessages(true);
             // Play notification sound
             notificationSound?.play().catch(err => {
-              // console.log('Error playing notification:', err);
+              // // Console log removed for security
             });
           }
           
@@ -87,11 +87,11 @@ export default function AdminChatNotifier() {
         clearTimeout(timeoutId);
         
         if (error instanceof Error && error.name === 'AbortError') {
-          // console.warn("Chat unread request timed out");
+          // // Console statement removed for security
         } else if (error instanceof TypeError && error.message === 'Failed to fetch') {
-          // console.warn("Network error fetching chat unread count - server may be starting up");
+          // // Console statement removed for security
         } else {
-          // console.error("Error checking for new messages:", error);
+          // // Console statement removed for security
         }
       } finally {
         setIsLoading(false);
@@ -147,3 +147,5 @@ export default function AdminChatNotifier() {
     </div>
   );
 }
+
+

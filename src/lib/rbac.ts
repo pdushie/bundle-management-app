@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+﻿import { db } from '@/lib/db';
 import { users, roles, permissions, rolePermissions, userRoles } from '@/lib/schema';
 import { eq, and, inArray } from 'drizzle-orm';
 import { getServerSession } from 'next-auth';
@@ -72,7 +72,7 @@ export async function hasPermission(userId: number, permissionName: string): Pro
 
     return result.length > 0;
   } catch (error) {
-    console.error('Error checking permission:', error);
+    // Console statement removed for security
     return false;
   }
 }
@@ -103,7 +103,7 @@ export async function hasAnyPermission(userId: number, permissionNames: string[]
 
     return result.length > 0;
   } catch (error) {
-    console.error('Error checking permissions:', error);
+    // Console statement removed for security
     return false;
   }
 }
@@ -131,7 +131,7 @@ export async function hasRole(userId: number, roleName: string): Promise<boolean
 
     return result.length > 0;
   } catch (error) {
-    console.error('Error checking role:', error);
+    // Console statement removed for security
     return false;
   }
 }
@@ -175,7 +175,7 @@ export async function getUserPermissions(userId: number): Promise<Permission[]> 
       createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
     }));
   } catch (error) {
-    console.error('Error getting user permissions:', error);
+    // Console statement removed for security
     return [];
   }
 }
@@ -232,7 +232,7 @@ export async function getUserRoles(userId: number): Promise<UserRole[]> {
       },
     }));
   } catch (error) {
-    console.error('Error getting user roles:', error);
+    // Console statement removed for security
     return [];
   }
 }
@@ -290,7 +290,7 @@ export async function getAllRoles(): Promise<Role[]> {
       updatedAt: r.updatedAt ? new Date(r.updatedAt) : null,
     }));
   } catch (error) {
-    console.error('Error getting roles:', error);
+    // Console statement removed for security
     return [];
   }
 }
@@ -311,7 +311,7 @@ export async function getAllPermissions(): Promise<Permission[]> {
       createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
     }));
   } catch (error) {
-    console.error('Error getting permissions:', error);
+    // Console statement removed for security
     return [];
   }
 }
@@ -347,7 +347,8 @@ export async function getRolePermissions(roleId: number): Promise<Permission[]> 
       createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
     }));
   } catch (error) {
-    console.error('Error getting role permissions:', error);
+    // Console statement removed for security
     return [];
   }
 }
+

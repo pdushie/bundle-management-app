@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -39,7 +39,7 @@ export default function AdminOTPSettings() {
       const data = await response.json();
       setOtpStatus(data);
     } catch (error) {
-      console.error('Error fetching OTP status:', error);
+      // Console statement removed for security
     } finally {
       setIsLoading(false);
     }
@@ -167,7 +167,7 @@ export default function AdminOTPSettings() {
                         <p className="font-medium">To change OTP settings:</p>
                         <ol className="list-decimal list-inside mt-1 space-y-1">
                           <li>Go to your Vercel Dashboard</li>
-                          <li>Navigate to Project Settings → Environment Variables</li>
+                          <li>Navigate to Project Settings ←’ Environment Variables</li>
                           <li>Update the <code className="bg-amber-100 px-1 rounded">ENABLE_OTP</code> variable</li>
                           <li>Redeploy your application</li>
                         </ol>
@@ -233,3 +233,4 @@ export default function AdminOTPSettings() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { getSecureServerSession } from '@/lib/session-security';
@@ -6,15 +6,15 @@ import { getCurrentTime } from '@/lib/timeService';
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('=== Debug Session Route ===');
+    // Console log removed for security
     
     // Get raw session
     const rawSession = await getServerSession(authOptions);
-    console.log('Raw session:', JSON.stringify(rawSession, null, 2));
+    // Console log removed for security
     
     // Get secure session
     const secureSession = await getSecureServerSession();
-    console.log('Secure session:', JSON.stringify(secureSession, null, 2));
+    // Console log removed for security
     
     return NextResponse.json({
       success: true,
@@ -37,10 +37,12 @@ export async function GET(request: NextRequest) {
     });
     
   } catch (error) {
-    // console.error('Debug session error:', error);
+    // // Console statement removed for security
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
 }
+
+

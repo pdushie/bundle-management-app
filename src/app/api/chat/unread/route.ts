@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { neonClient } from "@/lib/db";
@@ -16,7 +16,7 @@ async function hasAdminChatPermission(userId: string): Promise<boolean> {
     
     return result.length > 0;
   } catch (error) {
-    console.error('Error checking chat permission:', error);
+    // Console statement removed for security
     return false;
   }
 }
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // console.log(`API access: /api/chat/unread by user ${(session.user as any).id} (${session.user.role})`);
+    // // Console log removed for security
 
     // Get count of all unread messages from users
     const unreadCountResult = await neonClient`
@@ -60,10 +60,12 @@ export async function GET(req: NextRequest) {
       unreadCount
     });
   } catch (error) {
-    // console.error("Error fetching unread message count:", error);
+    // // Console statement removed for security
     return NextResponse.json(
       { success: false, error: "Failed to fetch unread message count" }, 
       { status: 500 }
     );
   }
 }
+
+

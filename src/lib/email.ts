@@ -1,4 +1,4 @@
-import { Resend } from 'resend';
+﻿import { Resend } from 'resend';
 import crypto from 'crypto';
 import { render } from '@react-email/render';
 import * as React from 'react';
@@ -51,14 +51,14 @@ export async function sendVerificationEmail({ to, name, verificationUrl }: Verif
     });
 
     if (error) {
-      console.error('Failed to send verification email:', error);
+      // Console statement removed for security
       return { success: false, error };
     }
 
-    console.log('Verification email sent successfully:', data);
+    // Console log removed for security
     return { success: true, data };
   } catch (error) {
-    console.error('Email service error:', error);
+    // Console statement removed for security
     return { success: false, error };
   }
 }
@@ -76,13 +76,13 @@ export async function sendWelcomeEmail({ to, name }: { to: string; name: string 
     });
 
     if (error) {
-      console.error('Failed to send welcome email:', error);
+      // Console statement removed for security
       return { success: false, error };
     }
 
     return { success: true, data };
   } catch (error) {
-    console.error('Email service error:', error);
+    // Console statement removed for security
     return { success: false, error };
   }
 }
@@ -128,14 +128,15 @@ export async function sendOTPEmail({ to, name, otpCode, expiryMinutes = 10 }: OT
     });
 
     if (error) {
-      console.error('Failed to send OTP email:', error);
+      // Console statement removed for security
       return { success: false, error };
     }
 
-    console.log('OTP email sent successfully:', data);
+    // Console log removed for security
     return { success: true, data };
   } catch (error) {
-    console.error('Email service error:', error);
+    // Console statement removed for security
     return { success: false, error };
   }
 }
+

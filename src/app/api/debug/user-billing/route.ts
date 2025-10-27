@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { db, neonClient } from '@/lib/db';
 import { orders as ordersTable, orderEntries, users } from '@/lib/schema';
 import { eq, and, gte, lte, desc } from 'drizzle-orm';
@@ -31,9 +31,9 @@ export async function GET(request: NextRequest) {
     const date = new Date(year, month - 1, day);
     const { start, end } = getDateBounds(date);
 
-    console.log(`Debugging billing for ${userEmail} on ${dateParam}`);
-    console.log(`Date bounds: ${start.toISOString()} to ${end.toISOString()}`);
-    console.log(`Timestamp range: ${start.getTime()} to ${end.getTime()}`);
+    // Console log removed for security
+    // Console log removed for security
+    // Console log removed for security
 
     // Get user info
     const userResult = await db!.select().from(users)
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     }
 
     const user = userResult[0];
-    console.log(`User found: ID ${user.id}, Email: ${user.email}`);
+    // Console log removed for security
 
     // Find all orders for the user on the specified date
     const ordersResult = await db!.select().from(ordersTable)
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       ))
       .orderBy(desc(ordersTable.timestamp));
 
-    console.log(`Found ${ordersResult.length} orders for ${userEmail} on ${dateParam}`);
+    // Console log removed for security
 
     // Get entries for each order and detailed info
     const ordersWithDetails = [];
@@ -81,13 +81,13 @@ export async function GET(request: NextRequest) {
         }
       });
 
-      console.log(`Order ${order.id}:`);
-      console.log(`  - Timestamp: ${order.timestamp} (${orderDate.toISOString()})`);
-      console.log(`  - Cost: ${order.cost}`);
-      console.log(`  - Estimated Cost: ${order.estimatedCost}`);
-      console.log(`  - Status: ${order.status}`);
-      console.log(`  - Total Data: ${order.totalData}`);
-      console.log(`  - Entries: ${entriesResult.length}`);
+      // Console log removed for security
+      // Console log removed for security
+      // Console log removed for security
+      // Console log removed for security
+      // Console log removed for security
+      // Console log removed for security
+      // Console log removed for security
     }
 
     // Also check for any orders around that date (±1 day) to see if there are timezone issues
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
       ))
       .orderBy(desc(ordersTable.timestamp));
 
-    console.log(`Found ${allOrdersAroundDate.length} orders around ${dateParam} (±1 day)`);
+    // Console log removed for security
     
     const surroundingOrders = allOrdersAroundDate.map(order => ({
       id: order.id,
@@ -149,10 +149,11 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Debug billing error:', error);
+    // Console statement removed for security
     return NextResponse.json({
       error: 'Failed to debug billing data',
       details: error instanceof Error ? error.message : String(error)
     }, { status: 500 });
   }
 }
+

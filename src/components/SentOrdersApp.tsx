@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from 'react';
 import { getUserOrdersOldestFirst, Order } from '@/lib/orderClient';
@@ -28,22 +28,12 @@ export default function SentOrdersApp() {
       const userOrders = await getUserOrdersOldestFirst(userEmail);
       
       // Log the orders to see if entry costs are present
-      // console.log('User orders with entry costs:', 
-      //   userOrders.map(order => ({
-      //     id: order.id,
-      //     totalData: order.totalData,
-      //     entries: order.entries.map(e => ({
-      //       number: e.number,
-      //       allocationGB: e.allocationGB,
-      //       cost: e.cost
-      //     }))
-      //   }))
-      // );
+      // // Console log removed for security
       
       setOrders(userOrders);
       refreshOrderCount();
     } catch (error) {
-      // console.error("Failed to fetch user orders:", error);
+      // // Console statement removed for security
     } finally {
       setLoading(false);
     }
@@ -53,20 +43,20 @@ export default function SentOrdersApp() {
   useEffect(() => {
     if (!userEmail) return;
     
-    // console.log('SentOrdersApp: Setting up event listeners for user:', userEmail);
+    // // Console log removed for security
     
     // Fetch orders immediately
     fetchUserOrders();
     
     // Set up event listener for order updates
     const handleOrderUpdate = () => {
-      // console.log('SentOrdersApp: ORDER_UPDATED_EVENT received');
+      // // Console log removed for security
       fetchUserOrders();
     };
     
     // Set up a more specific event listener for sent orders
     const handleOrderSent = () => {
-      // console.log('SentOrdersApp: ORDER_SENT_EVENT received');
+      // // Console log removed for security
       fetchUserOrders();
       // Force a count update notification
       notifyCountUpdated();
@@ -81,7 +71,7 @@ export default function SentOrdersApp() {
     const intervalId = setInterval(() => {
       // Only poll if window is visible to further reduce API calls
       if (document.visibilityState === 'visible') {
-        // console.log('SentOrdersApp: Low-frequency polling triggered');
+        // // Console log removed for security
         fetchUserOrders();
       }
     }, 300000); // 5 minutes
@@ -446,3 +436,5 @@ export default function SentOrdersApp() {
     </div>
   );
 }
+
+

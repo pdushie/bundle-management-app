@@ -1,4 +1,4 @@
-// Add direct SQL support to the orderDbOperations.ts file
+﻿// Add direct SQL support to the orderDbOperations.ts file
 import { db, neonClient } from './db';
 import { orders, orderEntries } from './schema';
 import { eq, desc, asc, and } from 'drizzle-orm';
@@ -10,7 +10,7 @@ export async function getOrderCountsDirectSQL(userEmail?: string): Promise<{
   userOrderCount: number;
 }> {
   try {
-    console.log('Using direct SQL to get order counts');
+    // Using direct SQL to get order counts - logging removed for security
     
     // Get pending orders count using direct SQL with proper single quotes
     const pendingResult = await neonClient`SELECT COUNT(*) FROM orders WHERE status = 'pending'`;
@@ -29,11 +29,7 @@ export async function getOrderCountsDirectSQL(userEmail?: string): Promise<{
       userOrderCount = parseInt(userResult[0]?.count || '0', 10);
     }
     
-    console.log('Direct SQL order counts:', {
-      pendingCount,
-      processedCount,
-      userOrderCount
-    });
+    // Direct SQL order counts - logging removed for security
     
     return {
       pendingCount,
@@ -41,7 +37,7 @@ export async function getOrderCountsDirectSQL(userEmail?: string): Promise<{
       userOrderCount
     };
   } catch (error) {
-    console.error('Failed to get order counts with direct SQL:', error);
+    // Console statement removed for security
     return {
       pendingCount: 0,
       processedCount: 0,
@@ -49,3 +45,4 @@ export async function getOrderCountsDirectSQL(userEmail?: string): Promise<{
     };
   }
 }
+

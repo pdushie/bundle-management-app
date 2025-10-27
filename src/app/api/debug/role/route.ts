@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 
@@ -19,7 +19,8 @@ export async function GET() {
       session: session
     });
   } catch (error) {
-    console.error('Error in role debug API:', error);
+    // Console statement removed for security
     return NextResponse.json({ error: String(error) }, { status: 500 });
   }
 }
+

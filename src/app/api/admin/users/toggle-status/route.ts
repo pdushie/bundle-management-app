@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Pool } from "pg";
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error("Database error:", error);
+    // Console statement removed for security
     // More generic error message that doesn't rely on the enabled variable
     return NextResponse.json(
       { error: "Failed to update user status" },
@@ -85,3 +85,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

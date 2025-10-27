@@ -29,7 +29,7 @@ const throttleNotification = (eventName: string, minInterval = 300): boolean => 
 // Enhanced helper function to dispatch an order updated event
 export const notifyOrderUpdated = (details?: object) => {
   if (typeof window !== 'undefined' && throttleNotification(ORDER_UPDATED_EVENT)) {
-    console.log('Dispatching ORDER_UPDATED_EVENT');
+    // Console log removed for security
     
     // Create a custom event with optional details
     const event = details 
@@ -46,7 +46,7 @@ export const notifyOrderUpdated = (details?: object) => {
 // Helper function specifically for when an order is processed
 export const notifyOrderProcessed = (orderId?: string) => {
   if (typeof window !== 'undefined' && throttleNotification(ORDER_PROCESSED_EVENT)) {
-    console.log('Dispatching ORDER_PROCESSED_EVENT');
+    // Console log removed for security
     
     // Create a custom event with the order ID
     const event = new CustomEvent(ORDER_PROCESSED_EVENT, { 
@@ -63,7 +63,7 @@ export const notifyOrderProcessed = (orderId?: string) => {
 // Helper function specifically for when a user sends an order
 export const notifyOrderSent = (orderId?: string) => {
   if (typeof window !== 'undefined' && throttleNotification(ORDER_SENT_EVENT)) {
-    console.log('Dispatching ORDER_SENT_EVENT');
+    // Console log removed for security
     
     // Create a custom event with the order ID
     const event = new CustomEvent(ORDER_SENT_EVENT, { 
@@ -80,10 +80,11 @@ export const notifyOrderSent = (orderId?: string) => {
 // Helper function to specifically trigger count updates
 export const notifyCountUpdated = () => {
   if (typeof window !== 'undefined' && throttleNotification(COUNT_UPDATED_EVENT)) {
-    console.log('Dispatching COUNT_UPDATED_EVENT');
+    // Console log removed for security
     
     // Create and dispatch a custom event when counts need to be updated
     const event = new Event(COUNT_UPDATED_EVENT);
     window.dispatchEvent(event);
   }
 };
+

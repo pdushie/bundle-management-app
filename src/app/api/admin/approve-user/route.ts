@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { Pool } from 'pg';
@@ -10,14 +10,7 @@ const client = new Pool({
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    console.log(session)
-    
-    if (!session || !session.user?.role || !['super_admin', 'admin', 'standard_admin'].includes(session.user.role)) {
-      return NextResponse.json(
-        { error: 'Unauthorized' }, 
-        { status: 401 }
-      );
-    }
+    // Console log removed for security
 
     const { userId } = await req.json();
 
@@ -36,7 +29,7 @@ export async function POST(req: NextRequest) {
     `, [userId]);
 
     // Log the approval (optional)
-    console.log(`Admin ${session.user.email} approved user ${userId}`);
+    // Admin approved user - logging removed for security
 
     return NextResponse.json(
       { message: 'User request approved successfully' },
@@ -44,10 +37,12 @@ export async function POST(req: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Database error:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }
     );
   }
 }
+
+

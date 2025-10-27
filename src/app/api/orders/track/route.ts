@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
   try {
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       return NextResponse.json({ 
         error: 'Database connection unavailable'
       }, { status: 500 });
@@ -74,9 +74,9 @@ export async function GET(req: NextRequest) {
           .limit(1);
         
         let adminInfo = null;
-        console.log('Order result for entry:', entry.id, 'orderResult:', orderResult);
+        // Console log removed for security
         if (orderResult.length > 0 && orderResult[0].processedBy) {
-          console.log('Looking up admin for processedBy:', orderResult[0].processedBy);
+          // Console log removed for security
           const adminResult = await db
             .select({
               adminName: users.name,
@@ -86,10 +86,10 @@ export async function GET(req: NextRequest) {
             .where(eq(users.id, orderResult[0].processedBy))
             .limit(1);
           
-          console.log('Admin lookup result:', adminResult);
+          // Console log removed for security
           adminInfo = adminResult.length > 0 ? adminResult[0] : null;
         } else {
-          console.log('No processedBy found for order:', orderResult.length > 0 ? orderResult[0] : 'no order');
+          // Console log removed for security
         }
         
         orderEntriesData.push({
@@ -99,7 +99,7 @@ export async function GET(req: NextRequest) {
         });
       }
     } catch (orderError) {
-      console.error('Error fetching order entries:', orderError);
+      // Console statement removed for security
       return NextResponse.json(
         { error: 'Failed to fetch order entries', details: orderError instanceof Error ? orderError.message : String(orderError) },
         { status: 500 }
@@ -137,7 +137,7 @@ export async function GET(req: NextRequest) {
         .orderBy(desc(phoneEntries.createdAt))
         .limit(500);
     } catch (phoneError) {
-      console.warn('Error fetching phone entries, continuing without them:', phoneError);
+      // Console statement removed for security
       phoneEntriesData = [];
     }
     
@@ -160,10 +160,12 @@ export async function GET(req: NextRequest) {
     });
     
   } catch (error) {
-    console.error("Error fetching order entries:", error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: "Failed to fetch order entries" },
       { status: 500 }
     );
   }
 }
+
+

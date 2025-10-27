@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import AppWithProviders from "../../AppWithProviders";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -22,10 +22,10 @@ async function checkChatPermission(userId: string): Promise<boolean> {
       WHERE ur.user_id = ${parseInt(userId)} AND p.name = 'admin.chat' AND ur.is_active = true
     `;
     
-    console.log(`Chat permission check for user ${userId}:`, result);
+    // Chat permission check for user - logging removed for security
     return result.length > 0;
   } catch (error) {
-    console.error('Error checking chat permission:', error);
+    // Console statement removed for security
     return false;
   }
 }
@@ -56,3 +56,4 @@ export default async function AdminChatPage() {
     </AppWithProviders>
   );
 }
+

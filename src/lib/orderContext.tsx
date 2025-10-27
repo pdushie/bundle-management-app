@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
@@ -60,7 +60,7 @@ export const OrderProvider = ({ children }: OrderProviderProps) => {
     const minRefreshInterval = 500; // 500ms minimum between refreshes
     
     if (now - lastRefreshRef.current < minRefreshInterval) {
-      console.log('Throttling refresh - too soon since last refresh');
+      // Console log removed for security
       return;
     }
     
@@ -70,18 +70,18 @@ export const OrderProvider = ({ children }: OrderProviderProps) => {
       setIsLoading(true);
       const userEmail = session?.user?.email || undefined;
       
-      console.log(`Refreshing order counts for user: ${userEmail || 'none'} (attempt ${refreshAttempts + 1})`);
+      // Refreshing order counts - logging removed for security
       
       const counts = await getOrderCounts(userEmail);
       
-      console.log('Received order counts:', counts);
+      // Received order counts - logging removed for security
       
       // Only update state if the counts actually changed to minimize re-renders
       if (counts.pendingCount !== orderCount || 
           counts.processedCount !== processedOrderCount || 
           counts.userOrderCount !== sentOrderCount) {
             
-        console.log('Counts changed, updating state');
+        // Console log removed for security
         setOrderCount(counts.pendingCount);
         setProcessedOrderCount(counts.processedCount);
         setSentOrderCount(counts.userOrderCount);
@@ -90,20 +90,19 @@ export const OrderProvider = ({ children }: OrderProviderProps) => {
         // Reset refresh attempts on successful update
         setRefreshAttempts(0);
         
-        console.log('Updated order counts in context - Pending:', counts.pendingCount, 
-                   'Processed:', counts.processedCount, 'Sent:', counts.userOrderCount);
+        // Updated order counts in context - logging removed for security
       } else {
-        console.log('No change in counts, state not updated');
+        // No change in counts, state not updated - logging removed for security
       }
     } catch (error) {
-      console.error('Error refreshing order counts:', error);
+      // Console statement removed for security
       
       // Increment refresh attempts
       setRefreshAttempts(prev => prev + 1);
       
       // Only reset to default values after multiple failed attempts
       if (refreshAttempts > 3) {
-        console.warn('Multiple refresh failures, resetting counts to zero');
+        // Console statement removed for security
         setOrderCount(0);
         setProcessedOrderCount(0);
         setSentOrderCount(0);
@@ -115,38 +114,38 @@ export const OrderProvider = ({ children }: OrderProviderProps) => {
 
   // Set up listeners for all event types
   useEffect(() => {
-    console.log('Setting up event listeners for order updates');
+    // Console log removed for security
     
     // Get initial count
     refreshOrderCount();
 
     // Create event handlers for each event type
     const handleOrderUpdate = (event: Event) => {
-      console.log('ORDER_UPDATED_EVENT received in context');
+      // ORDER_UPDATED_EVENT received in context - logging removed for security
       if ((event as CustomEvent)?.detail) {
-        console.log('With details:', (event as CustomEvent).detail);
+        // Console log removed for security
       }
       refreshOrderCount();
     };
     
     const handleOrderProcessed = (event: Event) => {
-      console.log('ORDER_PROCESSED_EVENT received in context');
+      // ORDER_PROCESSED_EVENT received in context - logging removed for security
       if ((event as CustomEvent)?.detail) {
-        console.log('With details:', (event as CustomEvent).detail);
+        // Console log removed for security
       }
       refreshOrderCount();
     };
     
     const handleOrderSent = (event: Event) => {
-      console.log('ORDER_SENT_EVENT received in context');
+      // ORDER_SENT_EVENT received in context - logging removed for security
       if ((event as CustomEvent)?.detail) {
-        console.log('With details:', (event as CustomEvent).detail);
+        // Console log removed for security
       }
       refreshOrderCount();
     };
     
     const handleCountUpdate = () => {
-      console.log('COUNT_UPDATED_EVENT received in context');
+      // COUNT_UPDATED_EVENT received in context - logging removed for security
       refreshOrderCount();
     };
 
@@ -161,7 +160,7 @@ export const OrderProvider = ({ children }: OrderProviderProps) => {
     const intervalId = setInterval(() => {
       // Only poll if window is visible to further reduce API calls
       if (document.visibilityState === 'visible') {
-        // console.log('Background polling interval triggered, refreshing counts');
+        // // Console log removed for security
         refreshOrderCount();
       }
     }, 300000); // 5 minutes
@@ -178,7 +177,7 @@ export const OrderProvider = ({ children }: OrderProviderProps) => {
   
   // Additional effect to handle session changes
   useEffect(() => {
-    console.log('Session changed, refreshing counts');
+    // Console log removed for security
     refreshOrderCount();
     
     // Dispatch count update notification when session changes
@@ -204,3 +203,5 @@ export const OrderProvider = ({ children }: OrderProviderProps) => {
 };
 
 // Note: notification functions are imported from orderNotifications.ts
+
+

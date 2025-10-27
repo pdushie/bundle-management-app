@@ -153,7 +153,7 @@ export function calculatePrice(profile: PricingProfile, dataSizeGB: number): num
     } else {
       // If no applicable tier exists, calculate price as 4 times the allocation
       const fallbackPrice = dataSizeGB * 4;
-      console.log(`No applicable pricing tier found for ${dataSizeGB}GB. Using fallback price: ${fallbackPrice}`);
+      // Console log removed for security
       return parseFloat(fallbackPrice.toFixed(2));
     }
   } else {
@@ -164,3 +164,4 @@ export function calculatePrice(profile: PricingProfile, dataSizeGB: number): num
     return parseFloat(result.toFixed(2)); // Round to 2 decimal places
   }
 }
+

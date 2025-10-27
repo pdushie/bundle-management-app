@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db, neonClient } from '@/lib/db';
@@ -9,7 +9,7 @@ import { eq, and, gte, lte, desc } from 'drizzle-orm';
 export async function GET(request: NextRequest) {
   // Check if database is available
   if (!db) {
-    console.error('Database connection is not available');
+    // Console statement removed for security
     return NextResponse.json({ 
       error: 'Database connection unavailable'
     }, { status: 500 });
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
         });
       }
     } catch (dbError) {
-      console.error('Database error while fetching orders:', dbError);
+      // Console statement removed for security
       return NextResponse.json({ 
         error: 'Failed to fetch orders from database', 
         details: dbError instanceof Error ? dbError.message : String(dbError)
@@ -81,17 +81,9 @@ export async function GET(request: NextRequest) {
     let totalData = 0;
     let totalAmount = 0;
 
-    console.log("Raw orders from database:", orders);
+    // Console log removed for security
     
-    console.log("Orders fetched details:", JSON.stringify(orders.map(order => ({
-      id: order.id,
-      cost: order.cost,
-      estimatedCost: order.estimatedCost,
-      status: order.status,
-      totalData: order.totalData,
-      typeof_cost: typeof order.cost,
-      typeof_estimatedCost: typeof order.estimatedCost
-    }))));
+    // Console log removed for security
 
     // Calculate estimated cost for any pending orders if needed
     for (const order of orders) {
@@ -121,7 +113,7 @@ export async function GET(request: NextRequest) {
                 
                 // Calculate based on tiered pricing
                 estimatedCost = parseFloat(profile.base_price);
-                console.log(`Base price for order ${order.id}: ${estimatedCost}`);
+                // Console log removed for security
                 
                 // Applying tiered pricing logic
                 let remainingData = totalData;
@@ -131,7 +123,7 @@ export async function GET(request: NextRequest) {
                   
                   const tierCost = tierAmount * parseFloat(tier.price);
                   estimatedCost += tierCost;
-                  console.log(`Added tier cost for ${tierAmount}GB: ${tierCost}`);
+                  // Console log removed for security
                   
                   remainingData -= tierAmount;
                 }
@@ -140,19 +132,19 @@ export async function GET(request: NextRequest) {
                 const basePrice = parseFloat(profile.base_price);
                 const perGBRate = parseFloat(profile.data_price_per_gb || "0");
                 estimatedCost = basePrice + (totalData * perGBRate);
-                console.log(`Simple pricing for order ${order.id}: ${basePrice} + (${totalData} * ${perGBRate}) = ${estimatedCost}`);
+                // Console log removed for security
               }
               
               // Apply minimum charge if applicable
               const minCharge = parseFloat(profile.minimum_charge || "0");
               if (estimatedCost < minCharge) {
-                console.log(`Applied minimum charge: ${minCharge} (was ${estimatedCost})`);
+                // Console log removed for security
                 estimatedCost = minCharge;
               }
               
               // Update the order object with the calculated cost
               order.estimatedCost = estimatedCost.toFixed(2);
-              console.log(`Set estimated cost for order ${order.id} to ${order.estimatedCost}`);
+              // Console log removed for security
               
               // Also update in database for future queries
               if (neonClient) {
@@ -162,12 +154,12 @@ export async function GET(request: NextRequest) {
                       pricing_profile_name = ${profile.name}
                   WHERE id = ${order.id}
                 `;
-                console.log(`Updated database with estimated cost for order ${order.id}`);
+                // Console log removed for security
               }
             }
           }
         } catch (error) {
-          console.error(`Error calculating estimated cost for order ${order.id}:`, error);
+          // Console statement removed for security
         }
       }
     }
@@ -181,47 +173,47 @@ export async function GET(request: NextRequest) {
       const rawEstimatedCost = order.estimatedCost;
       const rawCost = order.cost;
       
-      console.log(`Raw values for order ${order.id}: estimatedCost=${rawEstimatedCost} (${typeof rawEstimatedCost}), cost=${rawCost} (${typeof rawCost}), status=${order.status}`);
+      // Console log removed for security
       
       // Try to parse the values more carefully
       let orderAmount = 0;
       if (rawEstimatedCost !== null && rawEstimatedCost !== undefined) {
         orderAmount = Number(rawEstimatedCost);
-        console.log(`Using estimatedCost: ${rawEstimatedCost} -> ${orderAmount}`);
+        // Console log removed for security
       } else if (rawCost !== null && rawCost !== undefined) {
         orderAmount = Number(rawCost);
-        console.log(`Using cost: ${rawCost} -> ${orderAmount}`);
+        // Console log removed for security
       } else {
         // If we still don't have a cost, but we know it's pending, let's use a placeholder
         if (order.status === 'pending') {
           // Use a fixed estimated cost based on data
           const tempCost = Number(order.totalData) * 1.5; // Simple placeholder calculation
           orderAmount = tempCost;
-          console.log(`Using temporary estimated cost for pending order: ${tempCost}`);
+          // Console log removed for security
         } else {
-          console.log('No cost found for order');
+          // Console log removed for security
         }
       }
       
       // Ensure we don't have NaN
       if (isNaN(orderAmount)) {
-        console.log(`Order ${order.id} has NaN amount, setting to 0`);
+        // Console log removed for security
         orderAmount = 0;
       }
       
       // ONLY ADD TO TOTAL AMOUNT IF ORDER IS PROCESSED (users only pay for processed orders)
       if (order.status === 'processed') {
-        console.log(`Order ${order.id}: Adding ${orderAmount} to total (processed order)`);
+        // Console log removed for security
         totalAmount += orderAmount;
       } else {
-        console.log(`Order ${order.id}: NOT adding ${orderAmount} to total (${order.status} order)`);
+        // Console log removed for security
       }
 
       // Make sure we have a definitive orderAmount to return
       if (!orderAmount && order.status === 'pending') {
         // Force a value for pending orders if we somehow don't have one
         orderAmount = Number(order.totalData) * 1.5;
-        console.log(`Forcing an estimated cost for pending order ${order.id}: ${orderAmount}`);
+        // Console log removed for security
       }
 
       // Format for response
@@ -241,18 +233,18 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    console.log(`Final calculations - totalData: ${totalData}, totalAmount: ${totalAmount}`);
+    // Console log removed for security
     
     // Make absolutely sure totalAmount is a number
     if (isNaN(totalAmount)) {
-      console.error('totalAmount is NaN, resetting to 0');
+      // Console statement removed for security
       totalAmount = 0;
     }
     
     // Debug all the individual orders
-    console.log('Final order amounts:');
+    // Console log removed for security
     formattedOrders.forEach(order => {
-      console.log(`  Order ${order.id}: estimatedCost=${order.estimatedCost}`);
+      // Console log removed for security
     });
     
     const response = {
@@ -262,13 +254,15 @@ export async function GET(request: NextRequest) {
       orders: formattedOrders,
     };
     
-    console.log("Final response:", JSON.stringify(response));
+    // Console log removed for security
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error fetching billing data:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Failed to retrieve billing information' },
       { status: 500 }
     );
   }
 }
+
+

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
 
 const pool = new Pool({
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
         name: user.name
       });
     } catch (emailError) {
-      console.error('Failed to send welcome email:', emailError);
+      // Console statement removed for security
       // Don't fail the verification if welcome email fails
     }
 
@@ -77,10 +77,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth/verify-email?status=success', request.url));
 
   } catch (error) {
-    console.error('Email verification error:', error);
+    // Console statement removed for security
     // Redirect to verification page with error status
     return NextResponse.redirect(new URL('/auth/verify-email?status=error&message=Failed+to+verify+email', request.url));
   } finally {
     client.release();
   }
 }
+

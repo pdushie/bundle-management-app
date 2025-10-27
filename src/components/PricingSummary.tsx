@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { getCurrentUserPricing, calculatePrice } from '../lib/pricingClient';
 
 // Import types from pricingClient
@@ -33,7 +33,7 @@ export default function PricingSummary({
           if (onPriceCalculated) onPriceCalculated(price);
         }
       } catch (err) {
-        console.error('Error loading pricing:', err);
+        // Console statement removed for security
       } finally {
         setLoading(false);
       }
@@ -89,3 +89,4 @@ export default function PricingSummary({
     </div>
   );
 }
+

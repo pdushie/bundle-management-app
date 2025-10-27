@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from 'react';
 import { simulateNewOrders, testNotificationSystem } from '../lib/testUtils';
@@ -32,7 +32,7 @@ export default function NotificationTester() {
         setNotificationStatus('Notifications not supported in this browser');
       }
     } catch (error) {
-      console.error('Error requesting notification permission:', error);
+      // Console statement removed for security
       setNotificationStatus(`Error: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
@@ -43,7 +43,7 @@ export default function NotificationTester() {
       const result = testNotificationSystem();
       setTestResult(result);
     } catch (error) {
-      console.error('Error testing notifications:', error);
+      // Console statement removed for security
       setTestResult({ error: error instanceof Error ? error.message : String(error) });
     }
   };
@@ -54,7 +54,7 @@ export default function NotificationTester() {
       await simulateNewOrders({ orderCount: customOrderCount });
       setNotificationStatus(`Simulated ${customOrderCount} new pending orders`);
     } catch (error) {
-      console.error('Error simulating new orders:', error);
+      // Console statement removed for security
       setNotificationStatus(`Error: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
@@ -65,7 +65,7 @@ export default function NotificationTester() {
       await simulateNewOrders({ processedCount: customProcessedCount });
       setNotificationStatus(`Simulated ${customProcessedCount} new processed orders`);
     } catch (error) {
-      console.error('Error simulating processed orders:', error);
+      // Console statement removed for security
       setNotificationStatus(`Error: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
@@ -76,7 +76,7 @@ export default function NotificationTester() {
       await simulateNewOrders({ sentCount: customSentCount });
       setNotificationStatus(`Simulated ${customSentCount} new sent orders`);
     } catch (error) {
-      console.error('Error simulating sent orders:', error);
+      // Console statement removed for security
       setNotificationStatus(`Error: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
@@ -103,7 +103,7 @@ export default function NotificationTester() {
       await refreshOrderCount();
       setNotificationStatus('Force refreshed order counts');
     } catch (error) {
-      console.error('Error refreshing order counts:', error);
+      // Console statement removed for security
       setNotificationStatus(`Error: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
@@ -233,3 +233,4 @@ export default function NotificationTester() {
     </div>
   );
 }
+

@@ -28,7 +28,7 @@ export async function GET(
       data: permissions
     });
   } catch (error) {
-    console.error('Error fetching role permissions:', error);
+    // Console statement removed for security
     
     if (error instanceof Error) {
       if (error.message.includes('Authentication required') || error.message.includes('Super admin access required')) {

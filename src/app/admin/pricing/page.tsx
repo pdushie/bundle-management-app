@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -59,7 +59,7 @@ export default function PricingManagementPage() {
         return;
       }
     } catch (error) {
-      console.error('Error fetching permissions:', error);
+      // Console statement removed for security
       router.push('/admin');
       return;
     } finally {
@@ -93,3 +93,4 @@ export default function PricingManagementPage() {
     </div>
   );
 }
+

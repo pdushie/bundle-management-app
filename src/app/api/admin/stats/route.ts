@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Pool } from "pg";
@@ -37,7 +37,7 @@ export async function GET() {
 
     return NextResponse.json(stats);
   } catch (error) {
-    console.error("Database error:", error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: "Failed to fetch user statistics" },
       { status: 500 }
@@ -46,3 +46,4 @@ export async function GET() {
     client.release();
   }
 }
+

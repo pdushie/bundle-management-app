@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
@@ -18,7 +18,7 @@ export default function RoleDebugger() {
       const data = await response.json();
       setApiResult(data);
     } catch (error) {
-      console.error("Error fetching role info:", error);
+      // Console statement removed for security
     } finally {
       setLoading(false);
     }
@@ -31,7 +31,7 @@ export default function RoleDebugger() {
       const data = await response.json();
       setUserDbInfo(data);
     } catch (error) {
-      console.error("Error fetching user DB info:", error);
+      // Console statement removed for security
     } finally {
       setUserLoading(false);
     }
@@ -95,7 +95,7 @@ export default function RoleDebugger() {
               <div className={userDbInfo.roleComparison.matches ? "text-green-600" : "text-red-600"}>
                 <p><strong>Session Role:</strong> {userDbInfo.roleComparison.sessionRole}</p>
                 <p><strong>Database Role:</strong> {userDbInfo.roleComparison.dbRole}</p>
-                <p><strong>Match Status:</strong> {userDbInfo.roleComparison.matches ? "✅ Exact Match" : "❌ No Match"}</p>
+                <p><strong>Match Status:</strong> {userDbInfo.roleComparison.matches ? "✅ Exact Match" : "âŒ No Match"}</p>
                 {!userDbInfo.roleComparison.matches && userDbInfo.roleComparison.lowerCaseMatches && (
                   <p className="text-orange-600">
                     <strong>Case Issue:</strong> Roles match when comparing case-insensitively
@@ -109,3 +109,4 @@ export default function RoleDebugger() {
     </div>
   );
 }
+

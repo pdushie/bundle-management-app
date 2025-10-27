@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import AppWithProviders from "../../AppWithProviders";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -25,7 +25,7 @@ async function checkAnnouncementsPermission(userId: string): Promise<boolean> {
     
     return result.length > 0;
   } catch (error) {
-    console.error('Error checking announcements permission:', error);
+    // Console statement removed for security
     return false;
   }
 }
@@ -57,3 +57,4 @@ export default async function AnnouncementsPage() {
     </AppWithProviders>
   );
 }
+

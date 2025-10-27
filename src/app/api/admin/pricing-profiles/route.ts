@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { db } from "../../../../lib/db";
 import { pricingProfiles, userPricingProfiles, pricingTiers } from "../../../../lib/schema";
 import { getServerSession } from "next-auth";
@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   try {
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       return NextResponse.json({ 
         error: 'Database connection unavailable'
       }, { status: 500 });
@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
     const profilesWithTiers = profiles.map(profile => {
       // Add validation to ensure profile has required fields
       if (!profile || !profile.id || !profile.name) {
-        console.error('Invalid profile found:', profile);
+        // Console statement removed for security
         return null;
       }
       
@@ -57,11 +57,11 @@ export async function GET(req: NextRequest) {
       };
     }).filter(Boolean); // Remove null profiles
     
-    console.log('Profiles being returned:', profilesWithTiers.length, 'valid profiles');
+    // Console log removed for security
     
     return NextResponse.json({ profiles: profilesWithTiers });
   } catch (error) {
-    console.error("Error fetching pricing profiles:", error);
+    // Console statement removed for security
     return NextResponse.json({ error: "Failed to fetch pricing profiles" }, { status: 500 });
   }
 }
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
   try {
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       return NextResponse.json({ 
         error: 'Database connection unavailable'
       }, { status: 500 });
@@ -196,7 +196,7 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
   } catch (error) {
-    console.error("Error in POST pricing profiles:", error);
+    // Console statement removed for security
     return NextResponse.json({ 
       error: "Failed to process request", 
       details: error instanceof Error ? error.message : "Unknown error" 
@@ -208,7 +208,7 @@ export async function PUT(req: NextRequest) {
   try {
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       return NextResponse.json({ 
         error: 'Database connection unavailable'
       }, { status: 500 });
@@ -262,7 +262,7 @@ export async function PUT(req: NextRequest) {
       assignment: updatedAssignment
     });
   } catch (error) {
-    console.error("Error updating user profile assignment:", error);
+    // Console statement removed for security
     return NextResponse.json({ error: "Failed to update user profile assignment" }, { status: 500 });
   }
 }
@@ -271,7 +271,7 @@ export async function DELETE(req: NextRequest) {
   try {
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       return NextResponse.json({ 
         error: 'Database connection unavailable'
       }, { status: 500 });
@@ -319,7 +319,9 @@ export async function DELETE(req: NextRequest) {
       deletedAssignment: deletedAssignment[0]
     });
   } catch (error) {
-    console.error("Error removing user profile assignment:", error);
+    // Console statement removed for security
     return NextResponse.json({ error: "Failed to remove user profile assignment" }, { status: 500 });
   }
 }
+
+

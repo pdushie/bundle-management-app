@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -82,7 +82,7 @@ export function RoleManagement({ roles, permissions, onRolesChange }: RoleManage
         setRolePermissions(prev => ({ ...prev, [roleId]: data.data }));
       }
     } catch (error) {
-      console.error('Error fetching role permissions:', error);
+      // Console statement removed for security
     } finally {
       setLoadingPermissions(prev => ({ ...prev, [roleId]: false }));
     }
@@ -109,7 +109,7 @@ export function RoleManagement({ roles, permissions, onRolesChange }: RoleManage
       
       setIsEditDialogOpen(true);
     } catch (error) {
-      console.error('Error loading role for edit:', error);
+      // Console statement removed for security
       alert('Failed to load role data');
     }
   };
@@ -133,7 +133,7 @@ export function RoleManagement({ roles, permissions, onRolesChange }: RoleManage
       
       setIsDuplicateDialogOpen(true);
     } catch (error) {
-      console.error('Error loading role for duplicate:', error);
+      // Console statement removed for security
       alert('Failed to load role data');
     }
   };
@@ -158,7 +158,7 @@ export function RoleManagement({ roles, permissions, onRolesChange }: RoleManage
         alert(data.error || 'Failed to create role');
       }
     } catch (error) {
-      console.error('Error creating role:', error);
+      // Console statement removed for security
       alert('Failed to create role');
     }
   };
@@ -184,7 +184,7 @@ export function RoleManagement({ roles, permissions, onRolesChange }: RoleManage
         alert(data.error || 'Failed to duplicate role');
       }
     } catch (error) {
-      console.error('Error duplicating role:', error);
+      // Console statement removed for security
       alert('Failed to duplicate role');
     }
   };
@@ -252,7 +252,7 @@ export function RoleManagement({ roles, permissions, onRolesChange }: RoleManage
         alert(data.error || 'Failed to update role');
       }
     } catch (error) {
-      console.error('Error updating role:', error);
+      // Console statement removed for security
       alert('Failed to update role');
     }
   };
@@ -623,3 +623,4 @@ export function RoleManagement({ roles, permissions, onRolesChange }: RoleManage
     </div>
   );
 }
+

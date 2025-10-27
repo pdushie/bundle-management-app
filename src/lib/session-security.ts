@@ -1,4 +1,4 @@
-// Session security utilities
+﻿// Session security utilities
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from './auth';
 import { NextRequest } from 'next/server';
@@ -20,12 +20,7 @@ export interface SecureSession {
  */
 export function validateSessionSignature(session: any): boolean {
   if (!session?.signature || !session?.user?.id || !session?.user?.role || !session?.expires) {
-    console.warn('Session missing required fields for signature validation:', {
-      hasSignature: !!session?.signature,
-      hasUserId: !!session?.user?.id,
-      hasUserRole: !!session?.user?.role,
-      hasExpires: !!session?.expires
-    });
+    // Console statement removed for security
     return false;
   }
 
@@ -36,16 +31,11 @@ export function validateSessionSignature(session: any): boolean {
 
     const isValid = session.signature === expectedSignature;
     if (!isValid) {
-      console.error('Session signature mismatch:', {
-        expected: expectedSignature,
-        received: session.signature,
-        userId: session.user.id,
-        userRole: session.user.role
-      });
+      // Console statement removed for security
     }
     return isValid;
   } catch (error) {
-    console.error('Error validating session signature:', error);
+    // Console statement removed for security
     return false;
   }
 }
@@ -63,13 +53,13 @@ export async function getSecureServerSession(): Promise<SecureSession | null> {
 
     // Temporarily disable strict signature validation for debugging
     if (session.signature && !validateSessionSignature(session)) {
-      console.warn('Session signature validation failed - continuing anyway for debugging');
+      // Console statement removed for security
       // Don't return null, just log the warning
     }
 
     return session as SecureSession;
   } catch (error) {
-    console.error('Error getting secure server session:', error);
+    // Console statement removed for security
     return null;
   }
 }
@@ -123,7 +113,7 @@ export async function validateSessionAndRole(
 
     return { valid: true, session };
   } catch (error) {
-    console.error('Session validation error:', error);
+    // Console statement removed for security
     return { valid: false, session: null, error: 'Session validation failed' };
   }
 }
@@ -135,19 +125,14 @@ export async function requireRole(allowedRoles: string[]): Promise<SecureSession
   const session = await getSecureServerSession();
 
   if (!session) {
-    console.error('Authentication failed - no session found');
+    // Console statement removed for security
     throw new Error('Authentication required');
   }
 
-  console.log('Session validation for role check:', {
-    userId: session.user?.id,
-    userRole: session.user?.role,
-    allowedRoles,
-    hasSignature: !!session.signature
-  });
+  // Console log removed for security
 
   if (!hasRole(session, allowedRoles)) {
-    console.error(`Role authorization failed - user ${session.user?.id} with role '${session.user?.role}' attempted to access resource requiring: ${allowedRoles.join(' or ')}`);
+    // Console statement removed for security
     throw new Error(`Insufficient privileges. Required: ${allowedRoles.join(' or ')}`);
   }
 
@@ -167,3 +152,4 @@ export async function requireAdmin(): Promise<SecureSession> {
 export async function requireSuperAdmin(): Promise<SecureSession> {
   return await requireRole(['super_admin']);
 }
+

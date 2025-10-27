@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -71,7 +71,7 @@ export default function AdminOrdersDashboard() {
         setAdmins(data.admins || []);
       }
     } catch (error) {
-      console.error('Error fetching admins:', error);
+      // Console statement removed for security
     }
   };
 
@@ -102,10 +102,10 @@ export default function AdminOrdersDashboard() {
         });
         setCurrentPage(page);
       } else {
-        console.error('Failed to fetch processing reports');
+        // Console statement removed for security
       }
     } catch (error) {
-      console.error('Error fetching processing reports:', error);
+      // Console statement removed for security
     } finally {
       setLoading(false);
     }
@@ -165,7 +165,7 @@ export default function AdminOrdersDashboard() {
         }
       }
     } catch (error) {
-      console.error('Error exporting processing reports:', error);
+      // Console statement removed for security
     }
   };
 
@@ -527,3 +527,4 @@ export default function AdminOrdersDashboard() {
     </div>
   );
 }
+

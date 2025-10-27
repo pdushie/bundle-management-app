@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -78,7 +78,7 @@ export default function PackagesPage() {
       const data = await response.json();
       setPricingData(data);
     } catch (err) {
-      // console.error('Error fetching pricing data:', err);
+      // // Console statement removed for security
       setError(err instanceof Error ? err.message : 'Failed to load pricing information');
     } finally {
       setLoading(false);
@@ -366,3 +366,4 @@ export default function PackagesPage() {
     </div>
   );
 }
+

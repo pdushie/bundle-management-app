@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { orderEntries } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
@@ -32,10 +32,11 @@ export async function POST(request: NextRequest) {
       message: `Updated all entries for order ${orderId} to status: ${status}`
     });
   } catch (error) {
-    console.error('Error updating entry statuses:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Failed to update entry statuses' },
       { status: 500 }
     );
   }
 }
+

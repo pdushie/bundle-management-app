@@ -1,4 +1,4 @@
-import { PricingProfile, PricingTier } from './pricingUtils';
+﻿import { PricingProfile, PricingTier } from './pricingUtils';
 
 /**
  * Check if pricing exists for a specific data allocation in the pricing profile
@@ -75,7 +75,7 @@ export function calculateEntryCost(
 ): number {
   // Handle cases where tiers might not be available
   if (!tiers || tiers.length === 0) {
-    console.error('No pricing tiers found for profile:', pricingProfile.name);
+    // Console statement removed for security
     throw new Error(`No pricing tiers available for profile: ${pricingProfile.name}`);
   }
 
@@ -112,3 +112,4 @@ export function calculateEntryCosts(
     cost: calculateEntryCost(entry.allocationGB, pricingProfile, tiers)
   }));
 }
+

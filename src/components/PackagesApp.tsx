@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { Package, DollarSign, Users, ArrowRight } from 'lucide-react';
@@ -51,7 +51,7 @@ export default function PackagesApp() {
         setError(data.message || 'No pricing profile assigned');
       }
     } catch (err) {
-      // console.error('Error fetching user pricing:', err);
+      // // Console statement removed for security
       setError('Failed to load pricing information');
     } finally {
       setLoading(false);
@@ -234,3 +234,4 @@ export default function PackagesApp() {
     </div>
   );
 }
+

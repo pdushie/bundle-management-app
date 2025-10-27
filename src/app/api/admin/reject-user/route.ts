@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { Pool } from 'pg';
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     `, [userId]);
 
     // Log the rejection (optional)
-    console.log(`Admin ${session.user.email} rejected user ${userId} with reason: ${reason || 'No reason provided'}`);
+    // Admin rejected user - logging removed for security
 
     return NextResponse.json(
       { message: 'User request rejected successfully' },
@@ -43,10 +43,11 @@ export async function POST(req: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Database error:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }
     );
   }
 }
+

@@ -1,4 +1,4 @@
-import { neonClient, testConnection } from './db';
+﻿import { neonClient, testConnection } from './db';
 import { NextResponse } from 'next/server';
 
 /**
@@ -19,7 +19,7 @@ export async function executeDbQuery<T>(
     // Test the database connection first
     const connectionTest = await testConnection();
     if (!connectionTest.success) {
-      console.error('Database connection test failed:', connectionTest.error);
+      // Console statement removed for security
       return {
         data: null,
         error: 'Database connection unavailable',
@@ -41,7 +41,7 @@ export async function executeDbQuery<T>(
       response: null
     };
   } catch (error) {
-    console.error('Database error:', error);
+    // Console statement removed for security
     
     // Check for specific connection errors
     const errorString = String(error);
@@ -51,7 +51,7 @@ export async function executeDbQuery<T>(
       errorString.includes('ECONNRESET');
     
     if (isConnError) {
-      console.error('Database connection error detected:', errorString);
+      // Console statement removed for security
       return {
         data: null,
         error: 'Database connection failed',
@@ -119,7 +119,8 @@ export async function neonQuery(queryText: string, params: any[] = []) {
       return await neonClient([sqlText] as any);
     }
   } catch (error) {
-    console.error('Error in neonQuery:', error);
+    // Console statement removed for security
     throw error;
   }
 }
+

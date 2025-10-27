@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { clearOrders } from '@/lib/orderDbOperations';
 
 export async function POST() {
@@ -6,10 +6,11 @@ export async function POST() {
     await clearOrders();
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error in clear orders route:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Failed to clear orders' },
       { status: 500 }
     );
   }
 }
+

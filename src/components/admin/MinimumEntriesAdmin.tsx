@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -47,7 +47,7 @@ export default function MinimumEntriesAdmin() {
         setMessage({ type: 'error', text: 'Failed to load users' });
       }
     } catch (error) {
-      console.error('Error fetching users:', error);
+      // Console statement removed for security
       setMessage({ type: 'error', text: 'Error loading users' });
     } finally {
       setLoading(false);
@@ -90,7 +90,7 @@ export default function MinimumEntriesAdmin() {
         setMessage({ type: 'error', text: 'Failed to update minimum entries' });
       }
     } catch (error) {
-      console.error('Error updating minimum entries:', error);
+      // Console statement removed for security
       setMessage({ type: 'error', text: 'Error updating minimum entries' });
     } finally {
       setSaving(false);
@@ -288,3 +288,4 @@ export default function MinimumEntriesAdmin() {
     </div>
   );
 }
+

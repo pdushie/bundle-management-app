@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { neonClient } from "@/lib/db";
 
 // Get order halt status (public endpoint)
@@ -20,10 +20,11 @@ export async function GET(req: NextRequest) {
       message: haltMessage
     });
   } catch (error) {
-    console.error("Error fetching order halt status:", error);
+    // Console statement removed for security
     return NextResponse.json(
       { success: false, error: "Failed to fetch order halt status" }, 
       { status: 500 }
     );
   }
 }
+

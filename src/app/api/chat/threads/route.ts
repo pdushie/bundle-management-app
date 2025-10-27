@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { neonClient } from "@/lib/db";
@@ -16,7 +16,7 @@ async function hasAdminChatPermission(userId: string): Promise<boolean> {
     
     return result.length > 0;
   } catch (error) {
-    console.error('Error checking chat permission:', error);
+    // Console statement removed for security
     return false;
   }
 }
@@ -120,10 +120,11 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ success: true, threads: formattedThreads });
   } catch (error) {
-    console.error("Error fetching chat threads:", error);
+    // Console statement removed for security
     return NextResponse.json(
       { success: false, error: "Failed to fetch chat threads" },
       { status: 500 }
     );
   }
 }
+

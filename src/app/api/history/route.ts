@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getHistoryEntries, getPhoneEntriesForHistory, getTotalEntries } from '@/lib/historyDbOperations';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
@@ -21,8 +21,8 @@ export async function GET(request: NextRequest) {
     const totalEntriesData = await getTotalEntries();
     
     // Log the result for debugging
-    console.log(`History entries found: ${historyEntries.length}`);
-    console.log(`Total entries: ${totalEntriesData.totalEntries} (phone_entries: ${totalEntriesData.phoneEntriesCount}, processed order_entries: ${totalEntriesData.processedOrderEntriesCount})`);
+    // Console log removed for security
+    // Console log removed for security
     
     // Return in a consistent format that the component can use
     return NextResponse.json({ 
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       processedOrderEntriesCount: totalEntriesData.processedOrderEntriesCount
     });
   } catch (error) {
-    console.error('Error in history route:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Failed to retrieve history entries' },
       { status: 500 }
@@ -67,10 +67,12 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({ phoneEntries });
   } catch (error) {
-    console.error('Error in history route:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Failed to retrieve phone entries' },
       { status: 500 }
     );
   }
 }
+
+

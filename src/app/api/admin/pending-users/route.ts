@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Pool } from 'pg';
@@ -27,9 +27,10 @@ export async function GET() {
 
     return NextResponse.json({ users: result.rows });
   } catch (error) {
-    console.error('Database error:', error);
+    // Console statement removed for security
     return NextResponse.json({ error: 'Failed to fetch pending users' }, { status: 500 });
   } finally {
     client.release();
   }
 }
+

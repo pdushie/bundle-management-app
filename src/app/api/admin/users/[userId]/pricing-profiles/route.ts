@@ -24,8 +24,7 @@ export async function GET(
     if (!session) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
-    // Only allow admins, superadmins, or the user themselves to access their pricing profiles
-    // Use email for identity check since id is not present
+    // Only allow admins, superadmins, and standard_admins to access user pricing profiles
     const userId = parseInt(userIdParam);
     if (isNaN(userId)) {
       return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
@@ -33,7 +32,7 @@ export async function GET(
     if (
       session.user.role !== "admin" && 
       session.user.role !== "super_admin" && 
-      session.user.email !== userIdParam // assuming userIdParam is email, otherwise adjust accordingly
+      session.user.role !== "standard_admin"
     ) {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { OTPConfig } from '@/lib/otpConfig';
 
 export async function GET(request: NextRequest) {
@@ -11,10 +11,11 @@ export async function GET(request: NextRequest) {
       requiresEmailService: OTPConfig.requiresEmailService()
     });
   } catch (error) {
-    console.error('Error checking OTP status:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Failed to check OTP status' },
       { status: 500 }
     );
   }
 }
+

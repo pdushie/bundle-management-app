@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from 'react';
 import { getProcessedOrdersWithAdminInfo, getProcessedOrdersOldestFirst, Order } from '@/lib/orderClient';
@@ -30,7 +30,7 @@ export default function ProcessedOrdersApp() {
       setOrders(processedOrders);
       refreshOrderCount();
     } catch (error) {
-      // console.error("Failed to fetch processed orders:", error);
+      // // Console statement removed for security
     } finally {
       setLoading(false);
     }
@@ -38,20 +38,20 @@ export default function ProcessedOrdersApp() {
 
   // Set up polling for real-time updates
   useEffect(() => {
-    // console.log('ProcessedOrdersApp: Setting up event listeners');
+    // // Console log removed for security
     
     // Fetch orders immediately
     fetchProcessedOrders();
     
     // Set up event listener for order updates
     const handleOrderUpdate = () => {
-      // console.log('ProcessedOrdersApp: ORDER_UPDATED_EVENT received');
+      // // Console log removed for security
       fetchProcessedOrders();
     };
     
     // Set up a more specific event listener for processed orders
     const handleOrderProcessed = () => {
-      // console.log('ProcessedOrdersApp: ORDER_PROCESSED_EVENT received');
+      // // Console log removed for security
       fetchProcessedOrders();
       // Force a count update notification
       notifyCountUpdated();
@@ -66,7 +66,7 @@ export default function ProcessedOrdersApp() {
     const intervalId = setInterval(() => {
       // Only poll if window is visible to further reduce API calls
       if (document.visibilityState === 'visible') {
-        // console.log('ProcessedOrdersApp: Low-frequency polling triggered');
+        // // Console log removed for security
         fetchProcessedOrders();
       }
     }, 300000); // 5 minutes
@@ -528,3 +528,5 @@ export default function ProcessedOrdersApp() {
     </div>
   );
 }
+
+

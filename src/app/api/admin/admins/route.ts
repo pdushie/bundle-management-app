@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
@@ -39,10 +39,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ admins: allAdmins });
   } catch (error) {
-    console.error('Error fetching admins:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Failed to fetch admins' },
       { status: 500 }
     );
   }
 }
+

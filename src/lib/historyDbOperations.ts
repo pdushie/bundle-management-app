@@ -1,4 +1,4 @@
-import { db } from './db';
+﻿import { db } from './db';
 import { historyEntries, phoneEntries, orderEntries } from './schema';
 import { Order } from './orderDbOperations';
 import { eq, desc, and, count, sql } from 'drizzle-orm';
@@ -16,12 +16,12 @@ export const createHistoryEntryFromOrder = async (order: Order, userId?: string)
   try {
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       throw new Error('Database connection unavailable');
     }
 
-    console.log('Creating history entry for order:', order.id);
-    console.log('User ID provided:', userId);
+    // Console log removed for security
+    // Console log removed for security
     
     // Categorize phone numbers
     const validNumbers: typeof order.entries = [];
@@ -66,7 +66,7 @@ export const createHistoryEntryFromOrder = async (order: Order, userId?: string)
       userId: userId ? parseInt(userId) : null // Convert to integer since the DB column is integer type
     };
     
-    console.log('Inserting history entry with values:', historyEntry);
+    // Console log removed for security
     await db.insert(historyEntries).values(historyEntry);
     
     // Define phone entry insertion functions with proper error handling
@@ -80,7 +80,7 @@ export const createHistoryEntryFromOrder = async (order: Order, userId?: string)
           isDuplicate: false
         });
       } catch (error) {
-        console.error(`Error inserting valid phone entry ${entry.number}:`, error);
+        // Console statement removed for security
         throw error;
       }
     };
@@ -95,7 +95,7 @@ export const createHistoryEntryFromOrder = async (order: Order, userId?: string)
           isDuplicate: false
         });
       } catch (error) {
-        console.error(`Error inserting invalid phone entry ${entry.number}:`, error);
+        // Console statement removed for security
         throw error;
       }
     };
@@ -110,13 +110,13 @@ export const createHistoryEntryFromOrder = async (order: Order, userId?: string)
           isDuplicate: true
         });
       } catch (error) {
-        console.error(`Error inserting duplicate phone entry ${entry.number}:`, error);
+        // Console statement removed for security
         throw error;
       }
     };
     
     // Add phone entries for all numbers with better error handling
-    console.log(`Adding phone entries: ${validNumbers.length} valid, ${invalidNumbers.length} invalid, ${duplicateNumbers.length} duplicate`);
+    // Adding phone entries statistics - logging removed for security
     
     await Promise.all([
       ...validNumbers.map(insertValidEntry),
@@ -124,14 +124,14 @@ export const createHistoryEntryFromOrder = async (order: Order, userId?: string)
       ...duplicateNumbers.map(insertDuplicateEntry)
     ]);
     
-    console.log('Successfully created history entry with ID:', historyId);
+    // Console log removed for security
     return historyId;
   } catch (error) {
-    console.error('Failed to create history entry:', error);
+    // Console statement removed for security
     // Log more details about the error
     if (error instanceof Error) {
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
+      // Console statement removed for security
+      // Console statement removed for security
     }
     throw error;
   }
@@ -146,7 +146,7 @@ export const createHistoryEntriesFromOrders = async (orders: Order[], userId?: s
   try {
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       throw new Error('Database connection unavailable');
     }
 
@@ -159,7 +159,7 @@ export const createHistoryEntriesFromOrders = async (orders: Order[], userId?: s
     
     return historyIds;
   } catch (error) {
-    console.error('Failed to create history entries:', error);
+    // Console statement removed for security
     throw error;
   }
 };
@@ -171,7 +171,7 @@ export const getHistoryEntries = async () => {
   try {
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       throw new Error('Database connection unavailable');
     }
 
@@ -182,7 +182,7 @@ export const getHistoryEntries = async () => {
     
     return entries;
   } catch (error) {
-    console.error('Failed to get history entries:', error);
+    // Console statement removed for security
     throw error;
   }
 };
@@ -195,7 +195,7 @@ export const getPhoneEntriesForHistory = async (historyEntryId: string) => {
   try {
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       throw new Error('Database connection unavailable');
     }
 
@@ -206,7 +206,7 @@ export const getPhoneEntriesForHistory = async (historyEntryId: string) => {
     
     return entries;
   } catch (error) {
-    console.error('Failed to get phone entries:', error);
+    // Console statement removed for security
     throw error;
   }
 };
@@ -219,7 +219,7 @@ export const getTotalEntries = async () => {
   try {
     // Check if database is available
     if (!db) {
-      console.error('Database connection is not available');
+      // Console statement removed for security
       throw new Error('Database connection unavailable');
     }
 
@@ -241,7 +241,7 @@ export const getTotalEntries = async () => {
     // Calculate total entries
     const totalEntries = phoneEntriesCount + processedOrderEntriesCount;
     
-    console.log(`Total entries calculation: phone_entries (${phoneEntriesCount}) + processed order_entries (${processedOrderEntriesCount}) = ${totalEntries}`);
+    // Total entries calculation - logging removed for security
     
     return {
       totalEntries,
@@ -249,7 +249,9 @@ export const getTotalEntries = async () => {
       processedOrderEntriesCount
     };
   } catch (error) {
-    console.error('Failed to get total entries count:', error);
+    // Console statement removed for security
     throw error;
   }
 };
+
+

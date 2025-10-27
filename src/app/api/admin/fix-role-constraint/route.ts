@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Pool } from "pg";
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     const client = await pool.connect();
     
     try {
-      console.log('Checking for users_role_check constraint...');
+      // Console log removed for security
       
       // Check if the constraint exists
       const constraintCheck = await client.query(`
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       `);
       
       if (constraintCheck.rows.length > 0) {
-        console.log('Found users_role_check constraint, removing it...');
+        // Console log removed for security
         
         // Drop the constraint
         await client.query('ALTER TABLE users DROP CONSTRAINT users_role_check');
@@ -51,10 +51,11 @@ export async function POST(req: NextRequest) {
       client.release();
     }
   } catch (error) {
-    console.error("Error fixing role constraint:", error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: "Failed to fix role constraint", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
 }
+

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { Pool } from 'pg';
@@ -11,13 +11,13 @@ export async function GET() {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    console.log('Debug API - Session:', JSON.stringify(session, null, 2));
+    // Console log removed for security
 
     const userEmail = session.user.email;
     const userId = (session.user as any).id;
     const userRole = session.user.role;
 
-    console.log('Debug API - User details:', { userEmail, userId, userRole });
+    // Console log removed for security
 
     if (!userId) {
       return NextResponse.json({ 
@@ -36,7 +36,7 @@ export async function GET() {
     try {
       // First check if user exists in database
       const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
-      console.log('Debug API - User from DB:', userResult.rows[0]);
+      // Console log removed for security
 
       // Check user's RBAC roles
       const rolesResult = await pool.query(`
@@ -45,7 +45,7 @@ export async function GET() {
         JOIN roles r ON ur.role_id = r.id
         WHERE ur.user_id = $1 AND ur.is_active = true AND r.is_active = true
       `, [userId]);
-      console.log('Debug API - User roles:', rolesResult.rows);
+      // Console log removed for security
 
       // Check user's permissions through roles
       const permissionsResult = await pool.query(`
@@ -56,7 +56,7 @@ export async function GET() {
         WHERE ur.user_id = $1 AND ur.is_active = true AND p.is_active = true
         ORDER BY p.name
       `, [userId]);
-      console.log('Debug API - User permissions:', permissionsResult.rows);
+      // Console log removed for security
 
       return NextResponse.json({
         success: true,
@@ -77,10 +77,11 @@ export async function GET() {
     }
 
   } catch (error) {
-    console.error('Debug API error:', error);
+    // Console statement removed for security
     return NextResponse.json({
       error: 'Internal server error',
       message: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -99,7 +99,7 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
         setError('Failed to load users');
       }
     } catch (error) {
-      console.error('Error fetching users:', error);
+      // Console statement removed for security
       setError('Error loading users');
     } finally {
       setLoadingUsers(false);
@@ -117,7 +117,7 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
     setError(null);
     
     try {
-      console.log('Loading user package breakdown for:', { userId: selectedUserId, date: selectedDate });
+      // Loading user package breakdown - logging removed for security
       
       const response = await fetch(
         `/api/admin/accounting/user-package-breakdown?userId=${selectedUserId}&date=${selectedDate}`
@@ -125,7 +125,7 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('API Error:', errorText);
+        // Console statement removed for security
         throw new Error(`Failed to load user package breakdown: ${response.status}`);
       }
       
@@ -135,7 +135,7 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
       }
       
       const responseData = await response.json();
-      console.log('Received user package data:', responseData);
+      // Received user package data - logging removed for security
       setData(responseData);
       
       if (responseData.packages?.length === 0) {
@@ -143,7 +143,7 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
         setError(`No packages found for ${selectedUser?.name || 'this user'} on ${format(new Date(selectedDate), 'MMMM d, yyyy')}. Try selecting a different date or user.`);
       }
     } catch (error) {
-      console.error('Error loading user package breakdown:', error);
+      // Console statement removed for security
       setError(`Failed to load user package breakdown: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
@@ -448,3 +448,4 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
     </div>
   );
 }
+

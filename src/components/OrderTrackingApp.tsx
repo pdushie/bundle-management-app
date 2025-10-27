@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { Search, Calendar, Phone, Database, Loader, Filter, ArrowUpDown, Check, AlertTriangle, Clock, CheckCircle } from "lucide-react";
@@ -79,7 +79,7 @@ export default function OrderTrackingApp() {
       
       if (filters) {
         // Use the filter API endpoint with POST
-        console.log("Fetching with filters:", JSON.stringify(filters));
+        // Console log removed for security
         response = await fetch("/api/orders/track/filter", {
           method: "POST",
           headers: {
@@ -89,7 +89,7 @@ export default function OrderTrackingApp() {
         });
       } else {
         // Use the basic endpoint with GET
-        console.log("Fetching all entries without filters");
+        // Console log removed for security
         response = await fetch("/api/orders/track", {
           method: "GET",
           headers: {
@@ -100,15 +100,15 @@ export default function OrderTrackingApp() {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("API error response:", errorText);
+        // Console statement removed for security
         throw new Error(`Failed to fetch order entries: ${response.statusText}`);
       }
 
       const data = await response.json();
-      console.log(`Received ${data.orderEntries?.length || 0} entries from API`);
+      // Received entries from API - logging removed for security
       setOrderEntries(data.orderEntries || []);
     } catch (err) {
-      console.error("Error fetching order entries:", err);
+      // Console statement removed for security
       setError(`Failed to load order entries: ${(err as Error).message}`);
     } finally {
       setIsLoading(false);
@@ -129,12 +129,12 @@ export default function OrderTrackingApp() {
     
     if (startDate) {
       filters.startDate = startDate;
-      console.log(`Applying start date filter: ${startDate}`);
+      // Console log removed for security
     }
     
     if (endDate) {
       filters.endDate = endDate;
-      console.log(`Applying end date filter: ${endDate}`);
+      // Console log removed for security
     }
     
     if (statusFilter && statusFilter !== "all") {
@@ -147,10 +147,10 @@ export default function OrderTrackingApp() {
     
     // Check if we have any filters
     if (Object.keys(filters).length > 0) {
-      console.log("Applying filters:", JSON.stringify(filters));
+      // Console log removed for security
       fetchOrderEntries(filters);
     } else {
-      console.log("No filters applied, fetching all entries");
+      // Console log removed for security
       fetchOrderEntries();
     }
   };
@@ -174,7 +174,7 @@ export default function OrderTrackingApp() {
         setAdmins(data.admins || []);
       }
     } catch (error) {
-      console.error("Error fetching admins:", error);
+      // Console statement removed for security
     }
   };
 
@@ -368,7 +368,7 @@ export default function OrderTrackingApp() {
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 value={startDate}
                 onChange={(e) => {
-                  console.log("Setting start date:", e.target.value);
+                  // Console log removed for security
                   setStartDate(e.target.value);
                 }}
                 max={endDate || undefined}
@@ -386,7 +386,7 @@ export default function OrderTrackingApp() {
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 value={endDate}
                 onChange={(e) => {
-                  console.log("Setting end date:", e.target.value);
+                  // Console log removed for security
                   setEndDate(e.target.value);
                 }}
                 min={startDate || undefined}
@@ -621,3 +621,5 @@ export default function OrderTrackingApp() {
     </div>
   );
 }
+
+

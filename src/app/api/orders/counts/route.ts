@@ -1,18 +1,39 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getOrderCounts } from '@/lib/orderDbOperations';
 import { testConnection } from '@/lib/db';
 
-// Simple cache for order counts (reduces DB load)
-let orderCountsCache: any = null;
-let countsCacheTimestamp = 0;
+// User-specific cache for order counts (reduces DB load)
+const orderCountsCache: Map<string, {data: any, timestamp: number}> = new Map();
 const COUNTS_CACHE_DURATION = 60000; // 1 minute cache
 
 export async function POST(request: NextRequest) {
   try {
-    // Check cache first (especially useful for rapid polling)
+    // Parse userEmail first to create a proper cache key
+    let userEmail: string | undefined;
+    try {
+      const contentType = request.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const text = await request.text();
+        if (text && text.trim() !== '') {
+          const data = JSON.parse(text);
+          userEmail = data.userEmail;
+        }
+      } else {
+        const url = new URL(request.url);
+        userEmail = url.searchParams.get('userEmail') || undefined;
+      }
+    } catch (parseError) {
+      // Continue without userEmail if parsing fails
+    }
+
+    // Create cache key - use userEmail if provided, otherwise 'global' for general counts
+    const cacheKey = userEmail || 'global';
+    
+    // Check user-specific cache first (especially useful for rapid polling)
     const now = Date.now();
-    if (orderCountsCache && (now - countsCacheTimestamp) < COUNTS_CACHE_DURATION) {
-      return NextResponse.json(orderCountsCache, {
+    const cachedEntry = orderCountsCache.get(cacheKey);
+    if (cachedEntry && (now - cachedEntry.timestamp) < COUNTS_CACHE_DURATION) {
+      return NextResponse.json(cachedEntry.data, {
         headers: {
           'Content-Type': 'application/json',
           'Cache-Control': 'public, max-age=60',
@@ -23,14 +44,14 @@ export async function POST(request: NextRequest) {
     // First, test the database connection with extra logging for ECONNRESET issues
     const connectionTest = await testConnection();
     if (!connectionTest.success) {
-      // console.error('Database connection test failed in order counts route:', connectionTest.error);
+      // // Console statement removed for security
       
       // Check for ECONNRESET errors specifically
       const errorString = String(connectionTest.error);
       const isConnReset = errorString.includes('ECONNRESET');
       
       if (isConnReset) {
-        // console.error('ECONNRESET error detected - connection reset by peer');
+        // // Console statement removed for security
       }
       
       // Return a more specific error with a 503 Service Unavailable status
@@ -48,36 +69,16 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Parse the request body
-    let userEmail: string | undefined;
-    try {
-      // Check if the request has content before trying to parse it
-      const contentType = request.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        const text = await request.text();
-        if (text && text.trim() !== '') {
-          const data = JSON.parse(text);
-          userEmail = data.userEmail;
-        } else {
-          // console.log('Request body is empty, proceeding without userEmail');
-        }
-      } else {
-        // Try to get userEmail from query parameters if it exists
-        const url = new URL(request.url);
-        userEmail = url.searchParams.get('userEmail') || undefined;
-        // console.log('No JSON content-type, checking query params for userEmail:', userEmail);
-      }
-    } catch (parseError) {
-      // console.error('Error parsing request body:', parseError);
-      // Continue without userEmail if parsing fails
-    }
+    // userEmail was already parsed above for cache key
     
     // Get order counts with retry logic built into the function
     const counts = await getOrderCounts(userEmail);
     
-    // Update cache
-    orderCountsCache = counts;
-    countsCacheTimestamp = Date.now();
+    // Update user-specific cache
+    orderCountsCache.set(cacheKey, {
+      data: counts,
+      timestamp: Date.now()
+    });
     
     // Return the counts
     return NextResponse.json(counts, {
@@ -87,20 +88,20 @@ export async function POST(request: NextRequest) {
       }
     });
   } catch (error) {
-    // console.error('Error in order counts route:', error);
+    // // Console statement removed for security
     
     // Log detailed error information
     if (error instanceof Error) {
-      // console.error('Error name:', error.name);
-      // console.error('Error message:', error.message);
-      // console.error('Error stack:', error.stack);
+      // // Console statement removed for security
+      // // Console statement removed for security
+      // // Console statement removed for security
       
       // Check for ECONNRESET errors in the catch block
       const isConnReset = error.message.includes('ECONNRESET') || 
                          ((error as any).cause && String((error as any).cause).includes('ECONNRESET'));
                          
       if (isConnReset) {
-        // console.error('ECONNRESET error detected in catch block');
+        // // Console statement removed for security
         
         return NextResponse.json(
           { 
@@ -130,3 +131,17 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Clean up expired cache entries to prevent memory leaks
+setInterval(() => {
+  const now = Date.now();
+  const keysToDelete: string[] = [];
+  
+  orderCountsCache.forEach((entry, key) => {
+    if (now - entry.timestamp > COUNTS_CACHE_DURATION * 2) { // Clean up entries older than 2x cache duration
+      keysToDelete.push(key);
+    }
+  });
+  
+  keysToDelete.forEach(key => orderCountsCache.delete(key));
+}, COUNTS_CACHE_DURATION); // Run cleanup every cache duration

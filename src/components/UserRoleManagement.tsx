@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import '@/styles/rbac-select-fix.css';
@@ -69,15 +69,15 @@ export function UserRoleManagement({ users, roles, onUsersChange }: UserRoleMana
       const response = await fetch(`/api/admin/rbac/users/${userId}/roles`);
       const data = await response.json();
       
-      console.log(`Fetching roles for user ${userId}:`, { status: response.status, data });
+      // Fetching roles for user - logging removed for security
       
       if (response.ok && data.success) {
         setUserRoles(prev => ({ ...prev, [userId]: data.data }));
       } else {
-        console.error(`Failed to fetch roles for user ${userId}:`, data.error);
+        // Console statement removed for security
       }
     } catch (error) {
-      console.error(`Error fetching user roles for user ${userId}:`, error);
+      // Console statement removed for security
     } finally {
       setLoadingRoles(prev => ({ ...prev, [userId]: false }));
     }
@@ -85,11 +85,11 @@ export function UserRoleManagement({ users, roles, onUsersChange }: UserRoleMana
 
   const handleAssignRole = async () => {
     if (!selectedUser || !selectedRoleId) {
-      console.log('Missing selectedUser or selectedRoleId:', { selectedUser, selectedRoleId });
+      // Console log removed for security
       return;
     }
 
-    console.log('Assigning role:', { userId: selectedUser.id, roleId: selectedRoleId });
+    // Assigning role - logging removed for security
 
     try {
       const response = await fetch(`/api/admin/rbac/users/${selectedUser.id}/roles`, {
@@ -103,7 +103,7 @@ export function UserRoleManagement({ users, roles, onUsersChange }: UserRoleMana
       });
 
       const data = await response.json();
-      console.log('Role assignment response:', { status: response.status, data });
+      // Console log removed for security
 
       if (response.ok && data.success) {
         // Refresh user roles
@@ -115,27 +115,27 @@ export function UserRoleManagement({ users, roles, onUsersChange }: UserRoleMana
         await fetchUserRoles(selectedUser.id);
         setIsAssignDialogOpen(false);
         setSelectedRoleId('');
-        console.log('Role assigned successfully');
+        // Console log removed for security
         
         // Show success message
         alert('✅ Role assigned successfully!');
       } else {
-        console.error('Role assignment failed:', { status: response.status, error: data.error });
+        // Console statement removed for security
         
         // Handle specific error cases
         if (data.error?.includes('already has this role')) {
-          alert('⚠️ User already has this role assigned.');
+          alert('âš ï¸ User already has this role assigned.');
         } else if (response.status === 401) {
-          alert('❌ Unauthorized. You need super admin access to assign roles.');
+          alert('âŒ Unauthorized. You need super admin access to assign roles.');
         } else if (response.status === 404) {
-          alert('❌ User not found.');
+          alert('âŒ User not found.');
         } else {
-          alert(`❌ Failed to assign role: ${data.error || 'Unknown error'}`);
+          alert(`âŒ Failed to assign role: ${data.error || 'Unknown error'}`);
         }
       }
     } catch (error) {
-      console.error('Error assigning role:', error);
-      alert('❌ Network error: Failed to assign role. Please try again.');
+      // Console statement removed for security
+      alert('âŒ Network error: Failed to assign role. Please try again.');
     }
   };
 
@@ -148,7 +148,7 @@ export function UserRoleManagement({ users, roles, onUsersChange }: UserRoleMana
       });
 
       const data = await response.json();
-      console.log('Role removal response:', { status: response.status, data });
+      // Console log removed for security
 
       if (response.ok && data.success) {
         // Refresh user roles
@@ -160,19 +160,19 @@ export function UserRoleManagement({ users, roles, onUsersChange }: UserRoleMana
         await fetchUserRoles(userId);
         alert('✅ Role removed successfully!');
       } else {
-        console.error('Role removal failed:', { status: response.status, error: data.error });
+        // Console statement removed for security
         
         if (response.status === 401) {
-          alert('❌ Unauthorized. You need super admin access to remove roles.');
+          alert('âŒ Unauthorized. You need super admin access to remove roles.');
         } else if (response.status === 404) {
-          alert('❌ User or role not found.');
+          alert('âŒ User or role not found.');
         } else {
-          alert(`❌ Failed to remove role: ${data.error || 'Unknown error'}`);
+          alert(`âŒ Failed to remove role: ${data.error || 'Unknown error'}`);
         }
       }
     } catch (error) {
-      console.error('Error removing role:', error);
-      alert('❌ Network error: Failed to remove role. Please try again.');
+      // Console statement removed for security
+      alert('âŒ Network error: Failed to remove role. Please try again.');
     }
   };
 
@@ -375,3 +375,4 @@ export function UserRoleManagement({ users, roles, onUsersChange }: UserRoleMana
     </div>
   );
 }
+

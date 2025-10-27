@@ -1,4 +1,4 @@
-/**
+﻿/**
  * External Time Service
  * Provides accurate server time from external sources to avoid relying on client-side time
  */
@@ -72,7 +72,7 @@ async function fetchExternalTime(): Promise<Date> {
       }
     }
   } catch (error) {
-    console.warn(`Local time service failed:`, error);
+    // Console statement removed for security
   }
 
   // Fallback to external services if local fails
@@ -134,13 +134,13 @@ async function fetchExternalTime(): Promise<Date> {
       }
       
     } catch (error) {
-      console.warn(`Failed to fetch time from ${endpoint}:`, error);
+      // Console statement removed for security
       continue;
     }
   }
   
   // If all external services fail, return local time instead of throwing
-  console.warn('All time service endpoints failed, using local system time');
+  // Console statement removed for security
   return new Date();
 }
 
@@ -160,9 +160,9 @@ async function syncTime(): Promise<void> {
     timeOffset = serverTime - Date.now();
     lastSyncTime = Date.now();
     
-    console.log(`Time synced successfully. Offset: ${timeOffset}ms`);
+    // Console log removed for security
   } catch (error) {
-    console.warn('Failed to sync time with external services, using local time:', error);
+    // Console statement removed for security
     // Fallback to local time with zero offset
     timeOffset = 0;
     lastSyncTime = Date.now();
@@ -180,7 +180,7 @@ export async function getCurrentTime(): Promise<Date> {
     try {
       await syncTime();
     } catch (error) {
-      console.warn('Time sync failed, using local time:', error);
+      // Console statement removed for security
       // Continue with local time if sync fails
     }
   }
@@ -195,7 +195,9 @@ export async function getCurrentTime(): Promise<Date> {
 export function getCurrentTimeSync(): Date {
   // If we haven't synced yet, try to sync in background
   if (lastSyncTime === 0) {
-    syncTime().catch(console.error);
+    syncTime().catch(() => {
+      // Console statement removed for security
+    });
   }
   
   return new Date(Date.now() + timeOffset);
@@ -297,3 +299,5 @@ export function getTimeSyncStatus(): {
     isStale: lastSyncTime === 0 || (now - lastSyncTime) > SYNC_INTERVAL
   };
 }
+
+

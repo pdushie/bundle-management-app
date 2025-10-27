@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
@@ -43,11 +43,11 @@ export default function AnnouncementBanner() {
       // Add client-side cache to prevent redundant requests (5 minutes)
       const now = getCurrentTimestampSync();
       if (lastFetchTime && (now - lastFetchTime) < 300000) {
-        // console.log("Skipping fetch - cache still valid");
+        // // Console log removed for security
         return;
       }
       
-      // console.log("Fetching announcements...");
+      // // Console log removed for security
       
       // Update last fetch time
       setLastFetchTime(now);
@@ -72,22 +72,22 @@ export default function AnnouncementBanner() {
             if (contentType && contentType.includes("application/json")) {
               const data = await adminResponse.json();
               if (data.announcements && data.announcements.length > 0) {
-                // console.log("Admin announcements data received:", data);
+                // // Console log removed for security
                 // Filter out inactive announcements immediately on client side
                 const activeAnnouncements = data.announcements.filter((ann: Announcement) => ann.isActive === true);
                 setAnnouncements(activeAnnouncements);
                 return; // Successfully got announcements from admin endpoint
               }
             } else {
-              // console.log("Admin endpoint returned non-JSON response:", contentType);
+              // // Console log removed for security
             }
           } else if (adminResponse.status === 401 || adminResponse.status === 403) {
-            // console.log("Admin endpoint authentication failed, falling back to public endpoint");
+            // // Console log removed for security
           } else {
-            console.log("Admin endpoint failed:", adminResponse.status, adminResponse.statusText);
+            // Console log removed for security
           }
         } catch (adminError) {
-          console.error("Error with admin announcements endpoint:", adminError);
+          // Console statement removed for security
         }
       }
       
@@ -110,33 +110,33 @@ export default function AnnouncementBanner() {
           if (contentType && contentType.includes("application/json")) {
             const data = await publicResponse.json();
             if (data.announcements && Array.isArray(data.announcements)) {
-              console.log("Public announcements data received:", data);
+              // Console log removed for security
               // Filter out inactive announcements immediately on client side
               const activeAnnouncements = data.announcements.filter((ann: Announcement) => ann && ann.isActive === true);
               setAnnouncements(activeAnnouncements);
             } else {
-              console.log("No valid announcements received from public endpoint");
+              // No valid announcements received from public endpoint - logging removed for security
               setAnnouncements([]);
             }
           } else {
-            console.log("Public endpoint returned non-JSON response:", contentType);
+            // Console log removed for security
             setAnnouncements([]);
           }
         } else {
-          console.error("Public endpoint failed:", publicResponse.status, publicResponse.statusText);
+          // Console statement removed for security
           setAnnouncements([]);
         }
       } catch (publicError) {
         if (publicError instanceof Error && publicError.name === 'AbortError') {
-          console.error("Public announcements request timed out");
+          // Console statement removed for security
         } else {
-          console.error("Error with public announcements endpoint:", publicError);
+          // Console statement removed for security
         }
         setAnnouncements([]);
       }
       
     } catch (error) {
-      console.error("Error in announcement fetching process:", error);
+      // Console statement removed for security
     }
   }, []);
 
@@ -154,7 +154,7 @@ export default function AnnouncementBanner() {
 
     // Listen for custom announcement change events with controlled refresh
     const handleAnnouncementChange = () => {
-      console.log("Announcement change event detected, refreshing announcements...");
+      // Console log removed for security
       // Clear rotation intervals
       if (rotationIntervalRef.current) {
         clearInterval(rotationIntervalRef.current);
@@ -197,7 +197,7 @@ export default function AnnouncementBanner() {
     }
     
     pollingIntervalRef.current = setInterval(() => {
-      // console.log(`Polling for announcement updates... (${isAdmin ? 'admin' : 'user'} mode, ${isWindowFocused ? 'focused' : 'unfocused'})`);
+      // // Console log removed for security
       fetchAnnouncements();
     }, pollingInterval);
 
@@ -217,7 +217,7 @@ export default function AnnouncementBanner() {
         
         // Only update if there's actually a difference
         if (activeAnnouncements.length !== currentAnnouncements.length) {
-          console.log(`Filtering out ${currentAnnouncements.length - activeAnnouncements.length} inactive announcements`);
+          // Console log removed for security
           return activeAnnouncements;
         }
         return currentAnnouncements;
@@ -243,7 +243,7 @@ export default function AnnouncementBanner() {
     
     // Handle different cases based on active announcements
     if (!hasActive) {
-      console.log("No active announcements detected, clearing rotation");
+      // Console log removed for security
       if (currentIndex !== 0) {
         setCurrentIndex(0);
       }
@@ -334,3 +334,5 @@ export default function AnnouncementBanner() {
     </div>
   );
 }
+
+

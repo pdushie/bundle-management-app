@@ -1,4 +1,4 @@
-import { db, neonClient } from './db';
+﻿import { db, neonClient } from './db';
 import { orders, orderEntries, users } from './schema';
 import { eq, desc, asc, and, gte, lte } from 'drizzle-orm';
 
@@ -97,7 +97,7 @@ export const saveOrder = async (order: Order): Promise<void> => {
       }
     }
   } catch (error) {
-    console.error('Failed to save order to database:', error);
+    // Console statement removed for security
     throw error;
   }
 };
@@ -134,7 +134,7 @@ export const loadOrders = async (): Promise<Order[]> => {
     }
     return allOrders;
   } catch (error) {
-    console.error('Failed to load orders from database:', error);
+    // Console statement removed for security
     throw error;
   }
 };
@@ -143,7 +143,7 @@ export const addOrder = async (order: Order): Promise<void> => {
   try {
     await saveOrder(order);
   } catch (error) {
-    console.error('Failed to add order to database:', error);
+    // Console statement removed for security
     throw error;
   }
 };
@@ -187,7 +187,7 @@ export const saveOrderWithCost = async (order: Order): Promise<void> => {
       }
     }
   } catch (error) {
-    console.error('Failed to save order with cost:', error);
+    // Console statement removed for security
     throw error;
   }
 };
@@ -225,7 +225,7 @@ export const getOrdersOldestFirst = async (): Promise<Order[]> => {
     }
     return allOrders;
   } catch (error) {
-    console.error('Failed to get orders oldest first:', error);
+    // Console statement removed for security
     throw error;
   }
 };
@@ -237,7 +237,7 @@ export const saveOrders = async (ordersList: Order[]): Promise<void> => {
       await saveOrder(order);
     }
   } catch (error) {
-    console.error('Failed to save multiple orders:', error);
+    // Console statement removed for security
     throw error;
   }
 };
@@ -284,7 +284,7 @@ export const updateOrder = async (orderId: string, updates: Partial<Order>): Pro
       if (!updated) return; // Nothing to update
     }
   } catch (error) {
-    console.error('Failed to update order:', error);
+    // Console statement removed for security
     throw error;
   }
 };
@@ -321,7 +321,7 @@ export const getPendingOrdersOldestFirst = async (): Promise<Order[]> => {
     
     return allOrders;
   } catch (error) {
-    console.error('Failed to get pending orders from database:', error);
+    // Console statement removed for security
     return [];
   }
 };
@@ -358,7 +358,7 @@ export const getProcessedOrdersOldestFirst = async (): Promise<Order[]> => {
     
     return allOrders;
   } catch (error) {
-    console.error('Failed to get processed orders from database:', error);
+    // Console statement removed for security
     return [];
   }
 };
@@ -398,7 +398,7 @@ export const getUserOrdersOldestFirst = async (userEmail: string): Promise<Order
     
     return allOrders;
   } catch (error) {
-    console.error('Failed to get user orders from database:', error);
+    // Console statement removed for security
     return [];
   }
 };
@@ -411,7 +411,7 @@ export const clearOrders = async (): Promise<void> => {
     // Server-side operations don't directly notify client
     // Client notification happens via API responses
   } catch (error) {
-    console.error('Failed to clear orders from database:', error);
+    // Console statement removed for security
     throw error;
   }
 };
@@ -434,9 +434,9 @@ export const getOrderCounts = async (userEmail?: string): Promise<{
     try {
       // Use the neonClient directly with the correct tagged template syntax
       const testQuery = await neonClient`SELECT 1 AS test`;
-      console.log('Database connection test passed:', testQuery);
+      // Console log removed for security
     } catch (connError) {
-      console.error('Database connection test failed in getOrderCounts:', connError);
+      // Console statement removed for security
       // Create error with connection error details
       const connectionError = new Error('Database connection failed');
       (connectionError as any).cause = connError;
@@ -448,24 +448,24 @@ export const getOrderCounts = async (userEmail?: string): Promise<{
     // This avoids potential quoting issues with ORM
     
     // Get pending orders count with direct SQL
-    console.log('Getting pending orders count with direct SQL');
+    // Getting pending orders count with direct SQL - logging removed for security
     const pendingResult = await neonClient`SELECT COUNT(*) FROM orders WHERE status = 'pending'`;
     const pendingCount = parseInt(pendingResult[0]?.count || '0', 10);
-    console.log('Pending orders count:', pendingCount);
+    // Pending orders count - logging removed for security
     
     // Get processed orders count with direct SQL
-    console.log('Getting processed orders count with direct SQL');
+    // Getting processed orders count with direct SQL - logging removed for security
     const processedResult = await neonClient`SELECT COUNT(*) FROM orders WHERE status = 'processed'`;
     const processedCount = parseInt(processedResult[0]?.count || '0', 10);
-    console.log('Processed orders count:', processedCount);
+    // Processed orders count - logging removed for security
     
     // Count user orders if userEmail is provided with direct SQL
     let userOrderCount = 0;
     if (userEmail) {
-      console.log('Getting user orders count with direct SQL for:', userEmail);
+      // Getting user orders count with direct SQL - logging removed for security
       const userResult = await neonClient`SELECT COUNT(*) FROM orders WHERE user_email = ${userEmail}`;
       userOrderCount = parseInt(userResult[0]?.count || '0', 10);
-      console.log('User orders count:', userOrderCount);
+      // User orders count - logging removed for security
     }
     
     // Return all counts
@@ -475,20 +475,20 @@ export const getOrderCounts = async (userEmail?: string): Promise<{
       userOrderCount
     };
     
-    console.log('Final order counts:', counts);
+    // Final order counts - logging removed for security
     return counts;
   } catch (error) {
-    console.error('Failed to get order counts from database:', error);
+    // Console statement removed for security
     
     // Log detailed error information
     if (error instanceof Error) {
-      console.error('Error name:', error.name);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
+      // Console statement removed for security
+      // Console statement removed for security
+      // Console statement removed for security
       
       // Check for nested errors
       if ('cause' in error) {
-        console.error('Caused by:', error.cause);
+        // Console statement removed for security
       }
     }
     
@@ -606,7 +606,9 @@ export const getOrdersWithAdminInfo = async (filters?: {
     
     return allOrders;
   } catch (error) {
-    console.error('Failed to get orders with admin info:', error);
+    // Console statement removed for security
     throw error;
   }
 };
+
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 
@@ -112,7 +112,7 @@ export default function HistoryDebugger() {
       
     } catch (err: any) {
       setError(err.message || 'Unknown error occurred');
-      console.error('History debug error:', err);
+      // Console statement removed for security
     } finally {
       setLoading(false);
     }
@@ -145,7 +145,7 @@ export default function HistoryDebugger() {
               <p className="font-medium">/api/history</p>
               <div className="mt-1 text-sm">
                 Status: <span className={`font-semibold ${apiStatus.historyRoute.ok ? 'text-green-600' : 'text-red-600'}`}>
-                  {apiStatus.historyRoute.status} {apiStatus.historyRoute.ok ? '✅' : '❌'}
+                  {apiStatus.historyRoute.status} {apiStatus.historyRoute.ok ? '✅' : 'âŒ'}
                 </span>
                 {apiStatus.historyRoute.error && (
                   <p className="text-red-600 mt-1">Error: {apiStatus.historyRoute.error.toString()}</p>
@@ -162,7 +162,7 @@ export default function HistoryDebugger() {
               <p className="font-medium">/api/history/load</p>
               <div className="mt-1 text-sm">
                 Status: <span className={`font-semibold ${apiStatus.historyLoadRoute?.ok ? 'text-green-600' : 'text-red-600'}`}>
-                  {apiStatus.historyLoadRoute?.status} {apiStatus.historyLoadRoute?.ok ? '✅' : '❌'}
+                  {apiStatus.historyLoadRoute?.status} {apiStatus.historyLoadRoute?.ok ? '✅' : 'âŒ'}
                 </span>
                 {apiStatus.historyLoadRoute?.error && (
                   <p className="text-red-600 mt-1">Error: {apiStatus.historyLoadRoute.error.toString()}</p>
@@ -179,7 +179,7 @@ export default function HistoryDebugger() {
               <p className="font-medium">/api/debug/history</p>
               <div className="mt-1 text-sm">
                 Status: <span className={`font-semibold ${apiStatus.debugHistoryRoute?.ok ? 'text-green-600' : 'text-red-600'}`}>
-                  {apiStatus.debugHistoryRoute?.status} {apiStatus.debugHistoryRoute?.ok ? '✅' : '❌'}
+                  {apiStatus.debugHistoryRoute?.status} {apiStatus.debugHistoryRoute?.ok ? '✅' : 'âŒ'}
                 </span>
                 {apiStatus.debugHistoryRoute?.error && (
                   <p className="text-red-600 mt-1">Error: {apiStatus.debugHistoryRoute.error.toString()}</p>
@@ -199,14 +199,14 @@ export default function HistoryDebugger() {
             <div className="p-3 bg-gray-50 rounded-lg">
               <p className="font-medium">Connection Test:</p>
               <span className={debugResults.connectionTest === 'passed' ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>
-                {debugResults.connectionTest === 'passed' ? 'Passed ✅' : 'Failed ❌'}
+                {debugResults.connectionTest === 'passed' ? 'Passed ✅' : 'Failed âŒ'}
               </span>
             </div>
             
             <div className="p-3 bg-gray-50 rounded-lg">
               <p className="font-medium">Count Query Test:</p>
               <span className={debugResults.countTest === 'passed' ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>
-                {debugResults.countTest === 'passed' ? 'Passed ✅' : 'Failed ❌'}
+                {debugResults.countTest === 'passed' ? 'Passed ✅' : 'Failed âŒ'}
               </span>
             </div>
             
@@ -233,3 +233,4 @@ export default function HistoryDebugger() {
     </div>
   );
 }
+

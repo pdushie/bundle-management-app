@@ -15,7 +15,7 @@ export default withAuth(
       
       // If token is older than 2 hours, require re-authentication
       if (tokenAge > 7200) {
-        console.log('Token expired, redirecting to sign in');
+        // Console log removed for security
         return NextResponse.redirect(new URL('/auth/signin', req.url));
       }
 
@@ -25,7 +25,7 @@ export default withAuth(
         
         // Admin pages require admin, standard_admin, super_admin, data_processor, or moderator role
         if (userRole !== 'admin' && userRole !== 'standard_admin' && userRole !== 'super_admin' && userRole !== 'data_processor' && userRole !== 'moderator') {
-          console.log(`Unauthorized admin access attempt by user role: ${userRole}`);
+          // Unauthorized admin access attempt - logging removed for security
           return NextResponse.redirect(new URL('/?error=unauthorized', req.url));
         }
 
@@ -41,14 +41,14 @@ export default withAuth(
         
         // Add rate limiting logic here if needed
         // For now, just log API access
-        console.log(`API access: ${pathname} by user ${token.id} (${token.role})`);
+        // API access - logging removed for security
       }
     }
 
     // Log suspicious activity
     if (!token && pathname.startsWith('/admin')) {
       const forwardedFor = req.headers.get('x-forwarded-for') || 'unknown';
-      console.log(`Unauthorized access attempt to admin area: ${pathname} from IP: ${forwardedFor}`);
+      // Unauthorized access attempt to admin area - logging removed for security
     }
   },
   {
@@ -68,14 +68,14 @@ export default withAuth(
 
         // Additional token validation
         if (token.invalid) {
-          console.log('Invalid token detected, denying access');
+          // Console log removed for security
           return false;
         }
 
         // Role-based authorization
         if (pathname.startsWith('/admin')) {
           const hasAdminAccess = token.role === 'admin' || token.role === 'standard_admin' || token.role === 'super_admin' || token.role === 'data_processor' || token.role === 'moderator';
-          console.log(`Middleware auth check: path=${pathname}, role=${token.role}, hasAccess=${hasAdminAccess}`);
+          // Middleware auth check - logging removed for security
           return hasAdminAccess;
         }
 
@@ -100,3 +100,4 @@ export const config = {
     '/((?!api/auth|api/announcements|auth/signin|_next/static|_next/image|favicon.ico|public).*)',
   ]
 };
+

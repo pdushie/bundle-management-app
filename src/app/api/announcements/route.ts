@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { db, neonClient } from "@/lib/db";
 import { announcements } from "@/lib/schema";
 import { sql } from "drizzle-orm";
@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
         
         return NextResponse.json({ announcements: result }, { headers });
       } catch (drizzleError) {
-        // console.error("Drizzle query failed:", drizzleError);
+        // // Console statement removed for security
         // Continue to fallback method
       }
     }
@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
       
       return NextResponse.json({ announcements: formattedResult }, { headers });
     } catch (sqlError) {
-      // console.error("Direct SQL query failed:", sqlError);
+      // // Console statement removed for security
       return NextResponse.json({ 
         announcements: [],
         error: 'Database connection error' 
@@ -92,10 +92,11 @@ export async function GET(req: NextRequest) {
     }
     
   } catch (error) {
-    // console.error("Error fetching active announcements:", error);
+    // // Console statement removed for security
     return NextResponse.json(
       { error: "Failed to fetch announcements", announcements: [] }, 
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 }
+

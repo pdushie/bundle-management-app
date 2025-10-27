@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { 
   loadOrders, 
   getOrdersOldestFirst,
@@ -12,7 +12,7 @@ export async function GET() {
     const orders = await loadOrders();
     return NextResponse.json({ orders });
   } catch (error) {
-    console.error('Error in orders GET route:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Failed to retrieve orders' },
       { status: 500 }
@@ -46,10 +46,11 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({ orders: results });
   } catch (error) {
-    console.error('Error in orders POST route:', error);
+    // Console statement removed for security
     return NextResponse.json(
       { error: 'Failed to retrieve orders' },
       { status: 500 }
     );
   }
 }
+

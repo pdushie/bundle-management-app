@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
@@ -74,7 +74,7 @@ export default function ManageUserPricing({ userId, userName, userEmail, onClose
         }
       }
     } catch (error) {
-      console.error('Failed to fetch pricing data:', error);
+      // Console statement removed for security
     } finally {
       setIsLoading(false);
     }
@@ -104,7 +104,7 @@ export default function ManageUserPricing({ userId, userName, userEmail, onClose
         // onClose(); // Don't close immediately so user can see the update
       }
     } catch (error) {
-      console.error('Failed to assign pricing profile:', error);
+      // Console statement removed for security
     } finally {
       setActionLoading(false);
     }
@@ -124,7 +124,7 @@ export default function ManageUserPricing({ userId, userName, userEmail, onClose
       setUserProfiles([]);
       setSelectedProfile(null);
     } catch (error) {
-      console.error('Failed to remove pricing profiles:', error);
+      // Console statement removed for security
     } finally {
       setActionLoading(false);
     }
@@ -275,3 +275,4 @@ export default function ManageUserPricing({ userId, userName, userEmail, onClose
     </div>
   );
 }
+
