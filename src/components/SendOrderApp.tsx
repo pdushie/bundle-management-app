@@ -201,11 +201,19 @@ export default function SendOrderApp() {
     
     let reason = '';
     if (!phoneValidation.isValid && !allocationValid) {
-      reason = 'Invalid phone number and data allocation';
+      if (dataAllocation === 0) {
+        reason = 'Invalid phone number and missing data allocation';
+      } else {
+        reason = 'Invalid phone number and data allocation';
+      }
     } else if (!phoneValidation.isValid) {
       reason = 'Invalid phone number';
     } else if (!allocationValid) {
-      reason = 'Invalid data allocation (must be greater than 0)';
+      if (dataAllocation === 0) {
+        reason = 'Missing data allocation';
+      } else {
+        reason = 'Invalid data allocation (must be greater than 0)';
+      }
     }
     
     return {
@@ -213,6 +221,53 @@ export default function SendOrderApp() {
       phoneValidation,
       allocationValid,
       reason
+    };
+  };
+
+  // Enhanced function to parse data allocation with various formats
+  const parseDataAllocation = (allocRaw: string): { allocGB: number; wasConverted: boolean; originalFormat: string } => {
+    const originalFormat = allocRaw;
+    let allocValue = 0;
+    let wasConverted = false;
+    
+    // Normalize the input - remove spaces and convert to lowercase
+    const normalized = allocRaw.toLowerCase().trim();
+    
+    // Handle different formats
+    if (/^\d+(\.\d+)?gig(s|abyte|abytes)?$/i.test(normalized)) {
+      // Format: "25gig", "25gigs", "25gigabyte", "25gigabytes"
+      allocValue = parseFloat(normalized.replace(/gig.*$/i, ""));
+    } else if (/^\d+(\.\d+)?gb$/i.test(normalized)) {
+      // Format: "8gb", "1.5gb"
+      allocValue = parseFloat(normalized.replace(/gb$/i, ""));
+    } else if (/^\d+(\.\d+)?g$/i.test(normalized)) {
+      // Format: "2g", "5.5g"
+      allocValue = parseFloat(normalized.replace(/g$/i, ""));
+    } else if (/^\d+(\.\d+)?mb$/i.test(normalized)) {
+      // Format: "1024mb", "512mb" - convert MB to GB
+      const mbValue = parseFloat(normalized.replace(/mb$/i, ""));
+      allocValue = mbValue / 1024;
+      wasConverted = true;
+    } else if (/^\d+(\.\d+)?m$/i.test(normalized)) {
+      // Format: "1024m", "512m" - convert MB to GB
+      const mbValue = parseFloat(normalized.replace(/m$/i, ""));
+      allocValue = mbValue / 1024;
+      wasConverted = true;
+    } else if (/^\d+(\.\d+)?$/.test(normalized)) {
+      // Format: "3", "25", "1.5" - assume GB if no unit
+      allocValue = parseFloat(normalized);
+    } else {
+      // Try to extract just the numeric part as fallback
+      const numericMatch = normalized.match(/^(\d+(?:\.\d+)?)/);
+      if (numericMatch) {
+        allocValue = parseFloat(numericMatch[1]);
+      }
+    }
+    
+    return {
+      allocGB: allocValue,
+      wasConverted,
+      originalFormat
     };
   };
 
@@ -231,7 +286,7 @@ export default function SendOrderApp() {
         .split(/\r?\n/)
         .map((line) => line.trim())
         .filter((line) => line !== "");
-      
+
       // Enhanced parsing to handle both single-line and multi-line formats
       const processedEntries: Array<{phoneRaw: string, allocRaw: string, allocGB: number}> = [];
       
@@ -244,56 +299,83 @@ export default function SendOrderApp() {
         // Check if this line has both phone and allocation (single-line format)
         if (parts.length >= 2) {
           const phoneRaw = parts[0];
-          const allocRaw = parts[parts.length - 1].replace(/gb$/i, "").trim();
+          const allocRawInput = parts[parts.length - 1].trim();
           
-          // Validate allocation format
-          if (/^\d+(\.\d+)?$/.test(allocRaw)) {
-            const allocGB = parseFloat(allocRaw);
-            
-            // Check for phone number misinterpretation bug
-            if (!(allocGB >= 10000000 && allocGB <= 999999999 && allocRaw.startsWith('0') && allocRaw.length === 10)) {
-              if (!isNaN(allocGB) && allocGB > 0) {
-                processedEntries.push({ phoneRaw, allocRaw, allocGB });
-                // console.log(`Single-line format: Phone="${phoneRaw}", Data="${allocRaw}"`);
-                continue;
-              }
+          // Use enhanced parsing for data allocation
+          const allocationResult = parseDataAllocation(allocRawInput);
+          
+          // Check for phone number misinterpretation bug
+          if (!(allocationResult.allocGB >= 10000000 && allocationResult.allocGB <= 999999999 && allocRawInput.startsWith('0') && allocRawInput.length === 10)) {
+            if (!isNaN(allocationResult.allocGB) && allocationResult.allocGB > 0) {
+              processedEntries.push({ 
+                phoneRaw, 
+                allocRaw: allocRawInput,
+                allocGB: allocationResult.allocGB 
+              });
+              continue;
+            } else {
+              // Include entries with invalid/missing data allocation so they can be flagged as invalid
+              processedEntries.push({ 
+                phoneRaw, 
+                allocRaw: allocRawInput,
+                allocGB: 0 // This will be flagged as invalid
+              });
+              continue;
             }
           }
         }
-        
-        // Check if this could be a phone number for multi-line format
-        if (parts.length === 1) {
-          const possiblePhone = parts[0];
+        // Check if this line has only a phone number (missing data allocation)
+        else if (parts.length === 1) {
+          const phoneRaw = parts[0];
           
-          // Check if this looks like a phone number (starts with 0, contains only digits, reasonable length)
-          if (/^0\d{8,9}$/.test(possiblePhone) && i + 1 < rawLines.length) {
-            const nextLine = rawLines[i + 1].trim();
-            const nextParts = nextLine.split(/\s+/);
-            
-            // Check if next line could be data allocation
-            if (nextParts.length === 1) {
-              const possibleAlloc = nextParts[0].replace(/gb$/i, "").trim();
+          // Check if this looks like a phone number
+          if (/^0\d{8,9}$/.test(phoneRaw)) {
+            // Check if next line might be data allocation (multi-line format)
+            if (i + 1 < rawLines.length) {
+              const nextLine = rawLines[i + 1].trim();
+              const nextParts = nextLine.split(/\s+/);
               
-              if (/^\d+(\.\d+)?$/.test(possibleAlloc)) {
-                const allocGB = parseFloat(possibleAlloc);
+              // Check if next line could be data allocation
+              if (nextParts.length === 1) {
+                const possibleAllocInput = nextParts[0].trim();
+                
+                // Use enhanced parsing for data allocation
+                const allocationResult = parseDataAllocation(possibleAllocInput);
                 
                 // Make sure it's not a phone number misinterpreted as allocation
-                if (!(allocGB >= 10000000 && allocGB <= 999999999 && possibleAlloc.startsWith('0') && possibleAlloc.length === 10)) {
-                  if (!isNaN(allocGB) && allocGB > 0) {
+                if (!(allocationResult.allocGB >= 10000000 && allocationResult.allocGB <= 999999999 && possibleAllocInput.startsWith('0') && possibleAllocInput.length === 10)) {
+                  if (!isNaN(allocationResult.allocGB) && allocationResult.allocGB > 0) {
                     processedEntries.push({ 
-                      phoneRaw: possiblePhone, 
-                      allocRaw: possibleAlloc, 
-                      allocGB 
+                      phoneRaw: phoneRaw, 
+                      allocRaw: possibleAllocInput, 
+                      allocGB: allocationResult.allocGB 
                     });
-                    // console.log(`Multi-line format: Phone="${possiblePhone}", Data="${possibleAlloc}"`);
+                    i++; // Skip the next line since we've processed it
+                    continue;
+                  } else {
+                    // Invalid data allocation in multi-line format
+                    processedEntries.push({ 
+                      phoneRaw: phoneRaw, 
+                      allocRaw: possibleAllocInput, 
+                      allocGB: 0 
+                    });
                     i++; // Skip the next line since we've processed it
                     continue;
                   }
                 }
               }
             }
+            
+            // Phone number without data allocation (single line or end of input)
+            processedEntries.push({ 
+              phoneRaw, 
+              allocRaw: '', // Empty allocation
+              allocGB: 0 // This will be flagged as invalid
+            });
+            continue;
           }
         }
+
         
         // console.log(`Skipping line "${line}" - unrecognized format`);
       }
@@ -343,7 +425,6 @@ export default function SendOrderApp() {
           
           // Final validation combines all checks: phone number format, validation function, AND data allocation
           const finalValid = isValidNumber && entryValidation.isValid;
-          // console.log(`Final validation for ${entryValidation.phoneValidation.correctedNumber}: regex=${isValidNumber}, entry validation=${entryValidation.isValid}, final=${finalValid}`);
           
           const entry = {
             number: entryValidation.phoneValidation.correctedNumber,
@@ -356,7 +437,7 @@ export default function SendOrderApp() {
           
           parsed.push(entry);
           
-          // Log validation details
+          // Log validation details for debugging if needed
           if (!finalValid) {
             console.log(`Entry marked invalid: ${entryValidation.reason}`);
           }
@@ -472,56 +553,51 @@ export default function SendOrderApp() {
               
               const phoneNumber = row.getCell(1).text || '';
               let dataAllocation = 0;
+              let allocRawInput = '';
               
-              // Try to get data allocation from column 2 first (GB directly)
+              // Try to get data allocation from column 2 first (various formats)
               if (row.getCell(2).text) {
-                const gbRaw = row.getCell(2).text.toString().replace(/gb$/i, "").trim();
+                allocRawInput = row.getCell(2).text.toString().trim();
                 
-                // Check if allocation is a valid number format
-                if (!/^\d+(\.\d+)?$/.test(gbRaw)) {
-                  console.log(`Excel input: Invalid GB allocation format '${gbRaw}' - must be a number`);
-                } else {
-                  const gbValue = parseFloat(gbRaw);
-                  
-                  // Critical bug fix: Check if this looks like a phone number being interpreted as allocation
-                  // Phone numbers in Kenya start with 0 and are 10 digits, so when parsed as float they become 
-                  // very large numbers (e.g., "0249651753" becomes 249651753 GB = 243800.54 TB)
-                  if (gbValue >= 10000000 && gbValue <= 999999999 && gbRaw.startsWith('0') && gbRaw.length === 10) {
-                    console.log(`Excel input: CRITICAL BUG DETECTED - '${gbRaw}' looks like a phone number (${gbValue} GB = ${(gbValue/1024).toFixed(2)} TB), not data allocation. Skipping this entry.`);
-                    console.log(`This suggests columns might be swapped in the Excel file. Please check that phone numbers are in column 1 and data allocations are in column 2.`);
-                  } else if (!isNaN(gbValue) && gbValue > 0) {
-                    dataAllocation = gbValue;
-                  } else {
-                    console.log(`Excel input: Invalid GB allocation value '${gbRaw}' - must be a positive number`);
+                // Use enhanced parsing for data allocation
+                const allocationResult = parseDataAllocation(allocRawInput);
+                
+                // Critical bug fix: Check if this looks like a phone number being interpreted as allocation
+                if (allocationResult.allocGB >= 10000000 && allocationResult.allocGB <= 999999999 && allocRawInput.startsWith('0') && allocRawInput.length === 10) {
+                  console.log(`Excel input: CRITICAL BUG DETECTED - '${allocRawInput}' looks like a phone number (${allocationResult.allocGB} GB = ${(allocationResult.allocGB/1024).toFixed(2)} TB), not data allocation. Skipping this entry.`);
+                  console.log(`This suggests columns might be swapped in the Excel file. Please check that phone numbers are in column 1 and data allocations are in column 2.`);
+                } else if (!isNaN(allocationResult.allocGB) && allocationResult.allocGB > 0) {
+                  dataAllocation = allocationResult.allocGB;
+                  if (allocationResult.wasConverted) {
+                    console.log(`Excel input: Converted '${allocRawInput}' to ${allocationResult.allocGB}GB`);
                   }
+                } else {
+                  console.log(`Excel input: Invalid allocation value '${allocRawInput}' - could not parse`);
                 }
               }
               // Fall back to the old format with MB in column 4 if present
               else if (row.getCell(4) && row.getCell(4).text) {
-                const mbRaw = row.getCell(4).text.toString().replace(/mb$/i, "").trim();
+                allocRawInput = row.getCell(4).text.toString().trim();
                 
-                // Check if allocation is a valid number format
-                if (!/^\d+(\.\d+)?$/.test(mbRaw)) {
-                  console.log(`Excel input: Invalid MB allocation format '${mbRaw}' - must be a number`);
-                } else {
-                  const mbValue = parseFloat(mbRaw);
-                  
-                  // Critical bug fix: Check if this looks like a phone number being interpreted as MB allocation
-                  if (mbValue >= 10000000 && mbValue <= 999999999 && mbRaw.startsWith('0') && mbRaw.length === 10) {
-                    console.log(`Excel input: CRITICAL BUG DETECTED - '${mbRaw}' looks like a phone number (${mbValue} MB = ${(mbValue/1024/1024).toFixed(2)} GB), not MB allocation. Skipping this entry.`);
-                    console.log(`This suggests columns might be swapped in the Excel file. Please check that phone numbers are in column 1 and MB allocations are in column 4.`);
-                  } else if (!isNaN(mbValue) && mbValue > 0) {
-                    // Convert MB to GB
-                    dataAllocation = mbValue / 1024;
-                  } else {
-                    console.log(`Excel input: Invalid MB allocation value '${mbRaw}' - must be a positive number`);
+                // Use enhanced parsing for data allocation
+                const allocationResult = parseDataAllocation(allocRawInput);
+                
+                // Critical bug fix: Check if this looks like a phone number being interpreted as allocation
+                if (allocationResult.allocGB >= 10000000 && allocationResult.allocGB <= 999999999 && allocRawInput.startsWith('0') && allocRawInput.length === 10) {
+                  console.log(`Excel input: CRITICAL BUG DETECTED - '${allocRawInput}' looks like a phone number, not allocation. Skipping this entry.`);
+                  console.log(`This suggests columns might be swapped in the Excel file. Please check that phone numbers are in column 1 and allocations are in column 4.`);
+                } else if (!isNaN(allocationResult.allocGB) && allocationResult.allocGB > 0) {
+                  dataAllocation = allocationResult.allocGB;
+                  if (allocationResult.wasConverted) {
+                    console.log(`Excel input: Converted '${allocRawInput}' to ${allocationResult.allocGB}GB`);
                   }
+                } else {
+                  console.log(`Excel input: Invalid allocation value '${allocRawInput}' - could not parse`);
                 }
               }
               
-              // Add the entry even if phone number is invalid to show errors to users
-              // But ensure we have at least a data allocation
-              if (phoneNumber && dataAllocation > 0) {
+              // Add the entry even if phone number or data allocation is invalid to show errors to users
+              if (phoneNumber) {
                 // Validation will be done by validateNumber function
                 // We'll still log the issue here for debugging purposes
                 const containsNonDigits = /[^\d]/.test(phoneNumber);
@@ -1005,6 +1081,23 @@ export default function SendOrderApp() {
     }
   }, [orderEntries, pricingData]);
 
+  // Debug logging to help identify button disabled reasons
+  useEffect(() => {
+    if (orderEntries.length > 0) {
+      console.log('Send Order Button Status:', {
+        ordersHalted,
+        orderEntriesCount: orderEntries.length,
+        invalidCount,
+        hasPricingProfile: pricingData?.hasProfile,
+        minimumOrderEntries,
+        meetsMinimum: orderEntries.length >= minimumOrderEntries,
+        pricingTiers: pricingData?.profile?.tiers?.length || 0,
+        entriesWithoutPricing: pricingData?.profile?.tiers ? 
+          orderEntries.filter(entry => !hasPricingForAllocation(entry.allocationGB, pricingData.profile.tiers || [])).length : 0
+      });
+    }
+  }, [orderEntries, invalidCount, pricingData, ordersHalted, minimumOrderEntries]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Add the CSS for highlight pulse animation */}
@@ -1096,7 +1189,7 @@ export default function SendOrderApp() {
               <p className={`text-xs sm:text-sm ${
                 ordersHalted ? "text-gray-400" : "text-gray-700"
               }`}>
-                {ordersHalted ? message : "Upload an Excel file with phone numbers and GB allocations"}
+                {ordersHalted ? message : "Upload Excel file with phone numbers and data (supports GB, G, gig, MB formats)"}
               </p>                {/* Template download link */}
                 {!ordersHalted && (
                   <button 
@@ -1117,18 +1210,19 @@ export default function SendOrderApp() {
             {inputMethod === "manual" && (
               <div className="relative">
                 <textarea
-                  placeholder={ordersHalted ? `Order processing is currently halted: ${message}` : `Paste Phone numbers and data allocation in either format:
+                  placeholder={ordersHalted ? `Order processing is currently halted: ${message}` : `Paste phone numbers and data allocation. Supports various formats:
 
 Single-line format (phone and data on same line):
-0554739033 20GB
-0201234567 15GB
+0559147616 25gig
+0557192781 3
+0248111626 2g
+0557884774 8gb
 
 Multi-line format (phone on one line, data on next):
 0244987337
 2gb
 
-0556789012
-4gb`}
+Supports: 25gig, 25gb, 25g, 25, 1024mb, 1024m`}
                   className={`w-full p-3 sm:p-4 border rounded-lg sm:rounded-xl transition-all duration-200 resize-none font-mono text-sm sm:text-base ${
                     ordersHalted
                       ? "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed placeholder:text-gray-400"
@@ -1141,6 +1235,8 @@ Multi-line format (phone on one line, data on next):
                     if (!ordersHalted) {
                       const entries = processManualInput(e.target.value);
                       setOrderEntries(entries);
+                      // Save to localStorage after processing
+                      saveOrderEntriesToStorage(entries, e.target.value);
                     }
                   }}
                 />
@@ -1263,6 +1359,8 @@ Multi-line format (phone on one line, data on next):
                             !hasPricingForAllocation(entry.allocationGB, pricingData.profile.tiers || [])
                           )
                         ? "Some entries have no pricing available in your profile"
+                        : orderEntries.length === 0
+                        ? "No entries to send"
                         : ""
                     }
                     className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"

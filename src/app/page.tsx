@@ -1216,10 +1216,17 @@ function BundleAllocatorApp({
           const lastRowNum = worksheet.lastRow?.number || sortedChunk.length + 1;
           const totalRowNum = lastRowNum + 5;
           
-          worksheet.getCell(`F${totalRowNum}`).value = { formula: `SUM(D2:D${lastRowNum})` };
-          worksheet.getCell(`G${totalRowNum}`).value = { formula: `F${totalRowNum}/1024` };
+          // Add labels for the totals
+          worksheet.getCell(`E${totalRowNum}`).value = "Total MB:";
+          worksheet.getCell(`E${totalRowNum + 1}`).value = "Total GB:";
+          worksheet.getCell(`E${totalRowNum}`).font = { bold: true };
+          worksheet.getCell(`E${totalRowNum + 1}`).font = { bold: true };
+          
+          // Use dynamic formulas that adjust when rows are deleted
+          worksheet.getCell(`F${totalRowNum}`).value = { formula: `SUM(D:D)-D1` }; // Sum entire column D minus header
+          worksheet.getCell(`F${totalRowNum + 1}`).value = { formula: `F${totalRowNum}/1024` }; // Convert MB to GB
           worksheet.getCell(`F${totalRowNum}`).font = { bold: true };
-          worksheet.getCell(`G${totalRowNum}`).font = { bold: true };
+          worksheet.getCell(`F${totalRowNum + 1}`).font = { bold: true };
 
           const buffer = await workbook.xlsx.writeBuffer();
           const blob = new Blob([buffer], {
@@ -1303,10 +1310,17 @@ function BundleAllocatorApp({
         const lastRowNum = worksheet.lastRow?.number || entries.length + 1;
         const totalRowNum = lastRowNum + 5;
 
-        worksheet.getCell(`F${totalRowNum}`).value = { formula: `SUM(D2:D${lastRowNum})` };
-        worksheet.getCell(`G${totalRowNum}`).value = { formula: `F${totalRowNum}/1024` };
+        // Add labels for the totals
+        worksheet.getCell(`E${totalRowNum}`).value = "Total MB:";
+        worksheet.getCell(`E${totalRowNum + 1}`).value = "Total GB:";
+        worksheet.getCell(`E${totalRowNum}`).font = { bold: true };
+        worksheet.getCell(`E${totalRowNum + 1}`).font = { bold: true };
+
+        // Use dynamic formulas that adjust when rows are deleted
+        worksheet.getCell(`F${totalRowNum}`).value = { formula: `SUM(D:D)-D1` }; // Sum entire column D minus header
+        worksheet.getCell(`F${totalRowNum + 1}`).value = { formula: `F${totalRowNum}/1024` }; // Convert MB to GB
         worksheet.getCell(`F${totalRowNum}`).font = { bold: true };
-        worksheet.getCell(`G${totalRowNum}`).font = { bold: true };
+        worksheet.getCell(`F${totalRowNum + 1}`).font = { bold: true };
 
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], {
