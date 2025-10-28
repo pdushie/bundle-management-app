@@ -1556,7 +1556,7 @@ Supports: 25gig, 25gb, 25g, 25, 1024mb, 1024m`}
                         invalidEntryRefs.current[idx] = null;
                       }
                     }}
-                    className={`border rounded-lg p-3 flex justify-between items-center ${
+                    className={`border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 ${
                       entry.status === "sent" 
                         ? "bg-green-50 border-green-200" 
                         : entry.status === "error" 
@@ -1572,19 +1572,19 @@ Supports: 25gig, 25gb, 25g, 25, 1024mb, 1024m`}
                         : "bg-white border-gray-200"
                     }`}
                   >
-                    <div className="flex gap-3 items-center">
-                      {entry.status === "sent" && <CheckCircle className="w-5 h-5 text-green-600" />}
-                      {entry.status === "error" && <AlertCircle className="w-5 h-5 text-red-600" />}
-                      {entry.status === "pending" && (!(/^0\d{9}$/.test(entry.number)) || entry.isValid === false) && <AlertCircle className="w-5 h-5 text-red-600" />}
-                      {entry.status === "pending" && entry.isDuplicate && <AlertCircle className="w-5 h-5 text-yellow-600" />}
-                      {entry.status === "pending" && entry.wasFixed && <CheckCircle className="w-5 h-5 text-cyan-600" />}
-                      {entry.status === "pending" && !entry.wasFixed && !entry.isDuplicate && /^0\d{9}$/.test(entry.number) && entry.isValid !== false && <div className="w-5 h-5" />}
+                    <div className="flex gap-3 items-center min-w-0 flex-1">
+                      {entry.status === "sent" && <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />}
+                      {entry.status === "error" && <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />}
+                      {entry.status === "pending" && (!(/^0\d{9}$/.test(entry.number)) || entry.isValid === false) && <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />}
+                      {entry.status === "pending" && entry.isDuplicate && <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0" />}
+                      {entry.status === "pending" && entry.wasFixed && <CheckCircle className="w-5 h-5 text-cyan-600 flex-shrink-0" />}
+                      {entry.status === "pending" && !entry.wasFixed && !entry.isDuplicate && /^0\d{9}$/.test(entry.number) && entry.isValid !== false && <div className="w-5 h-5 flex-shrink-0" />}
                       
-                      <div>
-                        <p className={`font-mono text-base font-bold ${
+                      <div className="min-w-0 flex-1">
+                        <p className={`font-mono text-lg sm:text-base font-black break-all ${
                           !(/^0\d{9}$/.test(entry.number)) || entry.isValid === false ? "text-red-700" : 
                           entry.isDuplicate ? "text-yellow-700" :
-                          entry.wasFixed ? "text-cyan-700" : ""
+                          entry.wasFixed ? "text-cyan-700" : "text-gray-900"
                         }`}>{entry.number}</p>
                         {entry.message && (
                           <p className={`text-sm font-medium mt-1 ${
@@ -1616,8 +1616,8 @@ Supports: 25gig, 25gb, 25g, 25, 1024mb, 1024m`}
                         )}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="flex items-center gap-1 justify-end">
+                    <div className="text-left sm:text-right">
+                      <div className="flex items-center gap-1 justify-start sm:justify-end">
                         <p className="text-base font-bold text-gray-900">{entry.allocationGB.toFixed(2)} GB</p>
                         {pricingData?.profile?.tiers && (
                           <div className="flex items-center" title={hasPricingForAllocation(entry.allocationGB, pricingData.profile.tiers) ? "Pricing available" : "No pricing available for this allocation"}>
@@ -1629,7 +1629,7 @@ Supports: 25gig, 25gb, 25g, 25, 1024mb, 1024m`}
                           </div>
                         )}
                       </div>
-                      <p className="text-sm text-gray-700">{(entry.allocationGB * 1024).toFixed(0)} MB</p>
+                      <p className="text-sm font-medium text-gray-700">{(entry.allocationGB * 1024).toFixed(0)} MB</p>
                       {pricingData?.hasProfile && pricingData?.profile && (
                         <div className="mt-1">
                           {hasPricingForAllocation(entry.allocationGB, pricingData.profile.tiers || []) ? (
