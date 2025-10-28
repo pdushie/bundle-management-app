@@ -270,7 +270,7 @@ export default function UserPackageBreakdown({ onBack }: UserPackageBreakdownPro
               <Button 
                 onClick={loadUserPackageBreakdown} 
                 disabled={isLoading || !selectedUserId || !selectedDate}
-                className="w-full text-gray-900"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               >
                 {isLoading ? (
                   <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading...</>

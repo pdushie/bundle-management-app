@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { redirect } from "next/navigation";
-import { Users, Check, X, Clock, MessageCircle, Shield, Calendar, ArrowLeft, Database, User, LogOut, DollarSign, Settings } from "lucide-react";
+import { Users, Check, X, Clock, MessageCircle, Shield, Calendar, ArrowLeft, Database, User, LogOut, DollarSign, Settings, Receipt } from "lucide-react";
 
 // Hook to check RBAC permissions
 function usePermissions() {
@@ -61,7 +61,9 @@ import UserManagement from "@/components/UserManagement";
 import PricingProfiles from "@/components/PricingProfiles";
 import MinimumEntriesAdmin from "@/components/admin/MinimumEntriesAdmin";
 import AdminOrdersDashboard from "@/components/AdminOrdersDashboard";
+import UserAssignmentManagement from "@/components/UserAssignmentManagement";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { useRouter as useNextRouter } from 'next/navigation';
 
 interface PendingUser {
   id: string;
@@ -83,13 +85,18 @@ export default function AdminDashboard() {
   const router = useRouter();
   const { permissions, loading: permissionsLoading, hasPermission, hasAnyPermission } = usePermissions();
   
+  // Helper function to check if user is admin
+  const isAdminRole = (role: string | undefined) => {
+    return role === 'super_admin' || role === 'superadmin' || role === 'admin' || role === 'standard_admin';
+  };
+  
   // Set default tab based on user role and permissions
   const getDefaultTab = () => {
-    if (session?.user?.role === 'super_admin') {
+    if (session?.user?.role === 'super_admin' || session?.user?.role === 'superadmin') {
       return 'pending';
     }
     // For users with user management permissions, default to pending tab
-    if (hasAnyPermission(['users:create', 'users:update']) || session?.user?.role === 'admin' || session?.user?.role === 'standard_admin') {
+    if (hasAnyPermission(['users:create', 'users:update']) || isAdminRole(session?.user?.role)) {
       return 'pending';
     }
     // Otherwise default to users tab if they have user permissions
@@ -104,7 +111,7 @@ export default function AdminDashboard() {
     return 'users';
   };
   
-  const [activeTab, setActiveTab] = useState<'pending' | 'users' | 'pricing' | 'minimum-entries' | 'orders'>('users');
+  const [activeTab, setActiveTab] = useState<'pending' | 'users' | 'pricing' | 'minimum-entries' | 'assignments' | 'orders' | 'accounting'>('users');
   const [userHasSelectedTab, setUserHasSelectedTab] = useState(false);
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [userStats, setUserStats] = useState<UserStats>({
@@ -137,8 +144,8 @@ export default function AdminDashboard() {
       redirect("/");
     }
     
-    // For non-super_admin users, check if they have permissions to access admin dashboard
-    if (session && session.user?.role !== 'super_admin' && session.user?.role !== 'admin' && session.user?.role !== 'standard_admin' && !permissionsLoading) {
+    // For non-admin users, check if they have permissions to access admin dashboard
+    if (session && !isAdminRole(session.user?.role) && !permissionsLoading) {
       const hasAdminPermissions = hasAnyPermission([
         'users:view', 'users:create', 'users:update', 'users:delete',
         'pricing:view', 'pricing:create', 'pricing:update', 'pricing:delete'
@@ -171,14 +178,14 @@ export default function AdminDashboard() {
     }
     
     // Regular users get redirected to home
-    if (session && session.user?.role !== 'super_admin' && session.user?.role !== 'admin' && session.user?.role !== 'standard_admin') {
+    if (session && !isAdminRole(session.user?.role)) {
       // Console log removed for security
       redirect("/");
     }
   }, [status, session, router, permissionsLoading, hasAnyPermission, permissions]);
 
   useEffect(() => {
-    if (session?.user?.role === 'super_admin' || session?.user?.role === 'admin' || session?.user?.role === 'standard_admin' || hasAnyPermission(['users:create', 'users:update'])) {
+    if (isAdminRole(session?.user?.role) || hasAnyPermission(['users:create', 'users:update'])) {
       fetchPendingUsers();
       fetchUserStats();
     }
@@ -191,7 +198,7 @@ export default function AdminDashboard() {
       // Console log removed for security
       // Only set the default tab if user hasn't manually selected one
       if (defaultTab !== activeTab) {
-        setActiveTab(defaultTab as 'pending' | 'users' | 'pricing' | 'minimum-entries' | 'orders');
+        setActiveTab(defaultTab as 'pending' | 'users' | 'pricing' | 'minimum-entries' | 'orders' | 'accounting');
       }
     }
   }, [permissionsLoading, session, hasAnyPermission, userHasSelectedTab]);
@@ -283,9 +290,7 @@ export default function AdminDashboard() {
   }
 
   // Check if user has permission to access admin dashboard
-  const hasAdminAccess = session?.user?.role === 'super_admin' || 
-    session?.user?.role === 'admin' || 
-    session?.user?.role === 'standard_admin' ||
+  const hasAdminAccess = isAdminRole(session?.user?.role) ||
     hasAnyPermission([
       'users:view', 'users:create', 'users:update', 'users:delete',
       'pricing:view', 'pricing:create', 'pricing:update', 'pricing:delete'
@@ -408,8 +413,8 @@ export default function AdminDashboard() {
         {/* Admin Dashboard Tabs */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-6">
           <div className="flex border-b border-gray-200">
-            {/* Show Pending Requests tab to users with user management permissions */}
-            {(session?.user?.role === 'super_admin' || session?.user?.role === 'admin' || session?.user?.role === 'standard_admin' || hasAnyPermission(['users:create', 'users:update'])) && (
+        {/* Show Pending Requests tab to users with user management permissions */}
+        {(isAdminRole(session?.user?.role) || hasAnyPermission(['users:create', 'users:update'])) && (
               <button 
                 onClick={() => { setActiveTab('pending'); setUserHasSelectedTab(true); }} 
                 className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
@@ -428,8 +433,8 @@ export default function AdminDashboard() {
               </button>
             )}
             
-            {/* Show User Management tab to users with user permissions or admin roles */}
-            {(hasAnyPermission(['users:view', 'users:create', 'users:update', 'users:delete']) || session?.user?.role === 'super_admin' || session?.user?.role === 'admin' || session?.user?.role === 'standard_admin') && (
+        {/* Show User Management tab to users with user permissions or admin roles */}
+        {(hasAnyPermission(['users:view', 'users:create', 'users:update', 'users:delete']) || isAdminRole(session?.user?.role)) && (
               <button 
                 onClick={() => { setActiveTab('users'); setUserHasSelectedTab(true); }} 
                 className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
@@ -443,8 +448,8 @@ export default function AdminDashboard() {
               </button>
             )}
             
-            {/* Show Pricing Profiles tab to users with pricing permissions or admin roles */}
-            {(hasAnyPermission(['pricing:view', 'pricing:create', 'pricing:update', 'pricing:delete']) || session?.user?.role === 'super_admin' || session?.user?.role === 'admin' || session?.user?.role === 'standard_admin') && (
+        {/* Show Pricing Profiles tab to users with pricing permissions or admin roles */}
+        {(hasAnyPermission(['pricing:view', 'pricing:create', 'pricing:update', 'pricing:delete']) || isAdminRole(session?.user?.role)) && (
               <button 
                 onClick={() => { setActiveTab('pricing'); setUserHasSelectedTab(true); }} 
                 className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
@@ -458,8 +463,8 @@ export default function AdminDashboard() {
               </button>
             )}
             
-            {/* Show Minimum Entries tab to users with minimum entries permissions or admin roles */}
-            {(hasAnyPermission(['admin:minimum_entries']) || session?.user?.role === 'super_admin' || session?.user?.role === 'admin' || session?.user?.role === 'standard_admin') && (
+        {/* Show Minimum Entries tab to users with minimum entries permissions or admin roles */}
+        {(hasAnyPermission(['admin:minimum_entries']) || isAdminRole(session?.user?.role)) && (
               <button 
                 onClick={() => { setActiveTab('minimum-entries'); setUserHasSelectedTab(true); }} 
                 className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
@@ -473,8 +478,23 @@ export default function AdminDashboard() {
               </button>
             )}
             
-            {/* Show Order Reports tab to users with order permissions or admin roles */}
-            {(hasAnyPermission(['admin:orders']) || session?.user?.role === 'super_admin' || session?.user?.role === 'admin' || session?.user?.role === 'standard_admin') && (
+        {/* Show User Assignments tab to users with user permissions or admin roles */}
+        {(hasAnyPermission(['users:view', 'users:update']) || isAdminRole(session?.user?.role)) && (
+              <button 
+                onClick={() => { setActiveTab('assignments'); setUserHasSelectedTab(true); }} 
+                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+                  activeTab === 'assignments' 
+                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
+                    : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+                }`}
+              >
+                <Users className="w-4 h-4" />
+                User Assignments
+              </button>
+            )}
+            
+        {/* Show Order Reports tab to users with order permissions or admin roles */}
+        {(hasAnyPermission(['admin:orders']) || isAdminRole(session?.user?.role)) && (
               <button 
                 onClick={() => { setActiveTab('orders'); setUserHasSelectedTab(true); }} 
                 className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
@@ -485,6 +505,21 @@ export default function AdminDashboard() {
               >
                 <Database className="w-4 h-4" />
                 Order Reports
+              </button>
+            )}
+            
+        {/* Show Accounting tab to admin roles */}
+        {isAdminRole(session?.user?.role) && (
+              <button 
+                onClick={() => { setActiveTab('accounting'); setUserHasSelectedTab(true); }} 
+                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+                  activeTab === 'accounting' 
+                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
+                    : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+                }`}
+              >
+                <Receipt className="w-4 h-4" />
+                Accounting
               </button>
             )}
           </div>
@@ -603,6 +638,27 @@ export default function AdminDashboard() {
           <ErrorBoundary>
             <MinimumEntriesAdmin />
           </ErrorBoundary>
+        ) : activeTab === 'assignments' ? (
+          // User Assignments Tab Content
+          <ErrorBoundary>
+            <UserAssignmentManagement />
+          </ErrorBoundary>
+        ) : activeTab === 'accounting' ? (
+          // Accounting Tab - Redirect to dedicated page
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            <div className="p-6 text-center">
+              <Receipt className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Accounting Dashboard</h2>
+              <p className="text-gray-700 mb-6">Access comprehensive accounting features including user billing and account manager sales reporting.</p>
+              <button
+                onClick={() => router.push('/admin/accounting')}
+                className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Receipt className="w-4 h-4" />
+                Open Accounting Dashboard
+              </button>
+            </div>
+          </div>
         ) : (
           // Order Reports Tab Content
           <ErrorBoundary>

@@ -1226,13 +1226,13 @@ function BundleAllocatorApp({
           worksheet.getCell(`E${totalRowNum + 1}`).font = { bold: true };
           worksheet.getCell(`E${totalRowNum + 2}`).font = { bold: true };
           
-          // Use truly dynamic formulas that adjust when rows are deleted
+          // Use Chrome OS compatible formulas that work across all platforms
           // Total Numbers: Count of data rows (excluding header)
-          worksheet.getCell(`F${totalRowNum}`).value = { formula: `COUNTA(A:A)-1` }; // Count entries minus header
+          worksheet.getCell(`F${totalRowNum}`).value = { formula: `COUNTA(A2:A${lastRowNum})` }; // Count actual data entries
           
-          // Total Data: Dynamic MB calculation with GB conversion in same cell
+          // Total Data: Chrome OS compatible MB calculation with GB conversion
           worksheet.getCell(`F${totalRowNum + 1}`).value = { 
-            formula: `SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))&" MB ("&ROUND(SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))/1024,2)&" GB)"` 
+            formula: `SUM(D2:D${lastRowNum})&" MB ("&ROUND(SUM(D2:D${lastRowNum})/1024,2)&" GB)"` 
           };
           
           // Batch number (current part of total parts)
@@ -1335,13 +1335,13 @@ function BundleAllocatorApp({
         worksheet.getCell(`E${totalRowNum + 1}`).font = { bold: true };
         worksheet.getCell(`E${totalRowNum + 2}`).font = { bold: true };
         
-        // Use truly dynamic formulas that adjust when rows are deleted
+        // Use Chrome OS compatible formulas that work across all platforms
         // Total Numbers: Count of data rows (excluding header)
-        worksheet.getCell(`F${totalRowNum}`).value = { formula: `COUNTA(A:A)-1` }; // Count entries minus header
+        worksheet.getCell(`F${totalRowNum}`).value = { formula: `COUNTA(A2:A${lastRowNum})` }; // Count actual data entries
         
-        // Total Data: Dynamic MB calculation with GB conversion in same cell
+        // Total Data: Chrome OS compatible MB calculation with GB conversion
         worksheet.getCell(`F${totalRowNum + 1}`).value = { 
-          formula: `SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))&" MB ("&ROUND(SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))/1024,2)&" GB)"` 
+          formula: `SUM(D2:D${lastRowNum})&" MB ("&ROUND(SUM(D2:D${lastRowNum})/1024,2)&" GB)"` 
         };
         
         // Batch number (single file)

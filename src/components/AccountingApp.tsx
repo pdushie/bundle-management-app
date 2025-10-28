@@ -13,9 +13,10 @@ import DailySalesTracker from '@/components/DailySalesTracker';
 import DataAllocationDashboard from '@/components/DataAllocationDashboard';
 import DataCategorizerDashboard from '@/components/DataCategorizerDashboard';
 import UserPackageBreakdown from '@/components/UserPackageBreakdown';
+import AccountManagerSales from '@/components/AccountManagerSales';
 
 // Tab options for the accounting app
-type AccountingTab = 'user-billing' | 'daily-sales' | 'dashboard' | 'categorizer' | 'user-packages';
+type AccountingTab = 'user-billing' | 'daily-sales' | 'dashboard' | 'categorizer' | 'user-packages' | 'account-manager-sales';
 
 export default function AccountingApp({ tabActive = false }: { tabActive?: boolean }) {
   const { data: session, status } = useSession();
@@ -303,6 +304,18 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
             <span className="hidden sm:inline">User Packages</span>
             <span className="sm:hidden">Packages</span>
           </button>
+          <button
+            onClick={() => setActiveTab('account-manager-sales')}
+            className={`px-2 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-1 sm:gap-2 flex-shrink-0 ${
+              activeTab === 'account-manager-sales'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-900 hover:text-blue-600'
+            }`}
+          >
+            <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Account Manager Sales</span>
+            <span className="sm:hidden">AM Sales</span>
+          </button>
         </div>
       </div>
 
@@ -315,6 +328,8 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
         <DataCategorizerDashboard />
       ) : activeTab === 'user-packages' ? (
         <UserPackageBreakdown />
+      ) : activeTab === 'account-manager-sales' ? (
+        <AccountManagerSales />
       ) : (
         <Card>
         <CardHeader className="bg-blue-50">
@@ -389,12 +404,12 @@ export default function AccountingApp({ tabActive = false }: { tabActive?: boole
               <Button 
                 onClick={fetchBillData} 
                 disabled={loading || !selectedUserId || !selectedDate}
-                className="w-full"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               >
                 {loading ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin text-white" /> <span className="text-white">Generating...</span></>
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> <span>Generating...</span></>
                 ) : (
-                  <span className="text-gray-900">Generate Bill</span>
+                  <span>Generate Bill</span>
                 )}
               </Button>
             </div>
