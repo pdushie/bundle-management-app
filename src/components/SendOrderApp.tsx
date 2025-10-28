@@ -1280,9 +1280,9 @@ Supports: 25gig, 25gb, 25g, 25, 1024mb, 1024m`}
                 
                 {/* Cost information for users with pricing profiles */}
                 {pricingData?.hasProfile && totalCost !== null && (
-                  <div className="mt-1 flex items-center gap-2">
-                    <DollarSign className="w-3.5 h-3.5 text-green-600" />
-                    <p className="text-sm text-green-700 font-medium">
+                  <div className="mt-2 flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-green-600" />
+                    <p className="text-base text-green-700 font-bold">
                       Estimated cost: GHS {totalCost.toFixed(2)}
                     </p>
                   </div>
@@ -1305,7 +1305,7 @@ Supports: 25gig, 25gb, 25g, 25, 1024mb, 1024m`}
               
               {/* Action buttons */}
               {status !== "sending" && status !== "success" && (
-                <div className="flex gap-2">
+                <div className="flex gap-2 mt-3 sm:mt-0">
                   <button
                     onClick={() => {
                       if (!ordersHalted) {
@@ -1320,7 +1320,7 @@ Supports: 25gig, 25gb, 25g, 25, 1024mb, 1024m`}
                     }}
                     disabled={orderEntries.length === 0 || ordersHalted}
                     title={ordersHalted ? `Order processing is currently halted: ${message}` : ""}
-                    className="px-4 py-2 border border-gray-300 rounded-lg font-medium flex items-center gap-2 transition-all hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-lg font-medium flex items-center gap-2 transition-all hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                   >
                     Clear
                   </button>
@@ -1494,13 +1494,13 @@ Supports: 25gig, 25gb, 25g, 25, 1024mb, 1024m`}
                   
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                      <p className="text-xs sm:text-sm text-emerald-700">Pricing Plan</p>
-                      <p className="font-medium">{pricingData.profile.name}</p>
+                      <p className="text-sm text-emerald-700 font-medium">Pricing Plan</p>
+                      <p className="font-bold text-emerald-900">{pricingData.profile.name}</p>
                     </div>
                     
                     <div>
-                      <p className="text-xs sm:text-sm text-emerald-700">Total Data</p>
-                      <p className="font-medium">
+                      <p className="text-sm text-emerald-700 font-medium">Total Data</p>
+                      <p className="font-bold text-emerald-900">
                         {totalGB > 1023 
                           ? `${(totalGB / 1024).toFixed(2)} TB` 
                           : `${totalGB.toFixed(2)} GB`}
@@ -1508,12 +1508,12 @@ Supports: 25gig, 25gb, 25g, 25, 1024mb, 1024m`}
                     </div>
                     
                     <div>
-                      <p className="text-xs sm:text-sm text-emerald-700">Estimated Cost</p>
-                      <p className="font-bold text-lg">GHS {totalCost.toFixed(2)}</p>
+                      <p className="text-sm text-emerald-700 font-medium">Estimated Cost</p>
+                      <p className="font-bold text-xl text-emerald-900">GHS {totalCost.toFixed(2)}</p>
                     </div>
                   </div>
                   
-                  <div className="mt-2 text-xs sm:text-sm text-emerald-700">
+                  <div className="mt-3 text-sm text-emerald-700">
                     <p>* Cost calculated by applying pricing to each individual allocation</p>
                     
                     {pricingData.profile.isTiered && pricingData.profile.tiers && 
@@ -1618,7 +1618,7 @@ Supports: 25gig, 25gb, 25g, 25, 1024mb, 1024m`}
                     </div>
                     <div className="text-right">
                       <div className="flex items-center gap-1 justify-end">
-                        <p className="text-sm font-bold">{entry.allocationGB.toFixed(2)} GB</p>
+                        <p className="text-base font-bold text-gray-900">{entry.allocationGB.toFixed(2)} GB</p>
                         {pricingData?.profile?.tiers && (
                           <div className="flex items-center" title={hasPricingForAllocation(entry.allocationGB, pricingData.profile.tiers) ? "Pricing available" : "No pricing available for this allocation"}>
                             {hasPricingForAllocation(entry.allocationGB, pricingData.profile.tiers) ? (
@@ -1629,15 +1629,15 @@ Supports: 25gig, 25gb, 25g, 25, 1024mb, 1024m`}
                           </div>
                         )}
                       </div>
-                      <p className="text-xs sm:text-sm text-gray-700">{(entry.allocationGB * 1024).toFixed(0)} MB</p>
+                      <p className="text-sm text-gray-700">{(entry.allocationGB * 1024).toFixed(0)} MB</p>
                       {pricingData?.hasProfile && pricingData?.profile && (
                         <div className="mt-1">
                           {hasPricingForAllocation(entry.allocationGB, pricingData.profile.tiers || []) ? (
-                            <p className="text-xs sm:text-sm text-green-600 font-medium">
+                            <p className="text-sm text-green-600 font-bold">
                               GHS {calculatePrice(pricingData.profile, entry.allocationGB)?.toFixed(2)}
                             </p>
                           ) : (
-                            <p className="text-xs sm:text-sm text-red-600 font-medium">
+                            <p className="text-sm text-red-600 font-bold">
                               No pricing available
                             </p>
                           )}
