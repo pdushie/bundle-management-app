@@ -1581,13 +1581,13 @@ Supports: 25gig, 25gb, 25g, 25, 1024mb, 1024m`}
                       {entry.status === "pending" && !entry.wasFixed && !entry.isDuplicate && /^0\d{9}$/.test(entry.number) && entry.isValid !== false && <div className="w-5 h-5" />}
                       
                       <div>
-                        <p className={`font-mono text-sm font-medium ${
+                        <p className={`font-mono text-base font-bold ${
                           !(/^0\d{9}$/.test(entry.number)) || entry.isValid === false ? "text-red-700" : 
                           entry.isDuplicate ? "text-yellow-700" :
                           entry.wasFixed ? "text-cyan-700" : ""
                         }`}>{entry.number}</p>
                         {entry.message && (
-                          <p className={`text-xs sm:text-sm mt-1 ${
+                          <p className={`text-sm font-medium mt-1 ${
                             entry.status === "sent" 
                               ? "text-green-600" 
                               : entry.status === "error" 
@@ -1598,7 +1598,7 @@ Supports: 25gig, 25gb, 25g, 25, 1024mb, 1024m`}
                           </p>
                         )}
                         {(!(/^0\d{9}$/.test(entry.number)) || entry.isValid === false) && !entry.message && (
-                          <p className="text-xs sm:text-sm text-red-600 font-medium mt-1">
+                          <p className="text-sm font-medium text-red-600 mt-1">
                             {entry.number.length !== 10
                               ? `Invalid length (must be 10 digits, got ${entry.number.length})` 
                               : !entry.number.startsWith('0')
@@ -1609,10 +1609,10 @@ Supports: 25gig, 25gb, 25g, 25, 1024mb, 1024m`}
                           </p>
                         )}
                         {entry.isDuplicate && !entry.message && (
-                          <p className="text-xs sm:text-sm text-yellow-600 font-medium mt-1">Duplicate entry</p>
+                          <p className="text-sm font-medium text-yellow-600 mt-1">Duplicate entry</p>
                         )}
                         {entry.wasFixed && !entry.message && (
-                          <p className="text-xs sm:text-sm text-cyan-600 font-medium mt-1">Auto-fixed (added leading zero)</p>
+                          <p className="text-sm font-medium text-cyan-600 mt-1">Auto-fixed (added leading zero)</p>
                         )}
                       </div>
                     </div>
