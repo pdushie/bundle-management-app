@@ -112,10 +112,17 @@ export default function ProcessedOrdersApp() {
   const filteredOrders = orders.filter(order => {
     if (!filterText) return true;
     const searchTerm = filterText.toLowerCase();
+    
+    // Check if any phone number in the order entries matches the search term
+    const phoneNumberMatch = order.entries && order.entries.some(entry => 
+      entry.number && entry.number.toLowerCase().includes(searchTerm)
+    );
+    
     return (
       order.id.toLowerCase().includes(searchTerm) ||
       (order.userName?.toLowerCase() || '').includes(searchTerm) ||
-      new Date(order.timestamp).toLocaleDateString().includes(searchTerm)
+      new Date(order.timestamp).toLocaleDateString().includes(searchTerm) ||
+      phoneNumberMatch
     );
   });
 
@@ -212,7 +219,7 @@ export default function ProcessedOrdersApp() {
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Filter orders..."
+                    placeholder="Search by order ID, user, phone number, or date..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder:text-gray-900"
                     value={filterText}
                     onChange={(e) => {

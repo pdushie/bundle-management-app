@@ -417,6 +417,7 @@ export const clearOrders = async (): Promise<void> => {
 };
 
 // Get order counts for various categories - FIXED VERSION with direct SQL
+// Now filters by current date for tab notifications
 export const getOrderCounts = async (userEmail?: string): Promise<{
   pendingCount: number;
   processedCount: number;
@@ -444,38 +445,42 @@ export const getOrderCounts = async (userEmail?: string): Promise<{
       return { ...defaultCounts, connectionError: true };
     }
 
+    // Get current date in YYYY-MM-DD format for filtering
+    const today = new Date().toISOString().split('T')[0];
+    
     // DIRECT SQL APPROACH - Bypass Drizzle ORM for greater reliability
     // This avoids potential quoting issues with ORM
+    // NOW FILTERING BY CURRENT DATE ONLY
     
-    // Get pending orders count with direct SQL
-    // Getting pending orders count with direct SQL - logging removed for security
-    const pendingResult = await neonClient`SELECT COUNT(*) FROM orders WHERE status = 'pending'`;
+    // Get pending orders count for today only
+    // Getting pending orders count for today with direct SQL - logging removed for security
+    const pendingResult = await neonClient`SELECT COUNT(*) FROM orders WHERE status = 'pending' AND date = ${today}`;
     const pendingCount = parseInt(pendingResult[0]?.count || '0', 10);
-    // Pending orders count - logging removed for security
+    // Pending orders count for today - logging removed for security
     
-    // Get processed orders count with direct SQL
-    // Getting processed orders count with direct SQL - logging removed for security
-    const processedResult = await neonClient`SELECT COUNT(*) FROM orders WHERE status = 'processed'`;
+    // Get processed orders count for today only
+    // Getting processed orders count for today with direct SQL - logging removed for security
+    const processedResult = await neonClient`SELECT COUNT(*) FROM orders WHERE status = 'processed' AND date = ${today}`;
     const processedCount = parseInt(processedResult[0]?.count || '0', 10);
-    // Processed orders count - logging removed for security
+    // Processed orders count for today - logging removed for security
     
-    // Count user orders if userEmail is provided with direct SQL
+    // Count user orders for today if userEmail is provided with direct SQL
     let userOrderCount = 0;
     if (userEmail) {
-      // Getting user orders count with direct SQL - logging removed for security
-      const userResult = await neonClient`SELECT COUNT(*) FROM orders WHERE user_email = ${userEmail}`;
+      // Getting user orders count for today with direct SQL - logging removed for security
+      const userResult = await neonClient`SELECT COUNT(*) FROM orders WHERE user_email = ${userEmail} AND date = ${today}`;
       userOrderCount = parseInt(userResult[0]?.count || '0', 10);
-      // User orders count - logging removed for security
+      // User orders count for today - logging removed for security
     }
     
-    // Return all counts
+    // Return all counts (now filtered by current date)
     const counts = {
       pendingCount,
       processedCount,
       userOrderCount
     };
     
-    // Final order counts - logging removed for security
+    // Final order counts for today - logging removed for security
     return counts;
   } catch (error) {
     // Console statement removed for security
@@ -493,6 +498,54 @@ export const getOrderCounts = async (userEmail?: string): Promise<{
     }
     
     // Return default counts with connection error flag
+    return { ...defaultCounts, connectionError: true };
+  }
+};
+
+// Get all-time order counts (not filtered by date) - for admin/reporting purposes
+export const getAllTimeOrderCounts = async (userEmail?: string): Promise<{
+  pendingCount: number;
+  processedCount: number;
+  userOrderCount: number;
+  connectionError?: boolean;
+}> => {
+  const defaultCounts = {
+    pendingCount: 0,
+    processedCount: 0,
+    userOrderCount: 0
+  };
+  
+  try {
+    // First, test the database connection directly
+    try {
+      const testQuery = await neonClient`SELECT 1 AS test`;
+    } catch (connError) {
+      const connectionError = new Error('Database connection failed');
+      (connectionError as any).cause = connError;
+      return { ...defaultCounts, connectionError: true };
+    }
+
+    // Get all-time pending orders count
+    const pendingResult = await neonClient`SELECT COUNT(*) FROM orders WHERE status = 'pending'`;
+    const pendingCount = parseInt(pendingResult[0]?.count || '0', 10);
+    
+    // Get all-time processed orders count
+    const processedResult = await neonClient`SELECT COUNT(*) FROM orders WHERE status = 'processed'`;
+    const processedCount = parseInt(processedResult[0]?.count || '0', 10);
+    
+    // Count all-time user orders if userEmail is provided
+    let userOrderCount = 0;
+    if (userEmail) {
+      const userResult = await neonClient`SELECT COUNT(*) FROM orders WHERE user_email = ${userEmail}`;
+      userOrderCount = parseInt(userResult[0]?.count || '0', 10);
+    }
+    
+    return {
+      pendingCount,
+      processedCount,
+      userOrderCount
+    };
+  } catch (error) {
     return { ...defaultCounts, connectionError: true };
   }
 };

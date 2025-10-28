@@ -97,12 +97,19 @@ export default function SentOrdersApp() {
   const filteredOrders = orders.filter(order => {
     if (!filterText) return true;
     const searchTerm = filterText.toLowerCase();
+    
+    // Check if any phone number in the order entries matches the search term
+    const phoneNumberMatch = order.entries && order.entries.some(entry => 
+      entry.number && entry.number.toLowerCase().includes(searchTerm)
+    );
+    
     return (
       order.id.toLowerCase().includes(searchTerm) ||
       order.status.toLowerCase().includes(searchTerm) ||
       (order.pricingProfileName && order.pricingProfileName.toLowerCase().includes(searchTerm)) ||
-  (order.estimatedCost !== null && order.estimatedCost !== undefined && order.estimatedCost.toString().includes(searchTerm)) ||
-      new Date(order.timestamp).toLocaleDateString().includes(searchTerm)
+      (order.estimatedCost !== null && order.estimatedCost !== undefined && order.estimatedCost.toString().includes(searchTerm)) ||
+      new Date(order.timestamp).toLocaleDateString().includes(searchTerm) ||
+      phoneNumberMatch
     );
   });
 
@@ -157,7 +164,7 @@ export default function SentOrdersApp() {
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Filter orders..."
+                    placeholder="Search by order ID, status, phone number, or date..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                     value={filterText}
                     onChange={(e) => {

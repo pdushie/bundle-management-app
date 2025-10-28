@@ -8,11 +8,36 @@ const LAST_ACTIVE_TAB_KEY = 'last_active_tab';
 const LAST_ORDER_COUNT_KEY = 'last_order_count';
 const LAST_PROCESSED_COUNT_KEY = 'last_processed_count';
 const LAST_SENT_COUNT_KEY = 'last_sent_count';
+const LAST_RESET_DATE_KEY = 'last_reset_date';
 
 /**
  * Utility to track unread order counts across tab navigations
+ * Now resets daily to show only current day notifications
  */
 export const orderTrackingUtils = {
+  // Check if we need to reset counts for a new day
+  checkAndResetForNewDay: (): boolean => {
+    try {
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+      const lastResetDate = localStorage.getItem(LAST_RESET_DATE_KEY);
+      
+      if (lastResetDate !== today) {
+        // New day detected - reset all counts and tracking data
+        localStorage.setItem(LAST_RESET_DATE_KEY, today);
+        localStorage.setItem(UNREAD_PENDING_ORDERS_KEY, '0');
+        localStorage.setItem(UNREAD_PROCESSED_ORDERS_KEY, '0');
+        localStorage.setItem(UNREAD_SENT_ORDERS_KEY, '0');
+        localStorage.setItem(LAST_ORDER_COUNT_KEY, '0');
+        localStorage.setItem(LAST_PROCESSED_COUNT_KEY, '0');
+        localStorage.setItem(LAST_SENT_COUNT_KEY, '0');
+        return true; // Reset occurred
+      }
+      return false; // No reset needed
+    } catch (error) {
+      // Console statement removed for security
+      return false;
+    }
+  },
   // Store the current active tab
   setActiveTab: (tabId: string): void => {
     try {
@@ -48,6 +73,9 @@ export const orderTrackingUtils = {
     currentSentCount: number
   ): { hasNewPending: boolean, hasNewProcessed: boolean, hasNewSent: boolean } => {
     try {
+      // Check if we need to reset for a new day first
+      const wasReset = orderTrackingUtils.checkAndResetForNewDay();
+      
       // Ensure counts are valid numbers
       const safePendingCount = isNaN(currentPendingCount) ? 0 : currentPendingCount;
       const safeProcessedCount = isNaN(currentProcessedCount) ? 0 : currentProcessedCount;
@@ -205,6 +233,9 @@ export const orderTrackingUtils = {
     sentCount: number
   ): void => {
     try {
+      // Check and reset for new day first
+      const wasReset = orderTrackingUtils.checkAndResetForNewDay();
+      
       // Initializing order tracking with counts - logging removed for security
       
       // Always set the initial values to ensure proper synchronization

@@ -1216,18 +1216,32 @@ function BundleAllocatorApp({
           const lastRowNum = worksheet.lastRow?.number || sortedChunk.length + 1;
           const totalRowNum = lastRowNum + 5;
           
-          // Add labels for the totals
-          worksheet.getCell(`E${totalRowNum}`).value = "Total MB:";
-          worksheet.getCell(`E${totalRowNum + 1}`).value = "Total GB:";
+          // Add comprehensive summary section with dynamic formulas
+          worksheet.getCell(`E${totalRowNum}`).value = "Total Numbers:";
+          worksheet.getCell(`E${totalRowNum + 1}`).value = "Total Data:";
+          worksheet.getCell(`E${totalRowNum + 2}`).value = "Batch:";
+          
+          // Style the labels
           worksheet.getCell(`E${totalRowNum}`).font = { bold: true };
           worksheet.getCell(`E${totalRowNum + 1}`).font = { bold: true };
+          worksheet.getCell(`E${totalRowNum + 2}`).font = { bold: true };
           
           // Use truly dynamic formulas that adjust when rows are deleted
-          // SUBTOTAL(109, range) ignores hidden/filtered rows and adjusts automatically when rows are deleted
-          worksheet.getCell(`F${totalRowNum}`).value = { formula: `SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))` }; // Dynamic sum from D2 to last data row
-          worksheet.getCell(`F${totalRowNum + 1}`).value = { formula: `F${totalRowNum}/1024` }; // Convert MB to GB
+          // Total Numbers: Count of data rows (excluding header)
+          worksheet.getCell(`F${totalRowNum}`).value = { formula: `COUNTA(A:A)-1` }; // Count entries minus header
+          
+          // Total Data: Dynamic MB calculation with GB conversion in same cell
+          worksheet.getCell(`F${totalRowNum + 1}`).value = { 
+            formula: `SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))&" MB ("&ROUND(SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))/1024,2)&" GB)"` 
+          };
+          
+          // Batch number (current part of total parts)
+          worksheet.getCell(`F${totalRowNum + 2}`).value = `${i + 1}`;
+          
+          // Style the values
           worksheet.getCell(`F${totalRowNum}`).font = { bold: true };
           worksheet.getCell(`F${totalRowNum + 1}`).font = { bold: true };
+          worksheet.getCell(`F${totalRowNum + 2}`).font = { bold: true };
 
           const buffer = await workbook.xlsx.writeBuffer();
           const blob = new Blob([buffer], {
@@ -1311,18 +1325,32 @@ function BundleAllocatorApp({
         const lastRowNum = worksheet.lastRow?.number || entries.length + 1;
         const totalRowNum = lastRowNum + 5;
 
-        // Add labels for the totals
-        worksheet.getCell(`E${totalRowNum}`).value = "Total MB:";
-        worksheet.getCell(`E${totalRowNum + 1}`).value = "Total GB:";
+        // Add comprehensive summary section with dynamic formulas
+        worksheet.getCell(`E${totalRowNum}`).value = "Total Numbers:";
+        worksheet.getCell(`E${totalRowNum + 1}`).value = "Total Data:";
+        worksheet.getCell(`E${totalRowNum + 2}`).value = "Batch:";
+        
+        // Style the labels
         worksheet.getCell(`E${totalRowNum}`).font = { bold: true };
         worksheet.getCell(`E${totalRowNum + 1}`).font = { bold: true };
-
+        worksheet.getCell(`E${totalRowNum + 2}`).font = { bold: true };
+        
         // Use truly dynamic formulas that adjust when rows are deleted
-        // SUBTOTAL(109, range) ignores hidden/filtered rows and adjusts automatically when rows are deleted
-        worksheet.getCell(`F${totalRowNum}`).value = { formula: `SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))` }; // Dynamic sum from D2 to last data row
-        worksheet.getCell(`F${totalRowNum + 1}`).value = { formula: `F${totalRowNum}/1024` }; // Convert MB to GB
+        // Total Numbers: Count of data rows (excluding header)
+        worksheet.getCell(`F${totalRowNum}`).value = { formula: `COUNTA(A:A)-1` }; // Count entries minus header
+        
+        // Total Data: Dynamic MB calculation with GB conversion in same cell
+        worksheet.getCell(`F${totalRowNum + 1}`).value = { 
+          formula: `SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))&" MB ("&ROUND(SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))/1024,2)&" GB)"` 
+        };
+        
+        // Batch number (single file)
+        worksheet.getCell(`F${totalRowNum + 2}`).value = "1";
+        
+        // Style the values
         worksheet.getCell(`F${totalRowNum}`).font = { bold: true };
         worksheet.getCell(`F${totalRowNum + 1}`).font = { bold: true };
+        worksheet.getCell(`F${totalRowNum + 2}`).font = { bold: true };
 
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], {
