@@ -327,19 +327,20 @@ export default function OrdersApp() {
     const lastRowNum = worksheet.rowCount;
     const totalDataRow = worksheet.getRow(lastRowNum);
     
-    // Add number count summary in cell F using dynamic formula
+    // Add number count summary in cell F using Chrome OS compatible formula
+    const dataEndRow = lastRowNum - 1; // Last row with actual data
     totalDataRow.getCell(6).value = {
-      formula: `"Total Numbers: "&COUNTA(A:A)-1`,
+      formula: `"Total Numbers: "&COUNTA(A2:A${dataEndRow})`,
       result: `Total Numbers: ${order.entries.length}`
     };
     totalDataRow.getCell(6).font = { bold: true };
     
-    // Add total data allocation in cell F on the next row using dynamic formula
+    // Add total data allocation in cell F on the next row using Chrome OS compatible formula
     const totalGBRow = worksheet.getRow(lastRowNum + 1);
     
-    // Use dynamic formula that sums the data column and converts to MB and GB
+    // Use simple SUM range formula that works in both Excel and Google Sheets
     totalGBRow.getCell(6).value = {
-      formula: `"Total Data: "&SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))&" MB ("&ROUND(SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))/1024,2)&" GB)"`,
+      formula: `"Total Data: "&SUM(D2:D${dataEndRow})&" MB ("&ROUND(SUM(D2:D${dataEndRow})/1024,2)&" GB)"`,
       result: order.totalData > 1023 
         ? `Total Data: ${Math.round(order.totalData * 1024)} MB (${(order.totalData / 1024).toFixed(2)} TB)`
         : `Total Data: ${Math.round(order.totalData * 1024)} MB (${order.totalData.toFixed(2)} GB)`
@@ -576,20 +577,21 @@ export default function OrdersApp() {
       const lastRowNum = worksheet.rowCount;
       const totalDataRow = worksheet.getRow(lastRowNum);
       
-      // Add number count summary in cell F using dynamic formula
+      // Add number count summary in cell F using Chrome OS compatible formula
+      const dataEndRow = lastRowNum - 1; // Last row with actual data
       totalDataRow.getCell(6).value = {
-        formula: `"Total Numbers: "&COUNTA(A:A)-1`,
+        formula: `"Total Numbers: "&COUNTA(A2:A${dataEndRow})`,
         result: `Total Numbers: ${totalEntries}`
       };
       totalDataRow.getCell(6).font = { bold: true };
       
-      // Add total data allocation in cell F on the next row using dynamic formula
+      // Add total data allocation in cell F on the next row using Chrome OS compatible formula
       const totalGBRow = worksheet.getRow(lastRowNum + 1);
       const totalGB = totalDataMB / 1024;
       
-      // Use dynamic formula that sums the data column and converts to MB and GB
+      // Use simple SUM range formula that works in both Excel and Google Sheets
       totalGBRow.getCell(6).value = {
-        formula: `"Total Data: "&SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))&" MB ("&ROUND(SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))/1024,2)&" GB)"`,
+        formula: `"Total Data: "&SUM(D2:D${dataEndRow})&" MB ("&ROUND(SUM(D2:D${dataEndRow})/1024,2)&" GB)"`,
         result: totalGB > 1023 
           ? `Total Data: ${totalDataMB} MB (${(totalGB / 1024).toFixed(2)} TB)`
           : `Total Data: ${totalDataMB} MB (${totalGB.toFixed(2)} GB)`
@@ -779,20 +781,21 @@ export default function OrdersApp() {
     const lastRowNum = worksheet.rowCount;
     const totalDataRow = worksheet.getRow(lastRowNum);
     
-    // Add number count summary in cell F using dynamic formula
+    // Add number count summary in cell F using Chrome OS compatible formula
+    const dataEndRow = lastRowNum - 1; // Last row with actual data
     totalDataRow.getCell(6).value = {
-      formula: `"Total Numbers: "&COUNTA(A:A)-1`,
+      formula: `"Total Numbers: "&COUNTA(A2:A${dataEndRow})`,
       result: `Total Numbers: ${totalEntries}`
     };
     totalDataRow.getCell(6).font = { bold: true };
     
-    // Add total data allocation in cell F on the next row using dynamic formula
+    // Add total data allocation in cell F on the next row using Chrome OS compatible formula
     const totalGBRow = worksheet.getRow(lastRowNum + 1);
     const totalGB = totalDataMB / 1024;
     
-    // Use dynamic formula that sums the data column and converts to MB and GB
+    // Use simple SUM range formula that works in both Excel and Google Sheets
     totalGBRow.getCell(6).value = {
-      formula: `"Total Data: "&SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))&" MB ("&ROUND(SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))/1024,2)&" GB)"`,
+      formula: `"Total Data: "&SUM(D2:D${dataEndRow})&" MB ("&ROUND(SUM(D2:D${dataEndRow})/1024,2)&" GB)"`,
       result: totalGB > 1023 
         ? `Total Data: ${totalDataMB} MB (${(totalGB / 1024).toFixed(2)} TB)`
         : `Total Data: ${totalDataMB} MB (${totalGB.toFixed(2)} GB)`
