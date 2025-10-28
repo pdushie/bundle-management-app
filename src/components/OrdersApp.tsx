@@ -394,7 +394,10 @@ export default function OrdersApp() {
   
   // Download a single order directly and mark it as processed
   const downloadSingleOrder = async (order: Order) => {
+    let downloadSuccessful = false;
+    
     try {
+      // Step 1: Download the order (critical step)
       const { buffer, isZip } = await downloadOrder(order);
       
       // Set the appropriate MIME type based on whether it's a ZIP or Excel file
@@ -428,11 +431,22 @@ export default function OrdersApp() {
       link.click();
       URL.revokeObjectURL(url);
       
+      // Mark download as successful
+      downloadSuccessful = true;
+      
       // Show message if order was split due to size
       if (isZip) {
         alert(`Order data allocation (${order.totalData.toFixed(2)} GB) exceeds 1.5 TB. The data has been split into multiple Excel files and zipped for download.`);
       }
       
+    } catch (error) {
+      // // Console statement removed for security
+      alert("Failed to download order. Please try again.");
+      return; // Exit early if download fails
+    }
+    
+    // Step 2: Update order status (non-critical - shouldn't prevent successful download message)
+    try {
       // Get current date and time for processing timestamp using external time service
       const now = getCurrentTimeSync();
       const timestamp = getCurrentTimestampSync();
@@ -477,7 +491,9 @@ export default function OrdersApp() {
       
     } catch (error) {
       // // Console statement removed for security
-      alert("Failed to download order. Please try again.");
+      // Even if status update fails, the download was successful
+      // Show a warning but don't call it a failure
+      console.warn('Order downloaded successfully but status update failed:', error);
     }
   };
   
@@ -1052,7 +1068,8 @@ export default function OrdersApp() {
       refreshOrderCount();
       
       // Hide loading state
-      setIsLoading(false);        alert(`Successfully downloaded ${selectedOrders.length} orders as separate files.`);
+      setIsLoading(false);
+      alert(`Successfully downloaded ${selectedOrders.length} orders as separate files.`);
       }
     } catch (error) {
       // Console statement removed for security
