@@ -10,7 +10,7 @@ import { ChevronLeft, ChevronRight, X, DollarSign, Phone, Database } from 'lucid
 export default function SentOrdersApp() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortField, setSortField] = useState<'date' | 'status'>('date');
+  const [sortField, setSortField] = useState<'date' | 'status' | 'processedAt'>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage] = useState<number>(25);
@@ -84,7 +84,7 @@ export default function SentOrdersApp() {
     };
   }, [userEmail]);
 
-  const toggleSort = (field: 'date' | 'status') => {
+  const toggleSort = (field: 'date' | 'status' | 'processedAt') => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -103,12 +103,17 @@ export default function SentOrdersApp() {
       entry.number && entry.number.toLowerCase().includes(searchTerm)
     );
     
+    // Check if processed date matches the search term
+    const processedDateMatch = order.processedAt && 
+      new Date(order.processedAt).toLocaleDateString().toLowerCase().includes(searchTerm);
+    
     return (
       order.id.toLowerCase().includes(searchTerm) ||
       order.status.toLowerCase().includes(searchTerm) ||
       (order.pricingProfileName && order.pricingProfileName.toLowerCase().includes(searchTerm)) ||
       (order.estimatedCost !== null && order.estimatedCost !== undefined && order.estimatedCost.toString().includes(searchTerm)) ||
       new Date(order.timestamp).toLocaleDateString().includes(searchTerm) ||
+      processedDateMatch ||
       phoneNumberMatch
     );
   });
@@ -118,6 +123,15 @@ export default function SentOrdersApp() {
     if (sortField === 'date') {
       const dateA = new Date(a.timestamp).getTime();
       const dateB = new Date(b.timestamp).getTime();
+      return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+    } else if (sortField === 'processedAt') {
+      // Handle null/undefined processedAt values - put them last
+      if (!a.processedAt && !b.processedAt) return 0;
+      if (!a.processedAt) return sortDirection === 'asc' ? 1 : -1;
+      if (!b.processedAt) return sortDirection === 'asc' ? -1 : 1;
+      
+      const dateA = new Date(a.processedAt).getTime();
+      const dateB = new Date(b.processedAt).getTime();
       return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
     } else {
       return sortDirection === 'asc' 
@@ -164,7 +178,7 @@ export default function SentOrdersApp() {
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search by order ID, status, phone number, or date..."
+                    placeholder="Search by order ID, status, phone number, submission date, or processed date..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                     value={filterText}
                     onChange={(e) => {
@@ -203,7 +217,7 @@ export default function SentOrdersApp() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[600px]">
+              <table className="w-full min-w-[750px]">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Order ID</th>
@@ -230,6 +244,19 @@ export default function SentOrdersApp() {
                       <div className="flex items-center">
                         <span>Status</span>
                         {sortField === 'status' && (
+                          <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 ml-1 ${sortDirection === 'asc' ? 'transform rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M6 9l6 6 6-6"/>
+                          </svg>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider cursor-pointer hover:text-blue-600"
+                      onClick={() => toggleSort('processedAt')}
+                    >
+                      <div className="flex items-center">
+                        <span>Processed At</span>
+                        {sortField === 'processedAt' && (
                           <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 ml-1 ${sortDirection === 'asc' ? 'transform rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M6 9l6 6 6-6"/>
                           </svg>
@@ -279,6 +306,16 @@ export default function SentOrdersApp() {
                         }`}>
                           {order.status === "processed" ? "Processed" : "Pending"}
                         </span>
+                      </td>
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-700">
+                        {order.processedAt ? (
+                          <div className="flex flex-col">
+                            <span>{new Date(order.processedAt).toLocaleDateString()}</span>
+                            <span className="text-xs text-gray-500">{new Date(order.processedAt).toLocaleTimeString()}</span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 italic">Not processed</span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -343,13 +380,13 @@ export default function SentOrdersApp() {
             </div>
             
             <div className="p-3 sm:p-4 border-b border-gray-200">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div>
                   <p className="text-xs sm:text-sm text-gray-900">Order ID</p>
                   <p className="font-medium text-sm sm:text-base text-gray-900">{selectedOrder.id}</p>
                 </div>
                 <div>
-                  <p className="text-xs sm:text-sm text-gray-900">Date</p>
+                  <p className="text-xs sm:text-sm text-gray-900">Submitted</p>
                   <p className="font-medium text-sm sm:text-base text-gray-900">{new Date(selectedOrder.timestamp).toLocaleString()}</p>
                 </div>
                 <div>
@@ -362,6 +399,18 @@ export default function SentOrdersApp() {
                     }`}>
                       {selectedOrder.status === "processed" ? "Processed" : "Pending"}
                     </span>
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs sm:text-sm text-gray-900">Processed At</p>
+                  <p className="font-medium text-sm sm:text-base text-gray-900">
+                    {selectedOrder.processedAt ? (
+                      <span className="text-green-700">
+                        {new Date(selectedOrder.processedAt).toLocaleString()}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 italic">Not processed yet</span>
+                    )}
                   </p>
                 </div>
               </div>

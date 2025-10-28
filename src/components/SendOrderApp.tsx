@@ -1556,7 +1556,7 @@ Supports: 25gig, 25gb, 25g, 25, 1024mb, 1024m`}
                         invalidEntryRefs.current[idx] = null;
                       }
                     }}
-                    className={`border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 ${
+                    className={`border rounded-lg p-4 grid grid-cols-1 lg:grid-cols-3 gap-4 items-start ${
                       entry.status === "sent" 
                         ? "bg-green-50 border-green-200" 
                         : entry.status === "error" 
@@ -1572,52 +1572,59 @@ Supports: 25gig, 25gb, 25g, 25, 1024mb, 1024m`}
                         : "bg-white border-gray-200"
                     }`}
                   >
-                    <div className="flex gap-3 items-center min-w-0 flex-1">
-                      {entry.status === "sent" && <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />}
-                      {entry.status === "error" && <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />}
-                      {entry.status === "pending" && (!(/^0\d{9}$/.test(entry.number)) || entry.isValid === false) && <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />}
-                      {entry.status === "pending" && entry.isDuplicate && <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0" />}
-                      {entry.status === "pending" && entry.wasFixed && <CheckCircle className="w-5 h-5 text-cyan-600 flex-shrink-0" />}
-                      {entry.status === "pending" && !entry.wasFixed && !entry.isDuplicate && /^0\d{9}$/.test(entry.number) && entry.isValid !== false && <div className="w-5 h-5 flex-shrink-0" />}
-                      
-                      <div className="min-w-0 flex-1">
-                        <p className={`font-mono text-lg sm:text-base font-black break-all ${
-                          !(/^0\d{9}$/.test(entry.number)) || entry.isValid === false ? "text-red-700" : 
-                          entry.isDuplicate ? "text-yellow-700" :
-                          entry.wasFixed ? "text-cyan-700" : "text-gray-900"
-                        }`}>{entry.number}</p>
-                        {entry.message && (
-                          <p className={`text-sm font-medium mt-1 ${
-                            entry.status === "sent" 
-                              ? "text-green-600" 
-                              : entry.status === "error" 
-                              ? "text-red-600" 
-                              : "text-gray-700"
-                          }`}>
-                            {entry.message}
-                          </p>
-                        )}
-                        {(!(/^0\d{9}$/.test(entry.number)) || entry.isValid === false) && !entry.message && (
-                          <p className="text-sm font-medium text-red-600 mt-1">
-                            {entry.number.length !== 10
-                              ? `Invalid length (must be 10 digits, got ${entry.number.length})` 
-                              : !entry.number.startsWith('0')
-                              ? "Must start with 0"
-                              : /[^\d]/.test(entry.number)
-                              ? "Contains non-numeric characters"
-                              : "Invalid number format"}
-                          </p>
-                        )}
-                        {entry.isDuplicate && !entry.message && (
-                          <p className="text-sm font-medium text-yellow-600 mt-1">Duplicate entry</p>
-                        )}
-                        {entry.wasFixed && !entry.message && (
-                          <p className="text-sm font-medium text-cyan-600 mt-1">Auto-fixed (added leading zero)</p>
-                        )}
+                    {/* Phone Number Section */}
+                    <div className="lg:col-span-2 flex items-center min-h-[3rem]">
+                      <div className="flex items-center gap-1">
+                        <div className="flex-shrink-0">
+                          {entry.status === "sent" && <CheckCircle className="w-5 h-5 text-green-600" />}
+                          {entry.status === "error" && <AlertCircle className="w-5 h-5 text-red-600" />}
+                          {entry.status === "pending" && (!(/^0\d{9}$/.test(entry.number)) || entry.isValid === false) && <AlertCircle className="w-5 h-5 text-red-600" />}
+                          {entry.status === "pending" && entry.isDuplicate && <AlertCircle className="w-5 h-5 text-yellow-600" />}
+                          {entry.status === "pending" && entry.wasFixed && <CheckCircle className="w-5 h-5 text-cyan-600" />}
+                          {entry.status === "pending" && !entry.wasFixed && !entry.isDuplicate && /^0\d{9}$/.test(entry.number) && entry.isValid !== false && <div className="w-5 h-5" />}
+                        </div>
+                        
+                        <div className="flex flex-col">
+                          <p className={`font-mono text-lg font-black break-all leading-tight ${
+                            !(/^0\d{9}$/.test(entry.number)) || entry.isValid === false ? "text-red-700" : 
+                            entry.isDuplicate ? "text-yellow-700" :
+                            entry.wasFixed ? "text-cyan-700" : "text-gray-900"
+                          }`}>{entry.number}</p>
+                          {entry.message && (
+                            <p className={`text-sm font-medium mt-1 ${
+                              entry.status === "sent" 
+                                ? "text-green-600" 
+                                : entry.status === "error" 
+                                ? "text-red-600" 
+                                : "text-gray-700"
+                            }`}>
+                              {entry.message}
+                            </p>
+                          )}
+                          {(!(/^0\d{9}$/.test(entry.number)) || entry.isValid === false) && !entry.message && (
+                            <p className="text-sm font-medium text-red-600 mt-1">
+                              {entry.number.length !== 10
+                                ? `Invalid length (must be 10 digits, got ${entry.number.length})` 
+                                : !entry.number.startsWith('0')
+                                ? "Must start with 0"
+                                : /[^\d]/.test(entry.number)
+                                ? "Contains non-numeric characters"
+                                : "Invalid number format"}
+                            </p>
+                          )}
+                          {entry.isDuplicate && !entry.message && (
+                            <p className="text-sm font-medium text-yellow-600 mt-1">Duplicate entry</p>
+                          )}
+                          {entry.wasFixed && !entry.message && (
+                            <p className="text-sm font-medium text-cyan-600 mt-1">Auto-fixed (added leading zero)</p>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <div className="text-left sm:text-right">
-                      <div className="flex items-center gap-1 justify-start sm:justify-end">
+                    
+                    {/* Data Allocation & Pricing Section */}
+                    <div className="lg:col-span-1 flex flex-col items-end text-right space-y-2">
+                      <div className="flex items-center gap-2">
                         <p className="text-base font-bold text-gray-900">{entry.allocationGB.toFixed(2)} GB</p>
                         {pricingData?.profile?.tiers && (
                           <div className="flex items-center" title={hasPricingForAllocation(entry.allocationGB, pricingData.profile.tiers) ? "Pricing available" : "No pricing available for this allocation"}>
@@ -1629,9 +1636,10 @@ Supports: 25gig, 25gb, 25g, 25, 1024mb, 1024m`}
                           </div>
                         )}
                       </div>
-                      <p className="text-sm font-medium text-gray-700">{(entry.allocationGB * 1024).toFixed(0)} MB</p>
+                      <p className="text-sm font-medium text-gray-600">{(entry.allocationGB * 1024).toFixed(0)} MB</p>
+                      
                       {pricingData?.hasProfile && pricingData?.profile && (
-                        <div className="mt-1">
+                        <div>
                           {hasPricingForAllocation(entry.allocationGB, pricingData.profile.tiers || []) ? (
                             <p className="text-sm text-green-600 font-bold">
                               GHS {calculatePrice(pricingData.profile, entry.allocationGB)?.toFixed(2)}
