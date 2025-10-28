@@ -1008,7 +1008,7 @@ function BundleAllocatorApp({
       const totalDuplicates = processedEntries.length - parsed.length;
       
       if (totalDuplicates > 0) {
-        alertMessages.push(`Removed ${totalDuplicates} duplicate entry(ies).\n\nDuplicates are identified by matching both phone number AND data allocation.\nOnly the first occurrence of each combination was kept.`);
+        alertMessages.push(`🗑️ Removed ${totalDuplicates} duplicate entry(ies).\n\nDuplicates are identified by matching both phone number AND data allocation.\nOnly the first occurrence of each combination was kept.`);
       }
       
       if (fixedNumbers > 0) {

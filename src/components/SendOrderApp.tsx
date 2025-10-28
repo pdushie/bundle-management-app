@@ -451,11 +451,11 @@ export default function SendOrderApp() {
       const alertMessages: string[] = [];
       
       if (totalDuplicates > 0) {
-        alertMessages.push(`ðŸ—‘ï¸ Removed ${totalDuplicates} duplicate entry(ies).\n\nDuplicates are identified by matching both phone number AND data allocation.\nOnly the first occurrence of each combination was kept.`);
+        alertMessages.push(`Removed ${totalDuplicates} duplicate entry(ies).\n\nDuplicates are identified by matching both phone number AND data allocation.\nOnly the first occurrence of each combination was kept.`);
       }
       
       if (fixedNumbers > 0) {
-        alertMessages.push(`✅ Auto-fixed ${fixedNumbers} phone number(s) by:\n• Removing dots, hyphens, and non-digit characters\n• Adding leading zeros where needed\n• Fixing number format\n\nFixed numbers are marked with a cyan icon.`);
+        alertMessages.push(`Auto-fixed ${fixedNumbers} phone number(s) by:\n• Removing dots, hyphens, and non-digit characters\n• Adding leading zeros where needed\n• Fixing number format\n\nFixed numbers are marked with a cyan icon.`);
       }
       
       if (alertMessages.length > 0) {
@@ -694,11 +694,11 @@ export default function SendOrderApp() {
           const alertMessages: string[] = [];
           
           if (totalDuplicates > 0) {
-            alertMessages.push(`ðŸ—‘ï¸ Removed ${totalDuplicates} duplicate entry(ies).\n\nDuplicates are identified by matching both phone number AND data allocation.\nOnly the first occurrence of each combination was kept.`);
+            alertMessages.push(`Removed ${totalDuplicates} duplicate entry(ies).\n\nDuplicates are identified by matching both phone number AND data allocation.\nOnly the first occurrence of each combination was kept.`);
           }
           
           if (fixedNumbers > 0) {
-            alertMessages.push(`✅ Auto-fixed ${fixedNumbers} phone number(s) by adding leading zero.\n\nFixed numbers are marked with a cyan icon.`);
+            alertMessages.push(`Auto-fixed ${fixedNumbers} phone number(s) by adding leading zero.\n\nFixed numbers are marked with a cyan icon.`);
           }
           
           // Store messages to be displayed after file processing (in the handler)
@@ -741,11 +741,11 @@ export default function SendOrderApp() {
       const alertMessages: string[] = [];
       
       if (duplicateCount > 0) {
-        alertMessages.push(`ðŸ—‘ï¸ Removed ${duplicateCount} duplicate entry(ies).\n\nDuplicates are identified by matching both phone number AND data allocation.\nOnly the first occurrence of each combination was kept.`);
+        alertMessages.push(`Removed ${duplicateCount} duplicate entry(ies).\n\nDuplicates are identified by matching both phone number AND data allocation.\nOnly the first occurrence of each combination was kept.`);
       }
       
       if (fixedCount > 0) {
-        alertMessages.push(`✅ Auto-fixed ${fixedCount} phone number(s) by adding leading zero.\n\nFixed numbers are marked with a cyan icon.`);
+        alertMessages.push(`Auto-fixed ${fixedCount} phone number(s) by adding leading zero.\n\nFixed numbers are marked with a cyan icon.`);
       }
       
       if (alertMessages.length > 0) {
@@ -792,11 +792,11 @@ export default function SendOrderApp() {
       const alertMessages: string[] = [];
       
       if (duplicateCount > 0) {
-        alertMessages.push(`ðŸ—‘ï¸ Removed ${duplicateCount} duplicate entry(ies).\n\nDuplicates are identified by matching both phone number AND data allocation.\nOnly the first occurrence of each combination was kept.`);
+        alertMessages.push(`Removed ${duplicateCount} duplicate entry(ies).\n\nDuplicates are identified by matching both phone number AND data allocation.\nOnly the first occurrence of each combination was kept.`);
       }
       
       if (fixedCount > 0) {
-        alertMessages.push(`✅ Auto-fixed ${fixedCount} phone number(s) by adding leading zero.\n\nFixed numbers are marked with a cyan icon.`);
+        alertMessages.push(`Auto-fixed ${fixedCount} phone number(s) by adding leading zero.\n\nFixed numbers are marked with a cyan icon.`);
       }
       
       if (alertMessages.length > 0) {
