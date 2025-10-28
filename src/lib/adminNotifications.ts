@@ -76,13 +76,25 @@ export async function sendTelegramNotification(
   }
 }
 
+// Get a reliable bell emoji for Telegram messages
+function getBellEmoji(): string {
+  try {
+    // Try Unicode escape sequence first (most reliable)
+    return '\u{1F514}';
+  } catch (error) {
+    // Fallback to alternative symbols if Unicode fails
+    return '🔔'; // Direct fallback
+  }
+}
+
 // Function to notify admins about new orders
 export async function notifyAdminAboutNewOrder(order: Order): Promise<void> {
   try {
     const config = getAdminNotificationConfig();
     
     // Format the message (using Markdown for Telegram)
-    const message = `ðŸ”” *New Order Received!*\n\n` +
+    const bellIcon = getBellEmoji();
+    const message = `${bellIcon} *New Order Received!*\n\n` +
       `*Order ID:* \`${order.id}\`\n` +
       `*From:* ${order.userName} (${order.userEmail})\n` +
       `*Total Data:* ${order.totalData} GB\n` +

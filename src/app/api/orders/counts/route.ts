@@ -1,5 +1,5 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
-import { getOrderCounts } from '@/lib/orderDbOperations';
+import { getOrderCounts, getAllTimeOrderCounts } from '@/lib/orderDbOperations';
 import { testConnection } from '@/lib/db';
 
 // User-specific cache for order counts (reduces DB load)
@@ -71,8 +71,9 @@ export async function POST(request: NextRequest) {
     
     // userEmail was already parsed above for cache key
     
-    // Get order counts with retry logic built into the function
-    const counts = await getOrderCounts(userEmail);
+    // Get ALL-TIME order counts for badge display (not filtered by date)
+    // This ensures badges show all pending/processed orders, not just today's
+    const counts = await getAllTimeOrderCounts(userEmail);
     
     // Update user-specific cache
     orderCountsCache.set(cacheKey, {

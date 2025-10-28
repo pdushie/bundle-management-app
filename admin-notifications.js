@@ -53,6 +53,20 @@ async function sendTelegramNotification(message, chatId) {
 }
 
 /**
+ * Get a reliable bell emoji for Telegram messages
+ * @returns {string} Bell emoji
+ */
+function getBellEmoji() {
+  try {
+    // Try Unicode escape sequence first (most reliable)
+    return '\u{1F514}';
+  } catch (error) {
+    // Fallback to alternative symbols if Unicode fails
+    return '🔔'; // Direct fallback
+  }
+}
+
+/**
  * Notify admins about a new order
  * @param {Object} order - The order object
  * @returns {Promise<void>}
@@ -60,7 +74,8 @@ async function sendTelegramNotification(message, chatId) {
 async function notifyAdminAboutNewOrder(order) {
   try {
     // Format the message (using Markdown for Telegram)
-    const message = `🔔 *New Order Received!*\n\n` +
+    const bellIcon = getBellEmoji();
+    const message = `${bellIcon} *New Order Received!*\n\n` +
       `*Order ID:* \`${order.id}\`\n` +
       `*From:* ${order.userName} (${order.userEmail})\n` +
       `*Total Data:* ${order.totalData} GB\n` +

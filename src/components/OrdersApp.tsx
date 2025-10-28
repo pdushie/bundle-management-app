@@ -323,25 +323,27 @@ export default function OrdersApp() {
     // Add an empty row after the entries
     worksheet.addRow([]);
     
-    // Calculate the last row number and add summary row in column F
+    // Calculate the last row number and add summary row in column F with dynamic formulas
     const lastRowNum = worksheet.rowCount;
     const totalDataRow = worksheet.getRow(lastRowNum);
     
-    // Add number count summary in cell F
-    totalDataRow.getCell(6).value = `Total Numbers: ${order.entries.length}`;
+    // Add number count summary in cell F using dynamic formula
+    totalDataRow.getCell(6).value = {
+      formula: `"Total Numbers: "&COUNTA(A:A)-1`,
+      result: `Total Numbers: ${order.entries.length}`
+    };
     totalDataRow.getCell(6).font = { bold: true };
     
-    // Add total data allocation in cell F on the next row
-    const totalDataMB = Math.round(order.totalData * 1024);
+    // Add total data allocation in cell F on the next row using dynamic formula
     const totalGBRow = worksheet.getRow(lastRowNum + 1);
     
-    // Display in TB if total exceeds 1023 GB
-    if (order.totalData > 1023) {
-      const totalTB = order.totalData / 1024;
-      totalGBRow.getCell(6).value = `Total Data: ${totalDataMB} MB (${totalTB.toFixed(2)} TB)`;
-    } else {
-      totalGBRow.getCell(6).value = `Total Data: ${totalDataMB} MB (${order.totalData.toFixed(2)} GB)`;
-    }
+    // Use dynamic formula that sums the data column and converts to MB and GB
+    totalGBRow.getCell(6).value = {
+      formula: `"Total Data: "&SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))&" MB ("&ROUND(SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))/1024,2)&" GB)"`,
+      result: order.totalData > 1023 
+        ? `Total Data: ${Math.round(order.totalData * 1024)} MB (${(order.totalData / 1024).toFixed(2)} TB)`
+        : `Total Data: ${Math.round(order.totalData * 1024)} MB (${order.totalData.toFixed(2)} GB)`
+    };
     totalGBRow.getCell(6).font = { bold: true };
     
     // Auto-size columns
@@ -554,25 +556,28 @@ export default function OrdersApp() {
       // Add an empty row after all entries
       worksheet.addRow([]);
       
-      // Add summary information
+      // Add summary information with dynamic formulas
       const lastRowNum = worksheet.rowCount;
       const totalDataRow = worksheet.getRow(lastRowNum);
       
-      // Add number count summary in cell F
-      totalDataRow.getCell(6).value = `Total Numbers: ${totalEntries}`;
+      // Add number count summary in cell F using dynamic formula
+      totalDataRow.getCell(6).value = {
+        formula: `"Total Numbers: "&COUNTA(A:A)-1`,
+        result: `Total Numbers: ${totalEntries}`
+      };
       totalDataRow.getCell(6).font = { bold: true };
       
-      // Add total data allocation in cell F on the next row
+      // Add total data allocation in cell F on the next row using dynamic formula
       const totalGBRow = worksheet.getRow(lastRowNum + 1);
       const totalGB = totalDataMB / 1024;
       
-      // Display in TB if total exceeds 1023 GB
-      if (totalGB > 1023) {
-        const totalTB = totalGB / 1024;
-        totalGBRow.getCell(6).value = `Total Data: ${totalDataMB} MB (${totalTB.toFixed(2)} TB)`;
-      } else {
-        totalGBRow.getCell(6).value = `Total Data: ${totalDataMB} MB (${totalGB.toFixed(2)} GB)`;
-      }
+      // Use dynamic formula that sums the data column and converts to MB and GB
+      totalGBRow.getCell(6).value = {
+        formula: `"Total Data: "&SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))&" MB ("&ROUND(SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))/1024,2)&" GB)"`,
+        result: totalGB > 1023 
+          ? `Total Data: ${totalDataMB} MB (${(totalGB / 1024).toFixed(2)} TB)`
+          : `Total Data: ${totalDataMB} MB (${totalGB.toFixed(2)} GB)`
+      };
       totalGBRow.getCell(6).font = { bold: true };
       
       // Auto-size columns
@@ -754,25 +759,28 @@ export default function OrdersApp() {
     // Add an empty row after all entries
     worksheet.addRow([]);
     
-    // Add summary information
+    // Add summary information with dynamic formulas
     const lastRowNum = worksheet.rowCount;
     const totalDataRow = worksheet.getRow(lastRowNum);
     
-    // Add number count summary in cell F
-    totalDataRow.getCell(6).value = `Total Numbers: ${totalEntries}`;
+    // Add number count summary in cell F using dynamic formula
+    totalDataRow.getCell(6).value = {
+      formula: `"Total Numbers: "&COUNTA(A:A)-1`,
+      result: `Total Numbers: ${totalEntries}`
+    };
     totalDataRow.getCell(6).font = { bold: true };
     
-    // Add total data allocation in cell F on the next row
+    // Add total data allocation in cell F on the next row using dynamic formula
     const totalGBRow = worksheet.getRow(lastRowNum + 1);
     const totalGB = totalDataMB / 1024;
     
-    // Display in TB if total exceeds 1023 GB
-    if (totalGB > 1023) {
-      const totalTB = totalGB / 1024;
-      totalGBRow.getCell(6).value = `Total Data: ${totalDataMB} MB (${totalTB.toFixed(2)} TB)`;
-    } else {
-      totalGBRow.getCell(6).value = `Total Data: ${totalDataMB} MB (${totalGB.toFixed(2)} GB)`;
-    }
+    // Use dynamic formula that sums the data column and converts to MB and GB
+    totalGBRow.getCell(6).value = {
+      formula: `"Total Data: "&SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))&" MB ("&ROUND(SUBTOTAL(109,OFFSET(D2,0,0,COUNTA(D:D)-1,1))/1024,2)&" GB)"`,
+      result: totalGB > 1023 
+        ? `Total Data: ${totalDataMB} MB (${(totalGB / 1024).toFixed(2)} TB)`
+        : `Total Data: ${totalDataMB} MB (${totalGB.toFixed(2)} GB)`
+    };
     totalGBRow.getCell(6).font = { bold: true };
     
     // Add batch information
