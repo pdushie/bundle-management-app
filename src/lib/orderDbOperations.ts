@@ -290,19 +290,25 @@ export const saveOrders = async (ordersList: Order[]): Promise<void> => {
 export const updateOrder = async (orderId: string, updates: Partial<Order>): Promise<void> => {
   try {
     if (db) {
+      // Filter out read-only fields that shouldn't be updated in the database
+      const { entries, isSelected, createdAt, ...updatesToApply } = updates;
+      
       // Convert number fields to strings for Drizzle
-      const drizzleUpdates: any = { ...updates };
+      const drizzleUpdates: any = { ...updatesToApply };
       if (drizzleUpdates.totalData !== undefined) drizzleUpdates.totalData = drizzleUpdates.totalData.toString();
       if (drizzleUpdates.cost !== undefined) drizzleUpdates.cost = drizzleUpdates.cost !== null ? drizzleUpdates.cost.toString() : null;
       if (drizzleUpdates.estimatedCost !== undefined) drizzleUpdates.estimatedCost = drizzleUpdates.estimatedCost !== null ? drizzleUpdates.estimatedCost.toString() : null;
-      // Convert processedBy and processedAt properly
-      if (drizzleUpdates.processedBy !== undefined) drizzleUpdates.processedBy = drizzleUpdates.processedBy;
+      
+      // Handle processedAt conversion
       if (drizzleUpdates.processedAt !== undefined) {
-        // Convert string to Date object if it's a string
         if (typeof drizzleUpdates.processedAt === 'string') {
+          drizzleUpdates.processedAt = new Date(drizzleUpdates.processedAt);
+        } else if (!(drizzleUpdates.processedAt instanceof Date)) {
+          // Try to convert other types to Date
           drizzleUpdates.processedAt = new Date(drizzleUpdates.processedAt);
         }
       }
+      
       await db.update(orders).set(drizzleUpdates).where(eq(orders.id, orderId));
     } else {
       // Only allow updating one field at a time for Neon
@@ -339,7 +345,25 @@ export const getPendingOrdersOldestFirst = async (): Promise<Order[]> => {
     // Get pending orders sorted by timestamp ascending (oldest first)
     if (!db) throw new Error('Database not initialized');
     const dbOrders = await db
-      .select()
+      .select({
+        id: orders.id,
+        timestamp: orders.timestamp,
+        date: orders.date,
+        time: orders.time,
+        userName: orders.userName,
+        userEmail: orders.userEmail,
+        totalData: orders.totalData,
+        totalCount: orders.totalCount,
+        status: orders.status,
+        userId: orders.userId,
+        cost: orders.cost,
+        estimatedCost: orders.estimatedCost,
+        pricingProfileId: orders.pricingProfileId,
+        pricingProfileName: orders.pricingProfileName,
+        processedBy: orders.processedBy,
+        processedAt: orders.processedAt,
+        createdAt: orders.createdAt
+      })
       .from(orders)
       .where(eq(orders.status, 'pending'))
       .orderBy(asc(orders.timestamp));
@@ -376,7 +400,25 @@ export const getProcessedOrdersOldestFirst = async (): Promise<Order[]> => {
     // Get processed orders sorted by timestamp ascending (oldest first)
     if (!db) throw new Error('Database not initialized');
     const dbOrders = await db
-      .select()
+      .select({
+        id: orders.id,
+        timestamp: orders.timestamp,
+        date: orders.date,
+        time: orders.time,
+        userName: orders.userName,
+        userEmail: orders.userEmail,
+        totalData: orders.totalData,
+        totalCount: orders.totalCount,
+        status: orders.status,
+        userId: orders.userId,
+        cost: orders.cost,
+        estimatedCost: orders.estimatedCost,
+        pricingProfileId: orders.pricingProfileId,
+        pricingProfileName: orders.pricingProfileName,
+        processedBy: orders.processedBy,
+        processedAt: orders.processedAt,
+        createdAt: orders.createdAt
+      })
       .from(orders)
       .where(eq(orders.status, 'processed'))
       .orderBy(asc(orders.timestamp));

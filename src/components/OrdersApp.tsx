@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import React, { useState, useEffect } from "react";
-import { Download, Clock, FileText, User, Database, CheckCircle, XCircle, Loader, Search, SlidersHorizontal, Check, CheckSquare, Square, Archive, DollarSign } from "lucide-react";
+import { Download, Clock, FileText, User, Database, CheckCircle, XCircle, Loader, Search, Check, CheckSquare, Square, Archive, DollarSign, SlidersHorizontal } from "lucide-react";
 import ExcelJS from "exceljs";
 import JSZip from "jszip";
 import { getPendingOrdersOldestFirst, getOrdersOldestFirst, saveOrders, updateOrder, updateEntryStatuses } from "../lib/orderClient";
@@ -15,7 +15,7 @@ export default function OrdersApp() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "processed">("all");
+  // Status filter removed - OrdersApp only shows pending orders
   const [sortField, setSortField] = useState<"date" | "userName" | "totalData" | "totalCount">("date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc"); // Changed to "asc" so oldest orders appear at the top
   const [selectAll, setSelectAll] = useState<boolean>(false);
@@ -30,9 +30,10 @@ export default function OrdersApp() {
   const fetchOrders = async () => {
     try {
       setIsLoading(true);
-      // Try to load ALL orders from database
-      const allOrders = await getOrdersOldestFirst();
-      setOrders(allOrders);
+      // Load only PENDING orders for the order queue
+      const pendingOrders = await getPendingOrdersOldestFirst();
+      console.log('Fetched orders:', pendingOrders.map(o => ({ id: o.id, status: o.status })));
+      setOrders(pendingOrders);
       refreshOrderCount(); // Update order counts in the context
     } catch (error) {
       // // Console statement removed for security
@@ -91,8 +92,8 @@ export default function OrdersApp() {
       
       try {
         setIsLoading(true);
-        // Try to load ALL orders from database first, not just pending ones
-        const allOrders = await getOrdersOldestFirst();
+        // Load only pending orders for the order queue
+        const allOrders = await getPendingOrdersOldestFirst();
         
         if (!isMounted) return;
         
@@ -192,11 +193,9 @@ export default function OrdersApp() {
     setSelectAll(newSelectedCount > 0 && newSelectedCount === filteredCount);
   };
   
-  // Filter out processed orders for the orders queue (only show pending ones), 
-  // then apply any other filters and sort
-  // Apply filters and sorting to all orders
+  // Filter out any processed orders that might have slipped through, then apply other filters
   const allFilteredOrders = orders
-    .filter(order => statusFilter === "all" ? order.status === "pending" : order.status === statusFilter)
+    .filter(order => order.status === "pending") // Double-check pending status
     .filter(isOrderInFilteredView)
     .sort((a, b) => {
       // Apply sorting
@@ -467,19 +466,19 @@ export default function OrdersApp() {
         estimatedCost: order.estimatedCost
       };
       
-      // Update the local state
-      const updatedOrders = orders.map(o => o.id === order.id ? updatedOrder : o);
-      setOrders(updatedOrders);
-      
-      // Update in database
+      // Update in database FIRST before updating UI state
       await updateOrder(updatedOrder);
       
       // Update all entry statuses to 'sent' when order is processed
       try {
         await updateEntryStatuses(order.id, 'sent');
       } catch (error) {
-        // // Console statement removed for security
+        console.error('Failed to update entry statuses:', error);
       }
+      
+      // Remove the processed order from the local state (since OrdersApp only shows pending orders)
+      const updatedOrders = orders.filter(o => o.id !== order.id);
+      setOrders(updatedOrders);
       
       // Notify that the order has been processed
       notifyOrderProcessed(order.id);
@@ -918,29 +917,27 @@ export default function OrdersApp() {
         const processedDate = getCurrentDateStringSync();
         const processedTime = getCurrentTimeStringSync().substring(0, 5); // HH:MM format
         
-        // Mark all selected orders as processed with updated timestamps
+        // Create updated orders for database (with processed status)
         // IMPORTANT: Preserve cost fields when processing orders
-        const updatedOrders = orders.map(order => 
-          selectedOrderIds.includes(order.id) 
-            ? { 
-                ...order, 
-                status: "processed" as const,
-                timestamp: timestamp,
-                date: processedDate,
-                time: processedTime,
-                // Explicitly preserve cost fields to prevent them from being zeroed out
-                cost: order.cost,
-                estimatedCost: order.estimatedCost
-              } 
-            : order
-        );
+        const ordersToUpdate = orders
+          .filter(order => selectedOrderIds.includes(order.id))
+          .map(order => ({ 
+            ...order, 
+            status: "processed" as const,
+            timestamp: timestamp,
+            date: processedDate,
+            time: processedTime,
+            // Explicitly preserve cost fields to prevent them from being zeroed out
+            cost: order.cost,
+            estimatedCost: order.estimatedCost
+          }));
         
-        setOrders(updatedOrders);
+        // Remove processed orders from local state (since OrdersApp only shows pending orders)
+        const remainingOrders = orders.filter(order => !selectedOrderIds.includes(order.id));
+        setOrders(remainingOrders);
         
         // Update each order in the database
-        const updatePromises = updatedOrders
-          .filter(order => selectedOrderIds.includes(order.id))
-          .map(order => updateOrder(order));
+        const updatePromises = ordersToUpdate.map(order => updateOrder(order));
         
         await Promise.all(updatePromises);
         
@@ -1113,7 +1110,7 @@ export default function OrdersApp() {
     } else {
       setSelectAll(false);
     }
-  }, [allFilteredOrders, statusFilter, searchTerm]);
+  }, [allFilteredOrders, searchTerm]);
   
   // Listen for order updated events to refresh the list
   useEffect(() => {
@@ -1172,18 +1169,7 @@ export default function OrdersApp() {
               />
             </div>
             
-            {/* Status Filter */}
-            <div className="flex items-center gap-2">
-              <SlidersHorizontal className="h-4 w-4 text-gray-700" />
-              <select 
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="text-sm border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-              >
-                <option value="all">All Pending</option>
-                <option value="pending">Pending Only</option>
-              </select>
-            </div>
+            {/* Status filter removed - OrdersApp only shows pending orders */}
             
             {/* Bulk Download Button */}
             {selectedOrderIds.length > 0 && (
@@ -1299,8 +1285,8 @@ export default function OrdersApp() {
                       <div className="flex flex-col items-center justify-center">
                         <FileText className="h-8 w-8 text-gray-700 mb-3" />
                         <p className="text-gray-700">No orders found</p>
-                        {searchTerm || statusFilter !== "all" ? (
-                          <p className="text-gray-700 text-sm mt-1">Try adjusting your filters</p>
+                        {searchTerm ? (
+                          <p className="text-gray-700 text-sm mt-1">Try adjusting your search</p>
                         ) : null}
                       </div>
                     </td>
