@@ -127,10 +127,15 @@ export default function OrdersApp() {
     const newSelectAll = !selectAll;
     setSelectAll(newSelectAll);
     
+    // Get current filtered orders
+    const currentFilteredOrders = orders
+      .filter(order => order.status === "pending")
+      .filter(isOrderInFilteredView);
+    
     // Update all filtered orders
     const updatedOrders = orders.map(order => {
       // Only update orders that are in the current filtered view
-      if (isOrderInFilteredView(order)) {
+      if (isOrderInFilteredView(order) && order.status === "pending") {
         return { ...order, isSelected: newSelectAll };
       }
       return order;
@@ -140,7 +145,7 @@ export default function OrdersApp() {
     
     // Update selected IDs
     if (newSelectAll) {
-      setSelectedOrderIds(allFilteredOrders.map(order => order.id));
+      setSelectedOrderIds(currentFilteredOrders.map(order => order.id));
     } else {
       setSelectedOrderIds([]);
     }
@@ -166,25 +171,28 @@ export default function OrdersApp() {
   
   // Toggle selection for a single order
   const toggleOrderSelection = (orderId: string) => {
+    const orderToToggle = orders.find(o => o.id === orderId);
+    if (!orderToToggle) return;
+    
+    const wasSelected = orderToToggle.isSelected;
+    const willBeSelected = !wasSelected;
+    
     const updatedOrders = orders.map(order => {
       if (order.id === orderId) {
-        return { ...order, isSelected: !order.isSelected };
+        return { ...order, isSelected: willBeSelected };
       }
       return order;
     });
     
     setOrders(updatedOrders);
     
-    // Update the selected IDs list
-    const orderToToggle = orders.find(o => o.id === orderId);
-    if (orderToToggle) {
-      if (orderToToggle.isSelected) {
-        // It was previously selected, so we're removing it
-        setSelectedOrderIds(prev => prev.filter(id => id !== orderId));
-      } else {
-        // It was previously unselected, so we're adding it
-        setSelectedOrderIds(prev => [...prev, orderId]);
-      }
+    // Update the selected IDs list based on the new state
+    if (willBeSelected) {
+      // Adding to selection
+      setSelectedOrderIds(prev => [...prev, orderId]);
+    } else {
+      // Removing from selection
+      setSelectedOrderIds(prev => prev.filter(id => id !== orderId));
     }
     
     // Update selectAll state
