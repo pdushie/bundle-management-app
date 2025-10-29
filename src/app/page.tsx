@@ -20,7 +20,6 @@ import PackagesApp from "@/components/PackagesApp";
 import { OrderProvider, useOrderCount } from "@/lib/orderContext";
 import { ORDER_UPDATED_EVENT } from "@/lib/orderNotifications";
 import { requestNotificationPermission, hasNotificationPermission, sendThrottledNotification, playNotificationSound } from '@/lib/notifications';
-import { useBrowserTitle } from '@/hooks/useBrowserTitle';
 import { initializeTimeService, getCurrentTimeStringSync, getCurrentDateStringSync, getCurrentTimestampSync, getCurrentTimeSync } from '@/lib/timeService';
 
 type PhoneEntry = {
@@ -2463,11 +2462,6 @@ function AppContent() {
   const isModerator = userRole === 'moderator';
   const isRegularUser = userRole === 'user';
   
-  // Use order counts for browser title updates
-  const { orderCount, processedOrderCount } = useOrderCount();
-  
-  // Update browser title with order counts
-  useBrowserTitle({ orderCount, processedOrderCount });
 
   
   // Set initial active tab based on user role
