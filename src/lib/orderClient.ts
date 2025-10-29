@@ -27,6 +27,7 @@ export type Order = {
   estimatedCost?: number | null; // Total estimated cost of the order
   processedBy?: number; // ID of admin who processed the order
   processedAt?: string; // Timestamp when order was processed
+  createdAt?: string; // Timestamp when order was created/submitted
   adminEmail?: string; // Email of admin who processed the order (for reporting)
   adminName?: string; // Name of admin who processed the order (for reporting)
   isSelected?: boolean;

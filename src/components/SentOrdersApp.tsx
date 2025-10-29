@@ -104,15 +104,31 @@ export default function SentOrdersApp() {
     );
     
     // Check if processed date matches the search term
-    const processedDateMatch = order.processedAt && 
-      new Date(order.processedAt).toLocaleDateString().toLowerCase().includes(searchTerm);
+    const processedDateMatch = order.processedAt && (
+      new Date(order.processedAt).toLocaleDateString('en-US').toLowerCase().includes(searchTerm) ||
+      new Date(order.processedAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      }).toLowerCase().includes(searchTerm)
+    );
+    
+    // Check if submitted date matches the search term
+    const submittedDateMatch = order.createdAt ? (
+      new Date(order.createdAt).toLocaleDateString('en-US').toLowerCase().includes(searchTerm) ||
+      new Date(order.createdAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      }).toLowerCase().includes(searchTerm)
+    ) : new Date(order.timestamp).toLocaleDateString().includes(searchTerm);
     
     return (
       order.id.toLowerCase().includes(searchTerm) ||
       order.status.toLowerCase().includes(searchTerm) ||
       (order.pricingProfileName && order.pricingProfileName.toLowerCase().includes(searchTerm)) ||
       (order.estimatedCost !== null && order.estimatedCost !== undefined && order.estimatedCost.toString().includes(searchTerm)) ||
-      new Date(order.timestamp).toLocaleDateString().includes(searchTerm) ||
+      submittedDateMatch ||
       processedDateMatch ||
       phoneNumberMatch
     );
@@ -121,8 +137,8 @@ export default function SentOrdersApp() {
   // Apply sorting to the filtered orders
   const sortedOrders = [...filteredOrders].sort((a, b) => {
     if (sortField === 'date') {
-      const dateA = new Date(a.timestamp).getTime();
-      const dateB = new Date(b.timestamp).getTime();
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : new Date(a.timestamp).getTime();
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : new Date(b.timestamp).getTime();
       return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
     } else if (sortField === 'processedAt') {
       // Handle null/undefined processedAt values - put them last
@@ -226,7 +242,7 @@ export default function SentOrdersApp() {
                       onClick={() => toggleSort('date')}
                     >
                       <div className="flex items-center">
-                        <span>Date</span>
+                        <span>Submitted</span>
                         {sortField === 'date' && (
                           <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 ml-1 ${sortDirection === 'asc' ? 'transform rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M6 9l6 6 6-6"/>
@@ -274,7 +290,30 @@ export default function SentOrdersApp() {
                     >
                       <td className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-900 font-medium">{order.id}</td>
                       <td className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-700">
-                        {new Date(order.timestamp).toLocaleString()}
+                        <div className="flex flex-col">
+                          <span className="font-medium">
+                            {order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            }) : new Date(order.timestamp).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {order.createdAt ? new Date(order.createdAt).toLocaleTimeString('en-US', {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true
+                            }) : new Date(order.timestamp).toLocaleTimeString('en-US', {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true
+                            })}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-900">
                         <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-medium">
@@ -310,8 +349,20 @@ export default function SentOrdersApp() {
                       <td className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-700">
                         {order.processedAt ? (
                           <div className="flex flex-col">
-                            <span>{new Date(order.processedAt).toLocaleDateString()}</span>
-                            <span className="text-xs text-gray-500">{new Date(order.processedAt).toLocaleTimeString()}</span>
+                            <span className="font-medium">
+                              {new Date(order.processedAt).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              })}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(order.processedAt).toLocaleTimeString('en-US', {
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                hour12: true
+                              })}
+                            </span>
                           </div>
                         ) : (
                           <span className="text-gray-400 italic">Not processed</span>
@@ -387,7 +438,25 @@ export default function SentOrdersApp() {
                 </div>
                 <div>
                   <p className="text-xs sm:text-sm text-gray-900">Submitted</p>
-                  <p className="font-medium text-sm sm:text-base text-gray-900">{new Date(selectedOrder.timestamp).toLocaleString()}</p>
+                  <p className="font-medium text-sm sm:text-base text-gray-900">
+                    {selectedOrder.createdAt ? new Date(selectedOrder.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    }) : new Date(selectedOrder.timestamp).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })} at {selectedOrder.createdAt ? new Date(selectedOrder.createdAt).toLocaleTimeString('en-US', {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true
+                    }) : new Date(selectedOrder.timestamp).toLocaleTimeString('en-US', {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true
+                    })}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs sm:text-sm text-gray-900">Status</p>
@@ -406,7 +475,15 @@ export default function SentOrdersApp() {
                   <p className="font-medium text-sm sm:text-base text-gray-900">
                     {selectedOrder.processedAt ? (
                       <span className="text-green-700">
-                        {new Date(selectedOrder.processedAt).toLocaleString()}
+                        {new Date(selectedOrder.processedAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })} at {new Date(selectedOrder.processedAt).toLocaleTimeString('en-US', {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true
+                        })}
                       </span>
                     ) : (
                       <span className="text-gray-400 italic">Not processed yet</span>

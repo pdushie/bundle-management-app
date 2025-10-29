@@ -28,6 +28,7 @@ export type Order = {
   pricingProfileName?: string;
   processedBy?: number;
   processedAt?: string;
+  createdAt?: string;
   userId?: number;
 };
 
@@ -60,6 +61,7 @@ const mapDbOrderToOrder = async (dbOrder: any): Promise<Order> => {
     pricingProfileName: dbOrder.pricingProfileName || undefined,
     processedBy: dbOrder.processedBy || undefined,
     processedAt: dbOrder.processedAt || undefined,
+    createdAt: dbOrder.createdAt || undefined,
     userId: dbOrder.userId || undefined
   };
 };
@@ -106,7 +108,28 @@ export const loadOrders = async (): Promise<Order[]> => {
   try {
     let dbOrders;
     if (db) {
-      dbOrders = await db.select().from(orders).orderBy(desc(orders.timestamp));
+      dbOrders = await db
+        .select({
+          id: orders.id,
+          timestamp: orders.timestamp,
+          date: orders.date,
+          time: orders.time,
+          userName: orders.userName,
+          userEmail: orders.userEmail,
+          totalData: orders.totalData,
+          totalCount: orders.totalCount,
+          status: orders.status,
+          userId: orders.userId,
+          cost: orders.cost,
+          estimatedCost: orders.estimatedCost,
+          pricingProfileId: orders.pricingProfileId,
+          pricingProfileName: orders.pricingProfileName,
+          processedBy: orders.processedBy,
+          processedAt: orders.processedAt,
+          createdAt: orders.createdAt
+        })
+        .from(orders)
+        .orderBy(desc(orders.timestamp));
     } else {
       dbOrders = await neonClient`SELECT * FROM orders ORDER BY timestamp DESC`;
     }
@@ -197,7 +220,28 @@ export const getOrdersOldestFirst = async (): Promise<Order[]> => {
   try {
     let dbOrders;
     if (db) {
-      dbOrders = await db.select().from(orders).orderBy(asc(orders.timestamp));
+      dbOrders = await db
+        .select({
+          id: orders.id,
+          timestamp: orders.timestamp,
+          date: orders.date,
+          time: orders.time,
+          userName: orders.userName,
+          userEmail: orders.userEmail,
+          totalData: orders.totalData,
+          totalCount: orders.totalCount,
+          status: orders.status,
+          userId: orders.userId,
+          cost: orders.cost,
+          estimatedCost: orders.estimatedCost,
+          pricingProfileId: orders.pricingProfileId,
+          pricingProfileName: orders.pricingProfileName,
+          processedBy: orders.processedBy,
+          processedAt: orders.processedAt,
+          createdAt: orders.createdAt
+        })
+        .from(orders)
+        .orderBy(asc(orders.timestamp));
     } else {
       dbOrders = await neonClient`SELECT * FROM orders ORDER BY timestamp ASC`;
     }
@@ -371,7 +415,25 @@ export const getUserOrdersOldestFirst = async (userEmail: string): Promise<Order
     // Get user orders sorted by timestamp ascending (oldest first)
     if (!db) throw new Error('Database not initialized');
     const dbOrders = await db
-      .select()
+      .select({
+        id: orders.id,
+        timestamp: orders.timestamp,
+        date: orders.date,
+        time: orders.time,
+        userName: orders.userName,
+        userEmail: orders.userEmail,
+        totalData: orders.totalData,
+        totalCount: orders.totalCount,
+        status: orders.status,
+        userId: orders.userId,
+        cost: orders.cost,
+        estimatedCost: orders.estimatedCost,
+        pricingProfileId: orders.pricingProfileId,
+        pricingProfileName: orders.pricingProfileName,
+        processedBy: orders.processedBy,
+        processedAt: orders.processedAt,
+        createdAt: orders.createdAt
+      })
       .from(orders)
       .where(eq(orders.userEmail, userEmail))
       .orderBy(asc(orders.timestamp));
