@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, Info, AlertOctagon } from "lucide-react";
 import { getCurrentTimestampSync } from "../lib/timeService";
+import { useRealtimeUpdates } from "../hooks/useRealtimeUpdates";
 
 type Announcement = {
   id: number;
@@ -34,9 +35,13 @@ export default function AnnouncementBanner() {
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
   const [isWindowFocused, setIsWindowFocused] = useState<boolean>(true);
   const { data: session } = useSession();
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const rotationIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const hasActiveAnnouncementsRef = useRef<boolean>(false);
+  
+  // Use SSE for realtime announcement updates
+  const { hasNewAnnouncements, refreshAnnouncements } = useRealtimeUpdates({
+    enabled: true // Always enabled for announcements since they're public
+  });
   
   const fetchAnnouncements = useCallback(async () => {
     try {
@@ -176,38 +181,10 @@ export default function AnnouncementBanner() {
     };
   }, [fetchAnnouncements]);
 
-  // Setup polling and rotation effects
+  // Initial fetch - SSE will handle updates
   useEffect(() => {
-    // Initial fetch
     fetchAnnouncements();
-    
-    // Setup dynamic polling for new announcements
-    const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'superadmin';
-    
-    // Optimized polling intervals to reduce server load and function invocations:
-    // - Admins (focused): 2 minutes (announcements don't change frequently)
-    // - Admins (unfocused): 5 minutes 
-    // - Users (focused): 5 minutes
-    // - Users (unfocused): 10 minutes (announcements are not time-critical)
-    let pollingInterval;
-    if (isAdmin && session) {
-      pollingInterval = isWindowFocused ? 120000 : 300000; // 2min/5min
-    } else {
-      pollingInterval = isWindowFocused ? 300000 : 600000; // 5min/10min
-    }
-    
-    pollingIntervalRef.current = setInterval(() => {
-      // // Console log removed for security
-      fetchAnnouncements();
-    }, pollingInterval);
-
-    // Cleanup polling on unmount
-    return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
-    };
-  }, [fetchAnnouncements, session?.user?.role, isWindowFocused]);
+  }, [fetchAnnouncements]);
 
   // Controlled filtering effect to remove inactive announcements without causing loops
   useEffect(() => {

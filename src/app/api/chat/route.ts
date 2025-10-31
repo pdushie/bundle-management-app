@@ -2,6 +2,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { neonClient } from "@/lib/db";
+import { broadcastChatUpdate } from "./events/route";
 
 // Helper function to check if user has chat permissions via direct database query
 async function hasAdminChatPermission(userId: string): Promise<boolean> {
@@ -30,6 +31,9 @@ export async function GET(req: NextRequest) {
     }
 
     const userId = parseInt(req.nextUrl.searchParams.get("userId") || "0");
+    const page = parseInt(req.nextUrl.searchParams.get("page") || "1");
+    const limit = parseInt(req.nextUrl.searchParams.get("limit") || "50");
+    const offset = (page - 1) * limit;
     
     // If admin is querying for a specific user's messages
     const sessionUserId = (session.user as any)?.id;
@@ -40,21 +44,45 @@ export async function GET(req: NextRequest) {
       (isSuperAdmin || hasPermission) &&
       userId > 0
     ) {
+      // Get messages with pagination (most recent first, then reverse for chronological order)
       const messages = await neonClient`
         SELECT * FROM chat_messages 
         WHERE user_id = ${userId}
-        ORDER BY created_at ASC
+        ORDER BY created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
       `;
       
-      // Mark all messages as read for admin
-      await neonClient`
+      // Reverse to get chronological order (oldest first)
+      const chronologicalMessages = messages.reverse();
+      
+      // Get total count for pagination
+      const countResult = await neonClient`
+        SELECT COUNT(*) as total FROM chat_messages 
+        WHERE user_id = ${userId}
+      `;
+      const totalMessages = parseInt(countResult[0]?.total || "0");
+      
+      // Mark all messages as read for admin (not just the paginated ones)
+      const readResult = await neonClient`
         UPDATE chat_messages 
         SET read = TRUE 
         WHERE user_id = ${userId} AND sender_type = 'user' AND read = FALSE
+        RETURNING id
       `;
+      
+      // Broadcast SSE event if messages were marked as read
+      if (readResult.length > 0) {
+        console.log(`📧 Admin marked ${readResult.length} messages as read for user ${userId}`);
+        broadcastChatUpdate({
+          type: 'message_read',
+          userId: userId,
+          readBy: 'admin',
+          messageIds: readResult.map(r => r.id)
+        });
+      }
 
       // Transform column names from snake_case to camelCase
-      const formattedMessages = messages.map(msg => ({
+      const formattedMessages = chronologicalMessages.map(msg => ({
         id: msg.id,
         userId: msg.user_id,
         adminId: msg.admin_id,
@@ -65,26 +93,65 @@ export async function GET(req: NextRequest) {
         updatedAt: msg.updated_at
       }));
       
-      return NextResponse.json({ success: true, messages: formattedMessages });
+      return NextResponse.json({ 
+        success: true, 
+        messages: formattedMessages,
+        pagination: {
+          page,
+          limit,
+          total: totalMessages,
+          hasMore: offset + limit < totalMessages
+        }
+      });
     }
     
     // Regular user getting their own messages
     const userIdFromSession = (session.user as { id: number }).id;
+    
+    // Get messages with pagination (most recent first, then reverse for chronological order)
     const messages = await neonClient`
       SELECT * FROM chat_messages 
       WHERE user_id = ${userIdFromSession}
-      ORDER BY created_at ASC
+      ORDER BY created_at DESC
+      LIMIT ${limit} OFFSET ${offset}
     `;
     
-    // Mark all messages as read for user
-    await neonClient`
-      UPDATE chat_messages 
-      SET read = TRUE 
-      WHERE user_id = ${userIdFromSession} AND sender_type = 'admin' AND read = FALSE
+    // Reverse to get chronological order (oldest first)
+    const chronologicalMessages = messages.reverse();
+    
+    // Get total count for pagination
+    const countResult = await neonClient`
+      SELECT COUNT(*) as total FROM chat_messages 
+      WHERE user_id = ${userIdFromSession}
     `;
+    const totalMessages = parseInt(countResult[0]?.total || "0");
+    
+    // Only mark messages as read if explicitly requested
+    const markAsRead = req.nextUrl.searchParams.get("markAsRead") === "true";
+    let readResult: any[] = [];
+    
+    if (markAsRead) {
+      readResult = await neonClient`
+        UPDATE chat_messages 
+        SET read = TRUE 
+        WHERE user_id = ${userIdFromSession} AND sender_type = 'admin' AND read = FALSE
+        RETURNING id
+      `;
+      
+      // Broadcast SSE event if messages were marked as read
+      if (readResult.length > 0) {
+        console.log(`📧 User ${userIdFromSession} marked ${readResult.length} messages as read`);
+        broadcastChatUpdate({
+          type: 'message_read',
+          userId: userIdFromSession,
+          readBy: 'user',
+          messageIds: readResult.map(r => r.id)
+        });
+      }
+    }
 
     // Transform column names from snake_case to camelCase
-    const formattedMessages = messages.map(msg => ({
+    const formattedMessages = chronologicalMessages.map(msg => ({
       id: msg.id,
       userId: msg.user_id,
       adminId: msg.admin_id,
@@ -95,7 +162,16 @@ export async function GET(req: NextRequest) {
       updatedAt: msg.updated_at
     }));
     
-    return NextResponse.json({ success: true, messages: formattedMessages });
+    return NextResponse.json({ 
+      success: true, 
+      messages: formattedMessages,
+      pagination: {
+        page,
+        limit,
+        total: totalMessages,
+        hasMore: offset + limit < totalMessages
+      }
+    });
   } catch (error) {
     // Console statement removed for security
     return NextResponse.json(
@@ -150,6 +226,13 @@ export async function POST(req: NextRequest) {
         updatedAt: result[0].updated_at
       };
       
+      // Broadcast SSE event for new message
+      broadcastChatUpdate({
+        type: 'new_message',
+        message: formattedMessage,
+        recipientId: recipientId
+      });
+      
       return NextResponse.json({ success: true, message: formattedMessage });
     }
     
@@ -172,6 +255,16 @@ export async function POST(req: NextRequest) {
       createdAt: result[0].created_at,
       updatedAt: result[0].updated_at
     };
+    
+    // Broadcast SSE event for new message
+    const broadcastData = {
+      type: 'new_message',
+      message: formattedMessage,
+      userId: userId,
+      recipientType: 'admin' // Indicates this message is for any admin
+    };
+    console.log('DEBUG: Broadcasting user→admin message:', broadcastData);
+    broadcastChatUpdate(broadcastData);
     
     return NextResponse.json({ success: true, message: formattedMessage });
   } catch (error) {

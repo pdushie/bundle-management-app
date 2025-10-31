@@ -7,8 +7,13 @@ import { useSession } from 'next-auth/react';
 import { Shield, Users, DollarSign, UserCheck, Settings, Bell, MessageSquare, ArrowLeft, Package, FileBox, Eye, BarChart } from 'lucide-react';
 import AdminChatNotifier from '@/components/admin/AdminChatNotifier';
 import AdminOTPStatusIndicator from '@/components/admin/AdminOTPStatusIndicator';
+import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
-// Hook to check RBAC permissions
+// Cache for RBAC permissions to reduce API calls
+const permissionsCache = new Map<string, { permissions: string[], timestamp: number }>();
+const PERMISSIONS_CACHE_DURATION = 300000; // 5 minutes
+
+// Hook to check RBAC permissions with caching
 function usePermissions() {
   const [permissions, setPermissions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,25 +23,37 @@ function usePermissions() {
     const fetchPermissions = async () => {
       const userId = (session?.user as any)?.id;
       const userRole = (session?.user as any)?.role;
-      // Console log removed for security
       
       if (!userId) {
-        // Console log removed for security
+        setLoading(false);
+        return;
+      }
+
+      // Check cache first
+      const cached = permissionsCache.get(userId);
+      const now = Date.now();
+      
+      if (cached && (now - cached.timestamp) < PERMISSIONS_CACHE_DURATION) {
+        setPermissions(cached.permissions);
         setLoading(false);
         return;
       }
 
       try {
         const response = await fetch(`/api/admin/rbac/users/${userId}/permissions`);
-        // Permissions API response status - logging removed for security
         
         if (response.ok) {
           const data = await response.json();
-          // Permissions API response - logging removed for security
           
           if (data.success) {
             const permissionNames = data.permissions.map((p: any) => p.name);
-            // Console log removed for security
+            
+            // Cache the permissions
+            permissionsCache.set(userId, {
+              permissions: permissionNames,
+              timestamp: now
+            });
+            
             setPermissions(permissionNames);
           }
         } else {
@@ -71,48 +88,21 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const userRole = session?.user?.role;
-  const [unreadCount, setUnreadCount] = useState(0);
   const { permissions, loading: permissionsLoading, hasPermission, hasAnyPermission } = usePermissions();
   
   const isActive = (path: string) => {
     return pathname === path;
   };
   
-  // Fetch unread message count for the navigation badge
-  useEffect(() => {
-    const fetchUnreadCount = async () => {
-      if (!session?.user || (session.user.role !== 'admin' && session.user.role !== 'standard_admin' && session.user.role !== 'super_admin' && session.user.role !== 'moderator')) {
-        return;
-      }
-      
-      try {
-        const response = await fetch('/api/chat/unread');
-        
-        if (response.ok) {
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-            if (data.success) {
-              setUnreadCount(data.unreadCount);
-            }
-          }
-        }
-      } catch (error) {
-        // Console statement removed for security
-      }
-    };
-    
-    fetchUnreadCount();
-    
-    // Poll every 3 minutes (reduced to lower function invocations)
-    const intervalId = setInterval(() => {
-      if (document.visibilityState === 'visible') {
-        fetchUnreadCount();
-      }
-    }, 180000); // 3 minutes
-    
-    return () => clearInterval(intervalId);
-  }, [session]);
+  // Use real-time updates for chat notifications
+  const isAdminUser = session?.user && ['admin', 'standard_admin', 'super_admin', 'moderator'].includes(session.user.role || '');
+  
+  const { unreadChatCount } = useRealtimeUpdates({
+    enabled: !!isAdminUser,
+    onChatMessage: (data) => {
+      console.log('📬 Admin layout received chat update:', data.type);
+    }
+  });
   
   // Show loading state while permissions are being fetched
   if (permissionsLoading) {
@@ -365,9 +355,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <span className="flex items-center gap-2 relative">
                 <MessageSquare className="w-4 h-4" />
                 Chat Support
-                {unreadCount > 0 && !isActive('/admin/chat') && (
+                {unreadChatCount > 0 && !isActive('/admin/chat') && (
                   <span className="absolute -top-2 -right-6 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {unreadCount > 9 ? '9+' : unreadCount}
+                    {unreadChatCount > 9 ? '9+' : unreadChatCount}
                   </span>
                 )}
               </span>

@@ -1,9 +1,10 @@
 ﻿"use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { Send, Search, Loader2, MessageSquare, ChevronLeft, Bell, CheckCircle } from "lucide-react";
-import { ChatMessage, ChatThread } from "@/types/chat";
+import { ChatMessage, ChatThread, ChatPagination } from "@/types/chat";
+import { useRealtimeUpdates } from "@/hooks/useRealtimeUpdates";
 
 export default function AdminChatPanel() {
   const { data: session } = useSession();
@@ -11,55 +12,84 @@ export default function AdminChatPanel() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [threadsLoading, setThreadsLoading] = useState(true);
+  const [messagesLoading, setMessagesLoading] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [totalMessages, setTotalMessages] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Fetch threads on component mount and periodically
+  // Use real-time updates for chat
+  const isAdminUser = session?.user && ['admin', 'standard_admin', 'super_admin'].includes(session.user.role || '');
+  
+  useRealtimeUpdates({
+    enabled: !!isAdminUser,
+    onChatMessage: (data) => {
+      console.log('DEBUG: Admin received SSE:', data);
+      console.log('DEBUG: selectedUserId:', selectedUserId);
+      
+      if (data.type === 'new_message') {
+        // Only refresh threads if we're not already loading and it's a different user
+        if (!threadsLoading && (!selectedUserId || data.userId !== selectedUserId)) {
+          fetchThreads();
+        }
+        
+        // If viewing this user's messages, add the new message directly
+        // Check if this message should be displayed:
+        // 1. Admin→User: data.recipientId === selectedUserId
+        // 2. User→Admin: data.recipientType === 'admin' AND data.userId === selectedUserId
+        const shouldDisplayMessage = selectedUserId && data.message && (
+          (data.recipientId === selectedUserId) || // Admin→User
+          (data.recipientType === 'admin' && data.userId === selectedUserId) // User→Admin
+        );
+        
+        console.log('DEBUG: Should display message?', {
+          selectedUserId,
+          hasMessage: !!data.message,
+          recipientId: data.recipientId,
+          recipientType: data.recipientType,
+          userId: data.userId,
+          adminToUser: data.recipientId === selectedUserId,
+          userToAdmin: data.recipientType === 'admin' && data.userId === selectedUserId,
+          shouldDisplayMessage
+        });
+        
+        if (shouldDisplayMessage) {
+          console.log('DEBUG: Adding message to admin UI');
+          setMessages(prev => [...prev, data.message]);
+          // Auto-scroll to show new message
+          setTimeout(() => scrollToBottom(), 100);
+        } else {
+          console.log('DEBUG: Message not displayed');
+        }
+      } else if (data.type === 'message_read') {
+        // Messages were marked as read, refresh threads only if not loading
+        if (!threadsLoading) {
+          fetchThreads();
+        }
+      }
+    }
+  });
+
+  // Fetch threads on component mount only - real-time updates will handle refreshes
   useEffect(() => {
     if (!session?.user || (session.user.role !== "admin" && session.user.role !== "super_admin" && session.user.role !== "standard_admin")) return;
     
     fetchThreads();
-    
-    // Poll for new messages every 2 minutes (reduced to lower function invocations)
-    const interval = setInterval(() => {
-      if (document.visibilityState === "visible") {
-        fetchThreads();
-        if (selectedUserId) {
-          fetchMessages(selectedUserId);
-        }
-      }
-    }, 120000); // 2 minutes
-    
-    return () => clearInterval(interval);
-  }, [session, selectedUserId]);
+  }, [session]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // Listen for visibility changes to refresh messages when tab becomes active
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && session?.user) {
-        fetchThreads();
-        if (selectedUserId) {
-          fetchMessages(selectedUserId);
-        }
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [session, selectedUserId]);
-
-  const fetchThreads = async () => {
+  const fetchThreads = useCallback(async () => {
     if (!session?.user || (session.user.role !== "admin" && session.user.role !== "super_admin" && session.user.role !== "standard_admin")) return;
     
     try {
+      setThreadsLoading(true);
       const response = await fetch("/api/chat/threads");
       
       if (!response.ok) {
@@ -73,30 +103,58 @@ export default function AdminChatPanel() {
       }
     } catch (error) {
       // Console statement removed for security
+    } finally {
+      setThreadsLoading(false);
     }
-  };
+  }, [session]);
 
-  const fetchMessages = async (userId: number) => {
-    if (!session?.user || (session.user.role !== "admin" && session.user.role !== "super_admin" && session.user.role !== "standard_admin")) return;
+  const fetchMessages = async (userId: number, page: number = 1, append: boolean = false) => {
+    if (!session?.user || (session.user.role !== "admin" && session.user.role !== "super_admin" && session.user.role !== "standard_admin")) {
+      return;
+    }
     
-    setLoading(true);
+    setMessagesLoading(true);
     
     try {
-      const response = await fetch(`/api/chat?userId=${userId}`);
+      const url = `/api/chat?userId=${userId}&page=${page}&limit=50`;
+      const response = await fetch(url);
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', url);
+        xhr.setRequestHeader('Content-Type', 'application/json');
       
       if (!response.ok) {
         throw new Error("Failed to fetch messages");
       }
       
       const contentType = response.headers.get('content-type');
+      console.log('fetchMessages: Content-Type:', contentType);
       if (!contentType || !contentType.includes('application/json')) {
+        console.error('fetchMessages: Invalid content type:', contentType);
         throw new Error('Invalid response format from server');
       }
       
+      console.log('fetchMessages: Parsing JSON response...');
       const data = await response.json();
+      console.log('fetchMessages: Data received:', data);
       
       if (data.success && data.messages) {
-        setMessages(data.messages);
+        if (append) {
+          // Append older messages to the beginning
+          console.log('fetchMessages: Appending', data.messages.length, 'messages');
+          setMessages(prev => [...data.messages, ...prev]);
+        } else {
+          // Replace messages (initial load)
+          console.log('fetchMessages: Setting', data.messages.length, 'messages');
+          setMessages(data.messages);
+        }
+        
+        // Update pagination state
+        if (data.pagination) {
+          console.log('fetchMessages: Updating pagination:', data.pagination);
+          setCurrentPage(data.pagination.page);
+          setHasMoreMessages(data.pagination.hasMore);
+          setTotalMessages(data.pagination.total);
+        }
         
         // Update the thread's unread count to 0 since we've read the messages
         setThreads(threads.map(thread => 
@@ -104,9 +162,10 @@ export default function AdminChatPanel() {
         ));
       }
     } catch (error) {
-      // Console statement removed for security
+      console.error('Error fetching messages:', error);
+      setMessages([]);
     } finally {
-      setLoading(false);
+      setMessagesLoading(false);
     }
   };
 
@@ -190,7 +249,17 @@ export default function AdminChatPanel() {
 
   const selectUser = (userId: number) => {
     setSelectedUserId(userId);
-    fetchMessages(userId);
+    setCurrentPage(1);
+    setMessages([]);
+    setHasMoreMessages(false);
+    setTotalMessages(0);
+    fetchMessages(userId, 1, false);
+  };
+
+  const loadMoreMessages = () => {
+    if (selectedUserId && hasMoreMessages && !messagesLoading) {
+      fetchMessages(selectedUserId, currentPage + 1, true);
+    }
   };
 
   const backToThreads = () => {
@@ -306,7 +375,27 @@ export default function AdminChatPanel() {
           <div className="w-full flex flex-col">
             {/* Messages Container */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {loading && messages.length === 0 ? (
+              {/* Load More Button */}
+              {hasMoreMessages && messages.length > 0 && (
+                <div className="flex justify-center pb-4">
+                  <button
+                    onClick={loadMoreMessages}
+                    disabled={messagesLoading}
+                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {messagesLoading ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Loading...
+                      </div>
+                    ) : (
+                      `Load ${Math.min(50, totalMessages - messages.length)} more messages`
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {messagesLoading && messages.length === 0 ? (
                 <div className="flex justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                 </div>

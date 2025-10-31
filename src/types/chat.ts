@@ -19,11 +19,20 @@ export interface ChatThread {
   unreadCount: number;
 }
 
+// Pagination info for chat messages
+export interface ChatPagination {
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+}
+
 // Response type for chat API endpoints
 export interface ChatResponse {
   success: boolean;
   messages?: ChatMessage[];
   threads?: ChatThread[];
   message?: ChatMessage;
+  pagination?: ChatPagination;
   error?: string;
 }

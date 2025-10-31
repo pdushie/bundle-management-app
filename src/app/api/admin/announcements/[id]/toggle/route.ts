@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { getCurrentTime } from "@/lib/timeService";
+import { broadcastAnnouncementUpdate } from "../../../../announcements/events/route";
 
 // Helper function to check if user has announcements permissions via direct database query
 async function hasAdminAnnouncementsPermission(userId: string): Promise<boolean> {
@@ -71,6 +72,7 @@ export async function POST(
     }
     
     // Toggle the isActive state
+    console.log(`🔄 Toggling announcement ${idNum}: ${current[0].isActive} → ${!current[0].isActive}`);
     const [updatedAnnouncement] = await db.update(announcements)
       .set({
         isActive: !current[0].isActive,
@@ -78,6 +80,15 @@ export async function POST(
       })
       .where(eq(announcements.id, idNum))
       .returning();
+    
+    console.log(`✅ Announcement toggled successfully:`, updatedAnnouncement);
+    
+    // Broadcast SSE event for announcement toggle
+    console.log(`📡 Broadcasting announcement toggle...`);
+    broadcastAnnouncementUpdate({
+      type: 'announcement_updated',
+      announcement: updatedAnnouncement
+    });
     
     return NextResponse.json({ 
       message: `Announcement ${updatedAnnouncement.isActive ? 'activated' : 'deactivated'} successfully`,

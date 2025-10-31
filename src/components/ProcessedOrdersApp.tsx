@@ -19,6 +19,7 @@ export default function ProcessedOrdersApp() {
   // Modal state for order details
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  
   const [entriesSearchText, setEntriesSearchText] = useState<string>('');
   const [entriesCurrentPage, setEntriesCurrentPage] = useState<number>(1);
   const [entriesPerPage] = useState<number>(20);
@@ -196,6 +197,8 @@ export default function ProcessedOrdersApp() {
   const handleEntriesPageChange = (pageNumber: number) => {
     setEntriesCurrentPage(pageNumber);
   };
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">

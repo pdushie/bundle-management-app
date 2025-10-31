@@ -1,9 +1,10 @@
 ﻿"use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { AlertTriangle, Info, AlertOctagon, Plus, Edit, Trash, ToggleLeft, ToggleRight } from "lucide-react";
 import { getCurrentDateStringSync } from "../../lib/timeService";
+import { useRealtimeUpdates } from "../../hooks/useRealtimeUpdates";
 
 type Announcement = {
   id: number;
@@ -32,30 +33,41 @@ export default function AnnouncementManager() {
     endDate: "",
   });
 
-  // Fetch announcements
-  useEffect(() => {
-    const fetchAnnouncements = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch("/api/admin/announcements");
-        if (!response.ok) throw new Error("Failed to fetch announcements");
-        
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          throw new Error('Invalid response format from server');
-        }
-        
-        const data = await response.json();
-        setAnnouncements(data.announcements || []);
-      } catch (error) {
-        // Console statement removed for security
-      } finally {
-        setIsLoading(false);
+  // Fetch announcements function
+  const fetchAnnouncements = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/admin/announcements");
+      if (!response.ok) throw new Error("Failed to fetch announcements");
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Invalid response format from server');
       }
-    };
-
-    fetchAnnouncements();
+      
+      const data = await response.json();
+      setAnnouncements(data.announcements || []);
+    } catch (error) {
+      // Console statement removed for security
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  // Use real-time updates for announcements
+  const { hasNewAnnouncements } = useRealtimeUpdates({
+    onAnnouncementUpdate: (data) => {
+      console.log('📢 Announcement update received in AnnouncementManager:', data);
+      // Refresh announcements when an update is received
+      fetchAnnouncements();
+    },
+    enabled: true
+  });
+
+  // Initial fetch
+  useEffect(() => {
+    fetchAnnouncements();
+  }, [fetchAnnouncements]);
 
   // Handle form input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {

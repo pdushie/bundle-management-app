@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { desc, sql, eq } from "drizzle-orm";
 import { getCurrentTime, getCurrentTimeSync } from "@/lib/timeService";
+import { broadcastAnnouncementUpdate } from "../../announcements/events/route";
 
 // Helper function to check if user has announcements permissions via direct database query
 async function hasAdminAnnouncementsPermission(userId: string): Promise<boolean> {
@@ -212,6 +213,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Insert the announcement
+    console.log(`📝 Creating new announcement:`, { message, type, isActive });
     const [newAnnouncement] = await db.insert(announcements).values({
       message,
       type: type || 'info',
@@ -220,6 +222,15 @@ export async function POST(req: NextRequest) {
       endDate: parsedEndDate,
       createdBy: userId,
     }).returning();
+    
+    console.log(`✅ Announcement created successfully:`, newAnnouncement);
+    
+    // Broadcast SSE event for new announcement
+    console.log(`📡 Broadcasting new announcement...`);
+    broadcastAnnouncementUpdate({
+      type: 'announcement_created',
+      announcement: newAnnouncement
+    });
     
     return NextResponse.json({ 
       message: "Announcement created successfully",

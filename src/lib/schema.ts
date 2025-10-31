@@ -302,6 +302,53 @@ export const userRolesRelations = relations(userRoles, ({ one }) => ({
   }),
 }));
 
+// Not Received Reports Table
+export const notReceivedReports = pgTable("not_received_reports", {
+  id: serial("id").primaryKey(),
+  orderId: varchar("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+  orderEntryId: integer("order_entry_id").notNull().references(() => orderEntries.id, { onDelete: "cascade" }),
+  number: varchar("number", { length: 15 }).notNull(),
+  allocationGb: decimal("allocation_gb", { precision: 10, scale: 2, mode: 'string' }).notNull(),
+  reportedByUserId: integer("reported_by_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  reportDate: timestamp("report_date").defaultNow(),
+  status: varchar("status", { length: 20 }).default("pending").notNull(), // 'pending', 'resolved', 'confirmed_sent'
+  resolvedByAdminId: integer("resolved_by_admin_id").references(() => users.id, { onDelete: "set null" }),
+  resolutionDate: timestamp("resolution_date"),
+  adminNotes: text("admin_notes"),
+  evidenceUrl: varchar("evidence_url", { length: 500 }), // For admin to upload evidence that data was sent
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Define relations for not received reports
+export const notReceivedReportsRelations = relations(notReceivedReports, ({ one }) => ({
+  order: one(orders, {
+    fields: [notReceivedReports.orderId],
+    references: [orders.id],
+  }),
+  orderEntry: one(orderEntries, {
+    fields: [notReceivedReports.orderEntryId],
+    references: [orderEntries.id],
+  }),
+  reportedByUser: one(users, {
+    fields: [notReceivedReports.reportedByUserId],
+    references: [users.id],
+  }),
+  resolvedByAdmin: one(users, {
+    fields: [notReceivedReports.resolvedByAdminId],
+    references: [users.id],
+  }),
+}));
+
+// Update order entries relations to include not received reports
+export const orderEntriesRelationsUpdated = relations(orderEntries, ({ one, many }) => ({
+  order: one(orders, {
+    fields: [orderEntries.orderId],
+    references: [orders.id],
+  }),
+  notReceivedReports: many(notReceivedReports),
+}));
+
 // Add relation to users for pricing profiles and announcements
 export const usersRelations = relations(users, ({ many }) => ({
   sessions: many(sessions),
@@ -312,4 +359,6 @@ export const usersRelations = relations(users, ({ many }) => ({
   userRoles: many(userRoles),
   assignedRoles: many(userRoles, { relationName: 'assignedBy' }),
   grantedPermissions: many(rolePermissions, { relationName: 'grantedBy' }),
+  notReceivedReports: many(notReceivedReports, { relationName: 'reportedBy' }),
+  resolvedReports: many(notReceivedReports, { relationName: 'resolvedBy' }),
 }));

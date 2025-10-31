@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { Shield, ExternalLink, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useRealtimeUpdates } from "../hooks/useRealtimeUpdates";
 
 // Hook to check RBAC permissions
 function usePermissions() {
@@ -52,66 +53,14 @@ export default function AdminDashboardLink() {
   const { data: session } = useSession();
   const { hasPermission, loading: permissionsLoading } = usePermissions();
   const [isVisible, setIsVisible] = useState(false);
-  const [unreadChatCount, setUnreadChatCount] = useState<number>(0);
-  const [isLoadingChat, setIsLoadingChat] = useState<boolean>(false);
   const [isWindowFocused, setIsWindowFocused] = useState<boolean>(true);
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Fetch unread chat count - only for users with chat permissions
-  const fetchUnreadChatCount = useCallback(async () => {
-    if (!session?.user || permissionsLoading || !hasPermission('admin.chat')) {
-      return;
-    }
-    
-    try {
-      setIsLoadingChat(true);
-      
-      // Add timeout and better error handling
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-      
-      const response = await fetch("/api/chat/unread", {
-        method: "GET",
-        headers: {
-          "Accept": "application/json",
-          "Cache-Control": "no-cache"
-        },
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (response.ok) {
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          const data = await response.json();
-          if (data.success) {
-            setUnreadChatCount(data.unreadCount || 0);
-          } else {
-            // Console statement removed for security
-          }
-        } else {
-          // Console statement removed for security
-        }
-      } else {
-        // Console statement removed for security
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          // Console statement removed for security
-        } else if (error.message.includes('Failed to fetch')) {
-          // Console statement removed for security
-        } else {
-          // Console statement removed for security
-        }
-      } else {
-        // Console statement removed for security
-      }
-    } finally {
-      setIsLoadingChat(false);
-    }
-  }, [session?.user, hasPermission, permissionsLoading]);
+  // Use SSE for realtime updates instead of polling
+  const { unreadChatCount, chatConnectionStatus } = useRealtimeUpdates({
+    enabled: !permissionsLoading && hasPermission('admin.chat')
+  });
+  
+
   
   // Animation effect on mount
   useEffect(() => {
@@ -123,16 +72,10 @@ export default function AdminDashboardLink() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Setup window focus detection for immediate chat updates - only for users with chat permissions
+  // Setup window focus detection
   useEffect(() => {
-    if (!session?.user || permissionsLoading || !hasPermission('admin.chat')) {
-      return;
-    }
-    
     const handleFocus = () => {
       setIsWindowFocused(true);
-      // Fetch chat count immediately when window gains focus
-      fetchUnreadChatCount();
     };
     
     const handleBlur = () => {
@@ -146,45 +89,9 @@ export default function AdminDashboardLink() {
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('blur', handleBlur);
     };
-  }, [fetchUnreadChatCount, session?.user, hasPermission, permissionsLoading]);
+  }, []);
 
-  // Setup chat polling for users with chat permissions
-  useEffect(() => {
-    if (!session?.user || permissionsLoading || !hasPermission('admin.chat')) {
-      return;
-    }
-    
-    // Add a small delay to ensure the component is fully mounted and network is ready
-    const initialFetchTimer = setTimeout(() => {
-      // Check if document is ready and window is defined
-      if (typeof window !== 'undefined' && document.readyState === 'complete') {
-        fetchUnreadChatCount();
-      } else {
-        // If document is not ready, wait for it
-        const onReady = () => {
-          fetchUnreadChatCount();
-          document.removeEventListener('readystatechange', onReady);
-        };
-        document.addEventListener('readystatechange', onReady);
-      }
-    }, 1000); // 1 second delay
-    
-    // Dynamic polling based on window focus:
-    // - Focused: 10 seconds (frequent for active admins)
-    // - Unfocused: 30 seconds (reduced server load when not active)
-    const pollingInterval = isWindowFocused ? 10000 : 30000;
-    
-    pollingIntervalRef.current = setInterval(() => {
-      fetchUnreadChatCount();
-    }, pollingInterval);
 
-    return () => {
-      clearTimeout(initialFetchTimer);
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
-    };
-  }, [fetchUnreadChatCount, session?.user, isWindowFocused, hasPermission, permissionsLoading]);
   
   // Only show the link for users with admin, super_admin, or standard_admin role
   if (!session?.user?.role || (session.user.role !== "admin" && session.user.role !== "super_admin" && session.user.role !== "standard_admin")) {

@@ -5,7 +5,8 @@ import { getUserOrdersOldestFirst, Order } from '@/lib/orderClient';
 import { useOrderCount } from '@/lib/orderContext';
 import { ORDER_UPDATED_EVENT, ORDER_SENT_EVENT, notifyCountUpdated } from '@/lib/orderNotifications';
 import { useSession } from 'next-auth/react';
-import { ChevronLeft, ChevronRight, X, DollarSign, Phone, Database } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, DollarSign, Phone, Database, ThumbsDown } from 'lucide-react';
+import EvidenceModal from './EvidenceModal';
 
 export default function SentOrdersApp() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -19,6 +20,40 @@ export default function SentOrdersApp() {
   const { refreshOrderCount } = useOrderCount();
   const { data: session } = useSession();
   const userEmail = session?.user?.email || '';
+  
+  // State for not received reports
+  const [reportedEntries, setReportedEntries] = useState<Set<number>>(new Set());
+  const [reportingEntry, setReportingEntry] = useState<number | null>(null);
+  const [notReceivedReports, setNotReceivedReports] = useState<Map<number, any>>(new Map());
+  
+  // State for evidence modal
+  const [evidenceModalOpen, setEvidenceModalOpen] = useState(false);
+  const [selectedEvidenceUrl, setSelectedEvidenceUrl] = useState('');
+  const [evidenceTitle, setEvidenceTitle] = useState('');
+
+  const fetchNotReceivedReports = async () => {
+    try {
+      const response = await fetch('/api/orders/not-received-reports');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          // Create a map of orderEntryId -> report data
+          const reportsMap = new Map();
+          const reportedSet = new Set<number>();
+          
+          data.reports.forEach((report: any) => {
+            reportsMap.set(report.orderEntryId, report);
+            reportedSet.add(report.orderEntryId);
+          });
+          
+          setNotReceivedReports(reportsMap);
+          setReportedEntries(reportedSet);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching not received reports:', error);
+    }
+  };
 
   const fetchUserOrders = async () => {
     if (!userEmail) return;
@@ -32,6 +67,9 @@ export default function SentOrdersApp() {
       
       setOrders(userOrders);
       refreshOrderCount();
+      
+      // Fetch not received reports after loading orders
+      await fetchNotReceivedReports();
     } catch (error) {
       // // Console statement removed for security
     } finally {
@@ -169,6 +207,59 @@ export default function SentOrdersApp() {
   // Handle page navigation
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);
+  };
+
+  // Handle reporting not received
+  const handleReportNotReceived = async (entry: any, orderId: string) => {
+    if (reportedEntries.has(entry.id)) {
+      alert('You have already reported this number as not received');
+      return;
+    }
+
+    setReportingEntry(entry.id);
+
+    try {
+      const response = await fetch('/api/orders/report-not-received', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderEntryId: entry.id,
+          orderId: orderId,
+          number: entry.number,
+          allocationGb: entry.allocationGB,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Refresh not received reports to get the latest data
+        await fetchNotReceivedReports();
+        alert('Not received report submitted successfully. The admin team will investigate this issue.');
+      } else {
+        alert(data.error || 'Failed to submit not received report');
+      }
+    } catch (error) {
+      console.error('Error reporting not received:', error);
+      alert('Failed to submit not received report. Please try again.');
+    } finally {
+      setReportingEntry(null);
+    }
+  };
+
+  // Handle opening evidence modal
+  const openEvidenceModal = (evidenceUrl: string, title: string) => {
+    setSelectedEvidenceUrl(evidenceUrl);
+    setEvidenceTitle(title);
+    setEvidenceModalOpen(true);
+  };
+
+  const closeEvidenceModal = () => {
+    setEvidenceModalOpen(false);
+    setSelectedEvidenceUrl('');
+    setEvidenceTitle('');
   };
 
   return (
@@ -528,13 +619,14 @@ export default function SentOrdersApp() {
             <div className="p-3 sm:p-4 overflow-auto flex-grow">
               <h3 className="font-medium mb-3 text-sm sm:text-base text-gray-900">Order Entries ({selectedOrder?.totalCount ?? 0})</h3>
               <div className="grid grid-cols-1 gap-2 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto">
-                <div className="bg-gray-100 px-2 sm:px-4 py-2 grid grid-cols-3 rounded-md text-xs sm:text-sm font-medium text-gray-900">
+                <div className="bg-gray-100 px-2 sm:px-4 py-2 grid grid-cols-4 rounded-md text-xs sm:text-sm font-medium text-gray-900">
                   <div>Phone</div>
                   <div>Data</div>
                   <div>Cost</div>
+                  <div className="text-center">Not Received</div>
                 </div>
                 {selectedOrder?.entries?.map((entry, index) => (
-                  <div key={index} className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 grid grid-cols-3 gap-1 sm:gap-2 rounded-md hover:bg-gray-50">
+                  <div key={index} className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 grid grid-cols-4 gap-1 sm:gap-2 rounded-md hover:bg-gray-50">
                     <div className="flex items-center gap-1 sm:gap-2 min-w-0">
                       <Phone className="w-3 h-3 sm:w-4 sm:h-4 text-gray-900 flex-shrink-0" />
                       <span className="text-xs sm:text-sm truncate text-gray-900">{entry.number}</span>
@@ -548,6 +640,116 @@ export default function SentOrdersApp() {
                         <span className="text-green-600 font-medium text-xs sm:text-sm">GHS {entry.cost.toFixed(2)}</span>
                       ) : (
                         <span className="text-gray-900 text-xs sm:text-sm">N/A</span>
+                      )}
+                    </div>
+                    <div className="flex justify-center">
+                      {selectedOrder?.status === 'processed' && entry.id ? (
+                        (() => {
+                          const report = notReceivedReports.get(entry.id);
+                          if (report) {
+                            if (report.status === 'resolved') {
+                              return (
+                                <div className="flex flex-col items-center">
+                                  <span className="text-green-600 text-xs font-medium bg-green-50 px-2 py-1 rounded-full">
+                                    Resolved
+                                  </span>
+                                  {report.adminNotes && (
+                                    <div className="text-xs text-gray-600 mt-1 text-center max-w-20 truncate" title={report.adminNotes}>
+                                      {report.adminNotes}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            } else if (report.status === 'confirmed_sent') {
+                              return (
+                                <div className="flex flex-col items-center">
+                                  <span className="text-blue-600 text-xs font-medium bg-blue-50 px-2 py-1 rounded-full">
+                                    Confirmed Sent
+                                  </span>
+                                  {report.evidenceUrl && (
+                                    (() => {
+                                      console.log('Processing evidence URL:', report.evidenceUrl, 'for entry:', entry.id);
+                                      if (report.evidenceUrl.startsWith('http')) {
+                                        // External URL (Cloudinary)
+                                        return (
+                                          <button 
+                                            onClick={() => openEvidenceModal(report.evidenceUrl, `Evidence for ${entry.number}`)}
+                                            className="text-xs text-blue-600 mt-1 underline hover:text-blue-800 cursor-pointer"
+                                          >
+                                            View Evidence
+                                          </button>
+                                        );
+                                      } else if (report.evidenceUrl.startsWith('/api/evidence/')) {
+                                        // New format: direct API URL
+                                        return (
+                                          <button 
+                                            onClick={() => openEvidenceModal(report.evidenceUrl, `Evidence for ${entry.number}`)}
+                                            className="text-xs text-blue-600 mt-1 underline hover:text-blue-800 cursor-pointer"
+                                          >
+                                            View Evidence
+                                          </button>
+                                        );
+                                      } else if (report.evidenceUrl.startsWith('evidence_file_')) {
+                                        // Old format: evidence_file_ prefix
+                                        const filename = report.evidenceUrl.replace('evidence_file_', '');
+                                        return (
+                                          <button 
+                                            onClick={() => openEvidenceModal(`/api/evidence/${filename}`, `Evidence for ${entry.number}`)}
+                                            className="text-xs text-blue-600 mt-1 underline hover:text-blue-800 cursor-pointer"
+                                          >
+                                            View Evidence
+                                          </button>
+                                        );
+                                      } else if (report.evidenceUrl === 'evidence_uploaded') {
+                                        // Legacy placeholder - no actual file
+                                        return (
+                                          <span className="text-xs text-gray-500 mt-1">
+                                            Evidence Attached (Legacy)
+                                          </span>
+                                        );
+                                      } else {
+                                        // Fallback: try treating as filename
+                                        return (
+                                          <button 
+                                            onClick={() => openEvidenceModal(`/api/evidence/${report.evidenceUrl}`, `Evidence for ${entry.number}`)}
+                                            className="text-xs text-blue-600 mt-1 underline hover:text-blue-800 cursor-pointer"
+                                          >
+                                            View Evidence
+                                          </button>
+                                        );
+                                      }
+                                    })()
+                                  )}
+                                </div>
+                              );
+                            } else {
+                              // Status is 'pending'
+                              return (
+                                <span className="text-orange-600 text-xs font-medium bg-orange-50 px-2 py-1 rounded-full">
+                                  Under Review
+                                </span>
+                              );
+                            }
+                          } else {
+                            // No report exists, show thumbs down button
+                            return (
+                              <button
+                                onClick={() => handleReportNotReceived(entry, selectedOrder?.id || '')}
+                                disabled={reportingEntry === entry.id}
+                                className="inline-flex items-center justify-center p-1 sm:p-2 rounded-full bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="Report that this number did not receive data"
+                              >
+                                {reportingEntry === entry.id ? (
+                                  <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                                ) : (
+                                  <ThumbsDown className="w-3 h-3 sm:w-4 sm:h-4" />
+                                )}
+                              </button>
+                            );
+                          }
+                        })()
+                      ) : (
+                        <span className="text-gray-400 text-xs">N/A</span>
                       )}
                     </div>
                   </div>
@@ -566,6 +768,14 @@ export default function SentOrdersApp() {
           </div>
         </div>
       )}
+
+      {/* Evidence Modal */}
+      <EvidenceModal
+        isOpen={evidenceModalOpen}
+        onClose={closeEvidenceModal}
+        evidenceUrl={selectedEvidenceUrl}
+        title={evidenceTitle}
+      />
     </div>
   );
 }

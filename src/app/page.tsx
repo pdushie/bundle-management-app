@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Upload, FileText, Check, Download, Phone, Database, AlertCircle, BarChart, History, Calendar, Eye, Trash2, LogOut, User, Shield, Send, FileBox, CheckCircle, DollarSign, Calculator, Package } from "lucide-react";
+import { Upload, FileText, Check, Download, Phone, Database, AlertCircle, BarChart, History, Calendar, Eye, Trash2, LogOut, User, Shield, Send, FileBox, CheckCircle, DollarSign, Calculator, Package, ThumbsDown } from "lucide-react";
 import { X } from "lucide-react";
 import { orderTrackingUtils } from "@/lib/orderTracking";
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell, LineChart, Line } from "recharts";
@@ -17,6 +17,7 @@ import OrderTrackingApp from "@/components/OrderTrackingApp";
 import BillingApp from "@/components/BillingApp";
 import AccountingApp from "@/components/AccountingApp";
 import PackagesApp from "@/components/PackagesApp";
+import NotReceivedReportsApp from "@/components/NotReceivedReportsApp";
 import { OrderProvider, useOrderCount } from "@/lib/orderContext";
 import { ORDER_UPDATED_EVENT } from "@/lib/orderNotifications";
 import { requestNotificationPermission, hasNotificationPermission, sendThrottledNotification, playNotificationSound } from '@/lib/notifications';
@@ -2030,6 +2031,9 @@ function TabNavigation({
   const [unreadProcessedOrders, setUnreadProcessedOrders] = useState(0);
   const [unreadSentOrders, setUnreadSentOrders] = useState(0);
   
+  // State for pending not-received reports count
+  const [pendingNotReceivedReports, setPendingNotReceivedReports] = useState(0);
+  
   // Request notification permission when component mounts
   useEffect(() => {
     const requestPermission = async () => {
@@ -2101,6 +2105,60 @@ function TabNavigation({
     // Initial counts maintained - logging removed for security
     
   }, [orderCount, processedOrderCount, sentOrderCount, activeTab]);
+
+  // Fetch not-received reports count
+  const fetchNotReceivedReportsCount = async () => {
+    try {
+      const response = await fetch('/api/admin/not-received-reports');
+      if (response.ok) {
+        const data = await response.json();
+        const pendingCount = data.reports.filter((report: any) => report.status === 'pending').length;
+        setPendingNotReceivedReports(pendingCount);
+      }
+    } catch (error) {
+      console.error('Error fetching not-received reports count:', error);
+    }
+  };
+
+  // Initialize not-received reports count and set up SSE
+  useEffect(() => {
+    // Only fetch if user has access to not-received reports
+    if (!isSuperAdmin && !isAdmin) {
+      return;
+    }
+
+    // Initial fetch
+    fetchNotReceivedReportsCount();
+
+    // Set up SSE for real-time updates
+    const eventSource = new EventSource('/api/admin/not-received-reports/events');
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        
+        if (data.type === 'new_report') {
+          // New report created - increment count
+          setPendingNotReceivedReports(prev => prev + 1);
+        } else if (data.type === 'report_resolved') {
+          // Report resolved - decrement count
+          setPendingNotReceivedReports(prev => Math.max(0, prev - 1));
+        }
+      } catch (error) {
+        console.error('Error parsing SSE data:', error);
+      }
+    };
+
+    eventSource.onerror = () => {
+      // Fallback to polling on SSE failure
+      const interval = setInterval(fetchNotReceivedReportsCount, 60000);
+      return () => clearInterval(interval);
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [isSuperAdmin, isAdmin]);
   
   // Update tracking system when tab changes or counts change
   useEffect(() => {
@@ -2328,6 +2386,7 @@ function TabNavigation({
                tab.id === "packages" ? "Packages" :
                tab.id === "billing" ? "Billing" :
                tab.id === "history" ? "History & A." : 
+               tab.id === "not-received-reports" ? "Not Received" :
                tab.id === "accounting" ? "Accounting" : tab.name}
             </span>
             {tab.id === "history" && isSuperAdmin && history.length > 0 && (
@@ -2404,6 +2463,30 @@ function TabNavigation({
                 {unreadSentOrders > 0 && (
                   <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-full font-bold animate-pulse shadow-lg ring-2 ring-red-300">
                     {unreadSentOrders > 99 ? '99+' : unreadSentOrders}
+                  </span>
+                )}
+              </span>
+            )}
+
+            {/* Not Received Reports tab badge */}
+            {tab.id === "not-received-reports" && (
+              <span 
+                className={`relative ${
+                  pendingNotReceivedReports > 0 
+                    ? "bg-red-500 text-white animate-pulse" 
+                    : "bg-gray-300 text-gray-700"
+                } text-xs px-2 py-1 rounded-full cursor-pointer hover:scale-110 transition-transform shadow-md font-bold`}
+                onClick={(e) => {
+                  if (activeTab !== tab.id) {
+                    e.stopPropagation();
+                    handleTabClick(e, tab.id);
+                  }
+                }}
+              >
+                {pendingNotReceivedReports}
+                {pendingNotReceivedReports > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-full font-bold animate-pulse shadow-lg ring-2 ring-red-300">
+                    {pendingNotReceivedReports > 99 ? '99+' : pendingNotReceivedReports}
                   </span>
                 )}
               </span>
@@ -2643,6 +2726,13 @@ function AppContent() {
       name: "History & Analytics",
       icon: History,
     });
+    
+    // Insert the not received reports tab after history
+    baseTabs.splice(7, 0, {
+      id: "not-received-reports",
+      name: "Not Received Reports",
+      icon: ThumbsDown,
+    });
   }
   
   // Filter tabs based on user role
@@ -2687,6 +2777,7 @@ function AppContent() {
              tab.id === 'processed-orders' || 
              tab.id === 'track-orders' ||
              tab.id === 'history' ||
+             tab.id === 'not-received-reports' ||
              tab.id === 'accounting'; // Explicitly include accounting tab for admins
       return hasAccess;
     }
@@ -2807,6 +2898,13 @@ function AppContent() {
               processedOrderEntriesCount={processedOrderEntriesCount}
             />
           );
+        }
+        break;
+        
+      case "not-received-reports":
+        // Not received reports tab is accessible to super admins and admins only
+        if (isSuperAdmin || isAdmin) {
+          return <NotReceivedReportsApp />;
         }
         break;
         

@@ -2,11 +2,14 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
 import { Send, X, MessageSquare, Loader2, ChevronDown } from "lucide-react";
 import { ChatMessage } from "@/types/chat";
+import { useRealtimeUpdates } from "@/hooks/useRealtimeUpdates";
 
 export default function UserChat() {
   const { data: session } = useSession();
+  const pathname = usePathname();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,18 +24,58 @@ export default function UserChat() {
     setIsHydrated(true);
   }, []);
 
+  // Don't render UserChat on admin pages to avoid conflicts
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
+  // Use SSE for real-time updates
+  useRealtimeUpdates({
+    enabled: !!session?.user,
+    isAdminMode: false, // Regular user mode - don't call admin endpoints
+    onChatMessage: (data) => {
+      const currentUserId = (session?.user as any)?.id;
+      
+      if (data.type === 'new_message') {
+        // Check both userId and recipientId fields
+        if (data.userId === currentUserId || data.recipientId === currentUserId) {
+          // If chat is open and we have the message data, add it directly
+          if (isChatOpen && data.message) {
+            setMessages(prev => [...prev, data.message]);
+            // Auto-scroll to show new message
+            setTimeout(() => scrollToBottom(), 100);
+          } else {
+            // Chat is closed, just refresh to update unread count
+            fetchMessages(false); // Don't mark as read for background updates
+          }
+        }
+      }
+      
+      if (data.type === 'message_read') {
+        // Admin read user's messages - refresh to update read status
+        const currentUserId = (session?.user as any)?.id;
+        if (data.userId === currentUserId || data.recipientId === currentUserId) {
+          fetchMessages(false); // Don't mark as read for status updates
+        }
+      }
+    },
+    onAnnouncementUpdate: () => {
+      // User chat doesn't need announcement updates
+    }
+  });
+
   // Fetch messages on component mount and periodically
   useEffect(() => {
     if (!session?.user) return;
     
-    fetchMessages();
+    fetchMessages(false); // Initial load - don't mark as read
     
-    // Poll for new messages every 2 minutes (reduced from 10s to lower function invocations)
+    // Fallback polling every 10 minutes (SSE should handle most updates)
     const interval = setInterval(() => {
       if (document.visibilityState === "visible") {
-        fetchMessages();
+        fetchMessages(false); // Background polling - don't mark as read
       }
-    }, 120000); // 2 minutes
+    }, 600000); // 10 minutes - much longer since SSE handles real-time updates
     
     return () => clearInterval(interval);
   }, [session]);
@@ -56,11 +99,12 @@ export default function UserChat() {
     };
   }, [session]);
 
-  const fetchMessages = async () => {
+  const fetchMessages = async (markAsRead: boolean = false) => {
     if (!session?.user) {
       return;
     }    try {
-      const response = await fetch("/api/chat");
+      const url = markAsRead ? "/api/chat?markAsRead=true" : "/api/chat";
+      const response = await fetch(url);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch messages: ${response.status} ${response.statusText}`);
@@ -122,7 +166,7 @@ export default function UserChat() {
         setNewMessage("");
         
         // Immediately fetch messages to ensure everything is in sync
-        setTimeout(() => fetchMessages(), 300);
+        setTimeout(() => fetchMessages(true), 300); // Mark as read since chat is open
       } else {
         throw new Error(data.error || "Failed to send message");
       }
@@ -164,7 +208,7 @@ export default function UserChat() {
     setIsChatOpen(!isChatOpen);
     if (!isChatOpen) {
       // When opening chat, mark messages as read
-      fetchMessages();
+      fetchMessages(true); // Mark as read when user actively opens chat
     }
   };
 

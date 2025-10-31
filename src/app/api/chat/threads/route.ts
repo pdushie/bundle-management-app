@@ -38,66 +38,33 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
-    // Get all unique users who have chat messages - modified to ensure all users with messages appear
+    // Optimized query to get chat threads with latest message and unread count
     const threads = await neonClient`
-      WITH message_users AS (
-        -- First get all distinct users who have messages
-        SELECT DISTINCT user_id 
-        FROM chat_messages
-      ),
-      latest_messages AS (
-        -- For each user, get their most recent message
-        SELECT 
-          m.id,
-          m.user_id,
-          m.admin_id,
-          m.message,
-          m.sender_type,
-          m.read,
-          m.created_at,
-          m.updated_at
-        FROM chat_messages m
-        INNER JOIN (
-          SELECT user_id, MAX(created_at) as max_date
-          FROM chat_messages
-          GROUP BY user_id
-        ) latest ON m.user_id = latest.user_id AND m.created_at = latest.max_date
-      ),
-      unread_counts AS (
-        SELECT 
-          user_id,
-          COUNT(*) as unread_count
-        FROM 
-          chat_messages
-        WHERE 
-          sender_type = 'user' AND read = FALSE
-        GROUP BY 
-          user_id
-      )
-      SELECT 
-        u.id as user_id,
+      SELECT DISTINCT ON (cm.user_id)
+        cm.user_id,
         u.name as user_name,
         u.email as user_email,
-        lm.id,
-        lm.user_id,
-        lm.admin_id,
-        lm.message,
-        lm.sender_type,
-        lm.read,
-        lm.created_at,
-        lm.updated_at,
-        COALESCE(uc.unread_count, 0) as unread_count
+        cm.id,
+        cm.admin_id,
+        cm.message,
+        cm.sender_type,
+        cm.read,
+        cm.created_at,
+        cm.updated_at,
+        (
+          SELECT COUNT(*)::int 
+          FROM chat_messages 
+          WHERE user_id = cm.user_id 
+            AND sender_type = 'user' 
+            AND read = FALSE
+        ) as unread_count
       FROM 
-        users u
+        chat_messages cm
       INNER JOIN 
-        message_users mu ON u.id = mu.user_id
-      INNER JOIN 
-        latest_messages lm ON u.id = lm.user_id
-      LEFT JOIN 
-        unread_counts uc ON u.id = uc.user_id
+        users u ON cm.user_id = u.id
       ORDER BY 
-        CASE WHEN COALESCE(uc.unread_count, 0) > 0 THEN 0 ELSE 1 END,
-        lm.created_at DESC
+        cm.user_id,
+        cm.created_at DESC
     `;
 
     // Format the response
