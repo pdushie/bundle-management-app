@@ -1,23 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-
-// Store active connections
-const connections = new Set<ReadableStreamDefaultController>();
-
-// Function to broadcast updates to all connected clients
-export function broadcastReportUpdate(data: any) {
-  const message = `data: ${JSON.stringify(data)}\n\n`;
-  
-  connections.forEach((controller) => {
-    try {
-      controller.enqueue(new TextEncoder().encode(message));
-    } catch (error) {
-      // Remove failed connections
-      connections.delete(controller);
-    }
-  });
-}
+import { addConnection, removeConnection } from '@/lib/sse/notReceivedReports';
 
 export async function GET(request: NextRequest) {
   // Check authentication
@@ -30,7 +14,7 @@ export async function GET(request: NextRequest) {
   const readable = new ReadableStream({
     start(controller) {
       // Add connection to set
-      connections.add(controller);
+      addConnection(controller);
       
       // Send initial connection message
       const initialMessage = `data: ${JSON.stringify({ 
@@ -49,14 +33,14 @@ export async function GET(request: NextRequest) {
           controller.enqueue(new TextEncoder().encode(heartbeatMessage));
         } catch (error) {
           clearInterval(heartbeat);
-          connections.delete(controller);
+          removeConnection(controller);
         }
       }, 30000); // Heartbeat every 30 seconds
 
       // Cleanup on close
       request.signal.addEventListener('abort', () => {
         clearInterval(heartbeat);
-        connections.delete(controller);
+        removeConnection(controller);
         try {
           controller.close();
         } catch (error) {
@@ -66,12 +50,7 @@ export async function GET(request: NextRequest) {
     },
 
     cancel() {
-      // Remove connection from set when cancelled
-      connections.forEach((controller) => {
-        if (controller === this) {
-          connections.delete(controller);
-        }
-      });
+      // This context doesn't have access to the controller, so we'll handle cleanup in abort listener
     }
   });
 

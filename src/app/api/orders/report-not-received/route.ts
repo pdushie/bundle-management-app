@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { orders, orderEntries, notReceivedReports } from '@/lib/schema';
 import { eq, and } from 'drizzle-orm';
-import { broadcastReportUpdate } from '@/app/api/admin/not-received-reports/events/route';
+import { broadcastReportUpdate } from '@/lib/sse/notReceivedReports';
 
 export async function POST(request: NextRequest) {
   try {

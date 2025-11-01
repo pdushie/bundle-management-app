@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { notReceivedReports } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
-import { broadcastReportUpdate } from '../../events/route';
+import { broadcastReportUpdate } from '@/lib/sse/notReceivedReports';
 
 export async function PUT(
   request: NextRequest,

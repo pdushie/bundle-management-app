@@ -257,9 +257,8 @@ function AdminDashboardContent() {
       'pricing:view', 'pricing:create', 'pricing:update', 'pricing:delete'
     ]));
 
-  // Show loading state while waiting for session (only use client-side detection in production)
-  const isProduction = process.env.NODE_ENV === 'production';
-  const shouldWaitForClient = isProduction && !isClient;
+  // Show loading state while waiting for session (removed production-only client detection to fix hooks issue)
+  const shouldWaitForClient = false; // Simplified to avoid conditional hooks
   
   // Determine what to render based on state - using conditional rendering instead of early returns
   const renderContent = () => {

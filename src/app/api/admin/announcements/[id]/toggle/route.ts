@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { getCurrentTime } from "@/lib/timeService";
-import { broadcastAnnouncementUpdate } from "../../../../announcements/events/route";
+import { broadcastAnnouncementUpdate } from "@/lib/sse/announcements";
 
 // Helper function to check if user has announcements permissions via direct database query
 async function hasAdminAnnouncementsPermission(userId: string): Promise<boolean> {

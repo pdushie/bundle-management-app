@@ -22,6 +22,7 @@ import { OrderProvider, useOrderCount } from "@/lib/orderContext";
 import { ORDER_UPDATED_EVENT } from "@/lib/orderNotifications";
 import { requestNotificationPermission, hasNotificationPermission, sendThrottledNotification, playNotificationSound } from '@/lib/notifications';
 import { initializeTimeService, getCurrentTimeStringSync, getCurrentDateStringSync, getCurrentTimestampSync, getCurrentTimeSync } from '@/lib/timeService';
+import AppWithProviders from './AppWithProviders';
 
 type PhoneEntry = {
   number: string;
@@ -2534,18 +2535,9 @@ function TabNavigation({
 // Main App with Authentication and Role-Based Access
 function AppContent() {
   const { data: session, status } = useSession() as any;
-  const [isClient, setIsClient] = useState(false);
 
-  // Ensure we're on the client side to prevent hydration mismatches
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  // Show loading while waiting for session (only use client-side detection in production)
-  const isProduction = process.env.NODE_ENV === 'production';
-  const shouldWaitForClient = isProduction && !isClient;
-  
-  if (shouldWaitForClient || status === "loading") {
+  // Show loading while waiting for session
+  if (status === "loading") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center px-4">
         <div className="text-center">
@@ -3163,9 +3155,6 @@ function AppContent() {
     </div>
   );
 }
-
-// Import our AppWithProviders component
-import AppWithProviders from './AppWithProviders';
 
 // Export the main page component, wrapped with AppWithProviders
 export default function Home() {

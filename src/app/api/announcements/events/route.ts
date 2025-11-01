@@ -1,33 +1,5 @@
 import { NextResponse } from 'next/server';
-
-// Store active connections
-const connections = new Set<ReadableStreamDefaultController>();
-
-// Function to broadcast updates to all connected clients
-export function broadcastAnnouncementUpdate(data: { type: string; [key: string]: any }) {
-  console.log(`🎯 broadcastAnnouncementUpdate called with:`, data);
-  console.log(`📡 Current connections: ${connections.size}`);
-  
-  const message = `data: ${JSON.stringify(data)}\n\n`;
-  
-  // Remove disconnected clients
-  const deadConnections = new Set();
-  
-  connections.forEach((controller) => {
-    try {
-      controller.enqueue(new TextEncoder().encode(message));
-      console.log(`✅ Successfully sent announcement SSE to a client`);
-    } catch (error) {
-      console.error('❌ Error sending announcement SSE message:', error);
-      deadConnections.add(controller);
-    }
-  });
-  
-  // Clean up dead connections
-  deadConnections.forEach(controller => connections.delete(controller as ReadableStreamDefaultController));
-  
-  console.log(`📢 Broadcasted announcement update to ${connections.size} clients:`, data);
-}
+import { addConnection, removeConnection } from '@/lib/sse/announcements';
 
 export async function GET() {
   try {
@@ -37,8 +9,7 @@ export async function GET() {
     const stream = new ReadableStream({
       start(controller) {
         // Add to connections
-        connections.add(controller);
-        console.log(`New announcement SSE connection. Total connections: ${connections.size}`);
+        addConnection(controller);
         
         // Send initial connection message
         const initialMessage = `data: ${JSON.stringify({ type: 'connected', message: 'Announcements SSE connected' })}\n\n`;
@@ -47,16 +18,12 @@ export async function GET() {
         // Set up heartbeat to keep connection alive
         const heartbeat = setInterval(() => {
           try {
-            if (connections.has(controller)) {
-              const heartbeatMessage = `data: ${JSON.stringify({ type: 'heartbeat', timestamp: Date.now() })}\n\n`;
-              controller.enqueue(new TextEncoder().encode(heartbeatMessage));
-            } else {
-              clearInterval(heartbeat);
-            }
+            const heartbeatMessage = `data: ${JSON.stringify({ type: 'heartbeat', timestamp: Date.now() })}\n\n`;
+            controller.enqueue(new TextEncoder().encode(heartbeatMessage));
           } catch (error) {
             // Controller is closed, clean up
             clearInterval(heartbeat);
-            connections.delete(controller);
+            removeConnection(controller);
           }
         }, 15000); // Send heartbeat every 15 seconds
         
@@ -71,8 +38,7 @@ export async function GET() {
           clearInterval(controllerRef.heartbeatInterval);
           controllerRef.heartbeatInterval = null;
         }
-        connections.delete(controllerRef);
-        console.log(`Announcement SSE connection closed. Remaining connections: ${connections.size}`);
+        removeConnection(controllerRef);
       }
     });
 
