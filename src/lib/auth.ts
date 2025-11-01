@@ -131,35 +131,32 @@ function buildProviders() {
             [credentials.email]
           );
 
+          // User not found - return null without revealing this information
           if (result.rows.length === 0) {
             return null;
           }
 
           const user = result.rows[0];
           
-          // Check email verification first
+          // For security, we return null for any authentication failure
+          // This prevents user enumeration attacks
+          
+          // Check email verification
           if (!user.email_verified) {
-            throw new Error('Please verify your email address before signing in. Check your email for the verification link.');
+            return null;
           }
           
           // Check account status
-          if (user.status === 'pending') {
-            throw new Error('Your account is pending approval');
-          }
-          
-          if (user.status === 'rejected') {
-            throw new Error('Your request for account was rejected. Please contact support');
-          }
-          
           if (user.status !== 'approved') {
-            throw new Error('Account access denied');
+            return null;
           }
           
-          // Check if account is active (not disabled)
+          // Check if account is active
           if (user.is_active === false) {
-            throw new Error('Your account has been disabled. Please contact support');
+            return null;
           }
           
+          // Verify password
           const passwordMatch = await bcrypt.compare(
             credentials.password,
             user.hashed_password

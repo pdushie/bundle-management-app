@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { redirect } from "next/navigation";
 import { Users, Check, X, Clock, MessageCircle, Shield, Calendar, ArrowLeft, Database, User, LogOut, DollarSign, Settings, Receipt } from "lucide-react";
 
 // Hook to check RBAC permissions
@@ -80,7 +79,7 @@ interface UserStats {
   adminCount: number;
 }
 
-export default function AdminDashboard() {
+function AdminDashboardContent() {
   const { data: session, status } = useSession() as any;
   const router = useRouter();
   const { permissions, loading: permissionsLoading, hasPermission, hasAnyPermission } = usePermissions();
@@ -141,7 +140,8 @@ export default function AdminDashboard() {
     // Redirect unauthenticated users
     if (status === "unauthenticated") {
       // Console log removed for security
-      redirect("/");
+      router.push("/");
+      return;
     }
     
     // For non-admin users, check if they have permissions to access admin dashboard
@@ -173,14 +173,16 @@ export default function AdminDashboard() {
       // If they don't have any admin permissions, redirect to home
       if (!hasAdminPermissions && !hasAnnouncementsPermission && !hasChatPermission) {
         // Console log removed for security
-        redirect("/");
+        router.push("/");
+        return;
       }
     }
     
     // Regular users get redirected to home
     if (session && !isAdminRole(session.user?.role)) {
       // Console log removed for security
-      redirect("/");
+      router.push("/");
+      return;
     }
   }, [status, session, router, permissionsLoading, hasAnyPermission, permissions]);
 
@@ -278,6 +280,14 @@ export default function AdminDashboard() {
     }
   };
 
+  // Check if user has permission to access admin dashboard
+  const hasAdminAccess = session && (isAdminRole(session?.user?.role) ||
+    hasAnyPermission([
+      'users:view', 'users:create', 'users:update', 'users:delete',
+      'pricing:view', 'pricing:create', 'pricing:update', 'pricing:delete'
+    ]));
+
+  // Show loading state without early return to avoid hook order issues
   if (status === "loading" || permissionsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
@@ -288,16 +298,17 @@ export default function AdminDashboard() {
       </div>
     );
   }
-
-  // Check if user has permission to access admin dashboard
-  const hasAdminAccess = isAdminRole(session?.user?.role) ||
-    hasAnyPermission([
-      'users:view', 'users:create', 'users:update', 'users:delete',
-      'pricing:view', 'pricing:create', 'pricing:update', 'pricing:delete'
-    ]);
   
+  // Show access denied without early return to avoid hook order issues  
   if (!session || !hasAdminAccess) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-700">Checking permissions...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -712,6 +723,26 @@ export default function AdminDashboard() {
       )}
     </div>
   );
+}
+
+export default function AdminDashboard() {
+  const { data: session, status } = useSession() as any;
+  const { loading: permissionsLoading } = usePermissions();
+
+  // Show loading state - this component always calls the same hooks
+  if (status === "loading" || permissionsLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-700">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If we get here, we can render the main content
+  return <AdminDashboardContent />;
 }
 
 

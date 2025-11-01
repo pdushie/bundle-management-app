@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { AlertTriangle, Lock, Unlock, Settings, Save, RefreshCw } from 'lucide-react';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface SystemSetting {
   value: string;
@@ -16,6 +17,7 @@ interface SystemSettings {
 
 export default function SystemSettingsManager() {
   const { data: session } = useSession();
+  const { hasPermission, loading: permissionsLoading } = usePermissions();
   const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -23,15 +25,27 @@ export default function SystemSettingsManager() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Check if user is super admin
-  if (session?.user?.role !== 'super_admin') {
+  // Show loading while checking permissions
+  if (permissionsLoading) {
+    return (
+      <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+        <div className="flex items-center justify-center">
+          <RefreshCw className="w-6 h-6 animate-spin text-blue-600 mr-2" />
+          <span className="text-gray-600">Checking permissions...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if user has system:settings permission
+  if (!hasPermission('system:settings')) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
         <div className="flex items-center gap-2 text-red-800">
           <AlertTriangle className="w-5 h-5" />
           <span className="font-medium">Access Denied</span>
         </div>
-        <p className="text-red-700 mt-1">Only super administrators can access system settings.</p>
+        <p className="text-red-700 mt-1">You need system settings permission to access this page.</p>
       </div>
     );
   }

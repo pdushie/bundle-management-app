@@ -27,9 +27,6 @@ export default function AdminChatPanel() {
   useRealtimeUpdates({
     enabled: !!isAdminUser,
     onChatMessage: (data) => {
-      console.log('DEBUG: Admin received SSE:', data);
-      console.log('DEBUG: selectedUserId:', selectedUserId);
-      
       if (data.type === 'new_message') {
         // Only refresh threads if we're not already loading and it's a different user
         if (!threadsLoading && (!selectedUserId || data.userId !== selectedUserId)) {
@@ -45,24 +42,12 @@ export default function AdminChatPanel() {
           (data.recipientType === 'admin' && data.userId === selectedUserId) // User→Admin
         );
         
-        console.log('DEBUG: Should display message?', {
-          selectedUserId,
-          hasMessage: !!data.message,
-          recipientId: data.recipientId,
-          recipientType: data.recipientType,
-          userId: data.userId,
-          adminToUser: data.recipientId === selectedUserId,
-          userToAdmin: data.recipientType === 'admin' && data.userId === selectedUserId,
-          shouldDisplayMessage
-        });
+
         
         if (shouldDisplayMessage) {
-          console.log('DEBUG: Adding message to admin UI');
           setMessages(prev => [...prev, data.message]);
           // Auto-scroll to show new message
           setTimeout(() => scrollToBottom(), 100);
-        } else {
-          console.log('DEBUG: Message not displayed');
         }
       } else if (data.type === 'message_read') {
         // Messages were marked as read, refresh threads only if not loading
@@ -72,18 +57,6 @@ export default function AdminChatPanel() {
       }
     }
   });
-
-  // Fetch threads on component mount only - real-time updates will handle refreshes
-  useEffect(() => {
-    if (!session?.user || (session.user.role !== "admin" && session.user.role !== "super_admin" && session.user.role !== "standard_admin")) return;
-    
-    fetchThreads();
-  }, [session]);
-
-  // Scroll to bottom on new messages
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   const fetchThreads = useCallback(async () => {
     if (!session?.user || (session.user.role !== "admin" && session.user.role !== "super_admin" && session.user.role !== "standard_admin")) return;
@@ -127,30 +100,24 @@ export default function AdminChatPanel() {
       }
       
       const contentType = response.headers.get('content-type');
-      console.log('fetchMessages: Content-Type:', contentType);
       if (!contentType || !contentType.includes('application/json')) {
         console.error('fetchMessages: Invalid content type:', contentType);
         throw new Error('Invalid response format from server');
       }
       
-      console.log('fetchMessages: Parsing JSON response...');
       const data = await response.json();
-      console.log('fetchMessages: Data received:', data);
       
       if (data.success && data.messages) {
         if (append) {
           // Append older messages to the beginning
-          console.log('fetchMessages: Appending', data.messages.length, 'messages');
           setMessages(prev => [...data.messages, ...prev]);
         } else {
           // Replace messages (initial load)
-          console.log('fetchMessages: Setting', data.messages.length, 'messages');
           setMessages(data.messages);
         }
         
         // Update pagination state
         if (data.pagination) {
-          console.log('fetchMessages: Updating pagination:', data.pagination);
           setCurrentPage(data.pagination.page);
           setHasMoreMessages(data.pagination.hasMore);
           setTotalMessages(data.pagination.total);
@@ -168,6 +135,36 @@ export default function AdminChatPanel() {
       setMessagesLoading(false);
     }
   };
+
+  // Fetch threads on component mount only - real-time updates will handle refreshes
+  useEffect(() => {
+    if (!session?.user || (session.user.role !== "admin" && session.user.role !== "super_admin" && session.user.role !== "standard_admin")) return;
+    
+    fetchThreads();
+  }, [session, fetchThreads]);
+
+  // Scroll to bottom on new messages
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Polling fallback for production (especially Vercel where SSE may not work)
+  useEffect(() => {
+    if (!session?.user || !selectedUserId) return;
+    
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (!isProduction) return; // Only poll in production
+    
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible" && selectedUserId) {
+        // Refresh current conversation and threads
+        fetchMessages(selectedUserId, 1, false);
+        fetchThreads();
+      }
+    }, 3000); // Poll every 3 seconds in production
+    
+    return () => clearInterval(interval);
+  }, [session, selectedUserId, fetchMessages, fetchThreads]);
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();

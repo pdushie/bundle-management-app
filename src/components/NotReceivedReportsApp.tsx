@@ -57,22 +57,20 @@ export default function NotReceivedReportsApp() {
     fetchReports();
   }, []);
 
-  // Set up Server-Sent Events for real-time updates
+  // Set up Server-Sent Events for real-time updates with production polling fallback
+  const isProduction = process.env.NODE_ENV === 'production';
   const { connectionStatus } = useSSE('/api/admin/not-received-reports/events', {
     onMessage: (data) => {
       switch (data.type) {
         case 'connected':
-          console.log('Connected to not-received-reports SSE');
           break;
           
         case 'new_report':
-          console.log('New not-received report created:', data);
           // Refresh reports to get the latest data
           fetchReports();
           break;
           
         case 'report_resolved':
-          console.log('Report resolved:', data);
           // Refresh reports to get the latest data
           fetchReports();
           break;
@@ -82,18 +80,23 @@ export default function NotReceivedReportsApp() {
           break;
           
         default:
-          console.log('Unknown SSE event type:', data.type);
+          break;
       }
     },
-    onOpen: () => {
-      console.log('SSE connection opened for not-received-reports');
-    },
-    onError: (error) => {
-      console.error('SSE connection error:', error);
-    },
-    fallbackInterval: 60000, // Fallback to polling every 60 seconds
+    fallbackInterval: isProduction ? 5000 : 60000, // 5 seconds in production, 60 seconds in development
     fallbackCallback: fetchReports
   });
+
+  // Additional polling for production environments (Vercel compatibility)
+  useEffect(() => {
+    if (!isProduction) return;
+
+    const pollInterval = setInterval(() => {
+      fetchReports();
+    }, 10000); // Poll every 10 seconds in production
+
+    return () => clearInterval(pollInterval);
+  }, [isProduction]);
 
   const handleResolve = async (reportId: number, status: 'resolved' | 'confirmed_sent') => {
     setResolving(reportId);

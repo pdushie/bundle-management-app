@@ -99,7 +99,7 @@ export function useRealtimeUpdates(options: UseRealtimeUpdatesOptions = {}) {
         timestamp: new Date().toISOString()
       });
     },
-    fallbackInterval: 60000, // Fallback to polling every 60 seconds
+    fallbackInterval: process.env.NODE_ENV === 'production' ? 5000 : 60000, // 5s in production, 60s in dev
     fallbackCallback: isAdminMode ? () => fetchUnreadChatCountRef.current() : undefined
   }), []); // Empty dependency array - options should never change
 
@@ -145,7 +145,7 @@ export function useRealtimeUpdates(options: UseRealtimeUpdatesOptions = {}) {
         timestamp: new Date().toISOString()
       });
     },
-    fallbackInterval: 120000, // Fallback to polling every 2 minutes for announcements
+    fallbackInterval: process.env.NODE_ENV === 'production' ? 30000 : 120000, // 30s in production, 2min in dev
     fallbackCallback: () => fetchAnnouncementsRef.current()
   }), []); // Empty dependency array - options should never change
 

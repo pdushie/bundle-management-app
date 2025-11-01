@@ -70,12 +70,15 @@ export default function UserChat() {
     
     fetchMessages(false); // Initial load - don't mark as read
     
-    // Fallback polling every 10 minutes (SSE should handle most updates)
+    // More frequent polling for production (especially Vercel where SSE may not work)
+    const isProduction = process.env.NODE_ENV === 'production';
+    const pollingInterval = isProduction ? 3000 : 600000; // 3 seconds in production, 10 minutes in dev
+    
     const interval = setInterval(() => {
       if (document.visibilityState === "visible") {
         fetchMessages(false); // Background polling - don't mark as read
       }
-    }, 600000); // 10 minutes - much longer since SSE handles real-time updates
+    }, pollingInterval);
     
     return () => clearInterval(interval);
   }, [session]);

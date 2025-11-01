@@ -3,6 +3,24 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { neonClient } from "@/lib/db";
 
+// Helper function to check if user has system settings permissions via direct database query
+async function hasSystemSettingsPermission(userId: string): Promise<boolean> {
+  try {
+    const result = await neonClient`
+      SELECT p.name 
+      FROM user_roles ur
+      JOIN role_permissions rp ON ur.role_id = rp.role_id
+      JOIN permissions p ON rp.permission_id = p.id
+      WHERE ur.user_id = ${parseInt(userId)} AND p.name = 'system:settings' AND ur.is_active = true
+    `;
+    
+    return result.length > 0;
+  } catch (error) {
+    // Console statement removed for security
+    return false;
+  }
+}
+
 // Get system settings
 export async function GET(req: NextRequest) {
   try {
@@ -11,6 +29,15 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" }, 
         { status: 401 }
+      );
+    }
+
+    // Check if user has system:settings permission
+    const userId = (session.user as any).id;
+    if (!userId || !(await hasSystemSettingsPermission(userId))) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden - System settings permission required" }, 
+        { status: 403 }
       );
     }
 
@@ -43,7 +70,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// Update system settings (super admin only)
+// Update system settings
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -54,10 +81,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Only super_admin can update system settings
-    if (session.user.role !== "super_admin") {
+    // Check if user has system:settings permission
+    const userId = (session.user as any).id;
+    if (!userId || !(await hasSystemSettingsPermission(userId))) {
       return NextResponse.json(
-        { success: false, error: "Forbidden - Super admin access required" }, 
+        { success: false, error: "Forbidden - System settings permission required" }, 
         { status: 403 }
       );
     }

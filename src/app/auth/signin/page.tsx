@@ -92,7 +92,12 @@ export default function SignIn() {
           });
 
           if (result?.error) {
-            setError(result.error);
+            // Transform NextAuth error codes into user-friendly messages
+            if (result.error === 'CredentialsSignin') {
+              setError('Invalid email or password. Please check your credentials and try again.');
+            } else {
+              setError(result.error);
+            }
           } else if (result?.ok) {
             // Success - redirect to dashboard
             router.push("/");

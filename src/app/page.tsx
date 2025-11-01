@@ -2120,7 +2120,7 @@ function TabNavigation({
     }
   };
 
-  // Initialize not-received reports count and set up SSE
+  // Initialize not-received reports count and set up SSE with production polling fallback
   useEffect(() => {
     // Only fetch if user has access to not-received reports
     if (!isSuperAdmin && !isAdmin) {
@@ -2130,33 +2130,45 @@ function TabNavigation({
     // Initial fetch
     fetchNotReceivedReportsCount();
 
-    // Set up SSE for real-time updates
-    const eventSource = new EventSource('/api/admin/not-received-reports/events');
-    
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        
-        if (data.type === 'new_report') {
-          // New report created - increment count
-          setPendingNotReceivedReports(prev => prev + 1);
-        } else if (data.type === 'report_resolved') {
-          // Report resolved - decrement count
-          setPendingNotReceivedReports(prev => Math.max(0, prev - 1));
-        }
-      } catch (error) {
-        console.error('Error parsing SSE data:', error);
-      }
-    };
+    const isProduction = process.env.NODE_ENV === 'production';
+    let pollInterval: NodeJS.Timeout | null = null;
 
-    eventSource.onerror = () => {
-      // Fallback to polling on SSE failure
-      const interval = setInterval(fetchNotReceivedReportsCount, 60000);
-      return () => clearInterval(interval);
-    };
+    if (isProduction) {
+      // In production (Vercel), use polling instead of SSE
+      pollInterval = setInterval(fetchNotReceivedReportsCount, 8000); // Poll every 8 seconds
+    } else {
+      // In development, use SSE with polling fallback
+      const eventSource = new EventSource('/api/admin/not-received-reports/events');
+      
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.type === 'new_report') {
+            // New report created - increment count
+            setPendingNotReceivedReports(prev => prev + 1);
+          } else if (data.type === 'report_resolved') {
+            // Report resolved - decrement count
+            setPendingNotReceivedReports(prev => Math.max(0, prev - 1));
+          }
+        } catch (error) {
+          console.error('Error parsing SSE data:', error);
+        }
+      };
+
+      eventSource.onerror = () => {
+        // Fallback to polling on SSE failure
+        pollInterval = setInterval(fetchNotReceivedReportsCount, 60000);
+      };
+
+      return () => {
+        eventSource.close();
+        if (pollInterval) clearInterval(pollInterval);
+      };
+    }
 
     return () => {
-      eventSource.close();
+      if (pollInterval) clearInterval(pollInterval);
     };
   }, [isSuperAdmin, isAdmin]);
   
@@ -2345,55 +2357,65 @@ function TabNavigation({
   };
   
   return (
-    <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-1 w-full" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
-      {tabs.map((tab) => {
-        const Icon = tab.icon;
-        return (
-          <div 
-            key={tab.id}
-            role="button"
-            tabIndex={0}
-            onClick={(e) => handleTabClick(e, tab.id)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handleTabClick(e as any, tab.id);
-              }
-            }}
-            className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3 rounded-t-lg font-medium transition-all duration-200 whitespace-nowrap text-xs sm:text-sm cursor-pointer min-w-max ${
-                tab.id === "history" ? "sm:min-w-[180px] " : ""
-              }${activeTab === tab.id
-                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
-                : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-              }`}
-          >
-            <Icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-            <span 
-              className="hidden sm:inline truncate" 
-              title={tab.name} // Add tooltip for desktop view
-              style={{ maxWidth: tab.id === "history" ? "150px" : "120px" }} // Give more space to History & Analytics
+    <div className="relative w-full">
+      {/* Horizontal scrolling container with improved mobile handling */}
+      <div 
+        className="flex gap-1 overflow-x-auto pb-1 w-full scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
+        style={{ 
+          msOverflowStyle: 'scrollbar', 
+          scrollbarWidth: 'thin',
+          WebkitOverflowScrolling: 'touch' // Smooth scrolling on iOS
+        }}
+      >
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <div 
+              key={tab.id}
+              role="button"
+              tabIndex={0}
+              onClick={(e) => handleTabClick(e, tab.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleTabClick(e as any, tab.id);
+                }
+              }}
+              className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-3 rounded-t-lg font-medium transition-all duration-200 whitespace-nowrap text-xs sm:text-sm cursor-pointer flex-shrink-0 ${
+                  // Mobile-optimized sizing
+                  tab.id === "history" ? "min-w-[90px] sm:min-w-[160px] " : "min-w-[70px] sm:min-w-[100px] "
+                }${activeTab === tab.id
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
+                  : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                }`}
             >
-              {tab.name}
-            </span>
-            <span className="sm:hidden">
-              {tab.id === "bundle-allocator" ? "Allocator" :
-               tab.id === "bundle-categorizer" ? "Categorizer" :
-               tab.id === "send-order" ? "Send" :
-               tab.id === "orders" ? "Orders" :
-               tab.id === "processed-orders" ? "Processed" :
-               tab.id === "sent-orders" ? "My Orders" : 
-               tab.id === "track-orders" ? "Track" :
-               tab.id === "packages" ? "Packages" :
-               tab.id === "billing" ? "Billing" :
-               tab.id === "history" ? "History & A." : 
-               tab.id === "not-received-reports" ? "Not Received" :
-               tab.id === "accounting" ? "Accounting" : tab.name}
-            </span>
-            {tab.id === "history" && isSuperAdmin && history.length > 0 && (
-              <span className="bg-white/20 text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
-                {history.length}
+              <Icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+              <span 
+                className="hidden sm:inline truncate" 
+                title={tab.name}
+                style={{ maxWidth: tab.id === "history" ? "130px" : "100px" }}
+              >
+                {tab.name}
               </span>
-            )}
+              <span className="sm:hidden text-xs truncate max-w-[50px]">
+                {tab.id === "bundle-allocator" ? "Alloc" :
+                 tab.id === "bundle-categorizer" ? "Cat" :
+                 tab.id === "send-order" ? "Send" :
+                 tab.id === "orders" ? "Orders" :
+                 tab.id === "processed-orders" ? "Proc" :
+                 tab.id === "sent-orders" ? "My" : 
+                 tab.id === "track-orders" ? "Track" :
+                 tab.id === "packages" ? "Pack" :
+                 tab.id === "billing" ? "Bill" :
+                 tab.id === "history" ? "Hist" : 
+                 tab.id === "not-received-reports" ? "NotRec" :
+                 tab.id === "accounting" ? "Acc" : tab.name.slice(0, 4)}
+              </span>
+              {tab.id === "history" && isSuperAdmin && history.length > 0 && (
+                <span className="bg-white/20 text-xs px-1 sm:px-2 py-0.5 sm:py-1 rounded-full flex-shrink-0">
+                  {history.length}
+                </span>
+              )}
             
             {/* Orders tab badge with unread indicators */}
             {tab.id === "orders" && (
@@ -2494,6 +2516,17 @@ function TabNavigation({
           </div>
         );
       })}
+      </div>
+      
+      {/* Scroll indicator dots for mobile */}
+      <div className="flex justify-center mt-2 gap-1 sm:hidden">
+        {tabs.map((_, index) => (
+          <div 
+            key={index}
+            className="w-1.5 h-1.5 rounded-full bg-gray-300"
+          />
+        ))}
+      </div>
     </div>
   );
 }
