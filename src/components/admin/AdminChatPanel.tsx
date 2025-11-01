@@ -152,7 +152,7 @@ export default function AdminChatPanel() {
   useEffect(() => {
     if (!session?.user || !selectedUserId) return;
     
-    const isProduction = process.env.NODE_ENV === 'production';
+    const isProduction = process.env.NODE_ENV === 'production' || (typeof window !== 'undefined' && window.location.hostname.includes('vercel'));
     if (!isProduction) return; // Only poll in production
     
     const interval = setInterval(() => {
@@ -161,7 +161,7 @@ export default function AdminChatPanel() {
         fetchMessages(selectedUserId, 1, false);
         fetchThreads();
       }
-    }, 3000); // Poll every 3 seconds in production
+    }, 2000); // Poll every 2 seconds in production
     
     return () => clearInterval(interval);
   }, [session, selectedUserId, fetchMessages, fetchThreads]);

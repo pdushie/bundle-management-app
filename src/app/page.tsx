@@ -2534,9 +2534,18 @@ function TabNavigation({
 // Main App with Authentication and Role-Based Access
 function AppContent() {
   const { data: session, status } = useSession() as any;
+  const [isClient, setIsClient] = useState(false);
 
-  // Show loading while checking authentication
-  if (status === "loading") {
+  // Ensure we're on the client side to prevent hydration mismatches
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Show loading while waiting for session (only use client-side detection in production)
+  const isProduction = process.env.NODE_ENV === 'production';
+  const shouldWaitForClient = isProduction && !isClient;
+  
+  if (shouldWaitForClient || status === "loading") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center px-4">
         <div className="text-center">

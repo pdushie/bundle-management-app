@@ -24,13 +24,33 @@ export default function SignIn() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Check for verification messages from URL
+  // Check for verification messages and errors from URL
   useEffect(() => {
     const message = searchParams.get('message');
+    const urlError = searchParams.get('error');
+    
     if (message === 'verified') {
       setSuccess('Email verified successfully! Your account is now pending admin approval.');
     } else if (message === 'already-verified') {
       setSuccess('Your email is already verified. Your account is pending admin approval.');
+    }
+    
+    // Handle NextAuth error parameters
+    if (urlError) {
+      if (urlError === 'CredentialsSignin') {
+        setError('Invalid email or password. Please check your credentials and try again.');
+      } else if (urlError === 'Configuration') {
+        setError('Authentication system error. Please try again or contact support.');
+      } else if (urlError === 'AccessDenied') {
+        setError('Access denied. Your account may be pending approval or inactive.');
+      } else {
+        setError('Authentication failed. Please try again.');
+      }
+      
+      // Clear the error from URL to prevent showing it again on page refresh
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('error');
+      window.history.replaceState({}, '', newUrl.toString());
     }
   }, [searchParams]);
 

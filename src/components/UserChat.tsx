@@ -71,8 +71,8 @@ export default function UserChat() {
     fetchMessages(false); // Initial load - don't mark as read
     
     // More frequent polling for production (especially Vercel where SSE may not work)
-    const isProduction = process.env.NODE_ENV === 'production';
-    const pollingInterval = isProduction ? 3000 : 600000; // 3 seconds in production, 10 minutes in dev
+    const isProduction = process.env.NODE_ENV === 'production' || typeof window !== 'undefined' && window.location.hostname.includes('vercel');
+    const pollingInterval = isProduction ? 2000 : 30000; // 2 seconds in production, 30 seconds in dev
     
     const interval = setInterval(() => {
       if (document.visibilityState === "visible") {

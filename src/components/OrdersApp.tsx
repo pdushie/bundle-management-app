@@ -26,55 +26,67 @@ export default function OrdersApp() {
   // Get the refreshOrderCount function from context
   const { refreshOrderCount } = useOrderCount();
 
-  // Function to fetch orders
-  const fetchOrders = async () => {
+  // Add debounced fetch to prevent excessive API calls
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  const [isFetching, setIsFetching] = useState<boolean>(false);
+
+  // Function to fetch orders with debouncing and caching
+  const fetchOrders = async (force: boolean = false) => {
+    const now = Date.now();
+    
+    // Debounce: don't fetch if we just fetched within the last 10 seconds unless forced
+    if (!force && now - lastFetchTime < 10000 && !isFetching) {
+      return;
+    }
+
+    // Prevent multiple simultaneous fetches
+    if (isFetching) {
+      return;
+    }
+
     try {
+      setIsFetching(true);
       setIsLoading(true);
+      
       // Load only PENDING orders for the order queue
       const pendingOrders = await getPendingOrdersOldestFirst();
-      console.log('Fetched orders:', pendingOrders.map(o => ({ id: o.id, status: o.status })));
       setOrders(pendingOrders);
       refreshOrderCount(); // Update order counts in the context
+      setLastFetchTime(now);
     } catch (error) {
-      // // Console statement removed for security
+      // Console statement removed for security
     } finally {
       setIsLoading(false);
+      setIsFetching(false);
     }
   };
 
-  // Set up polling for real-time updates
+  // Optimized polling for real-time updates
   useEffect(() => {
-    // // Console log removed for security
-    
-    // Fetch orders immediately
-    fetchOrders();
+    // Fetch orders immediately (forced)
+    fetchOrders(true);
     
     // Set up event listener for order updates
     const handleOrderUpdate = () => {
-      // // Console log removed for security
-      fetchOrders();
+      fetchOrders(true); // Force refresh on events
     };
     
     // Create a more specific handler for order processed events
     const handleOrderProcessed = () => {
-      // // Console log removed for security
-      fetchOrders();
-      // Force a count update notification
+      fetchOrders(true); // Force refresh
       notifyCountUpdated();
     };
     
     // Add event listeners for all relevant events
     window.addEventListener(ORDER_UPDATED_EVENT, handleOrderUpdate);
     
-    // Set up polling interval with longer interval (5 minutes)
-    // This significantly reduces bandwidth usage and function invocations
+    // Optimized polling - less frequent and more intelligent
     const intervalId = setInterval(() => {
-      // Only poll if window is visible to further reduce API calls
+      // Only poll if window is visible and not recently fetched
       if (document.visibilityState === 'visible') {
-        // // Console log removed for security
-        fetchOrders();
+        fetchOrders(); // Uses debouncing internally
       }
-    }, 300000); // 5 minutes
+    }, 60000); // Reduced to 1 minute, but with debouncing
     
     // Clean up
     return () => {

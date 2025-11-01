@@ -24,37 +24,50 @@ export default function ProcessedOrdersApp() {
   const [entriesCurrentPage, setEntriesCurrentPage] = useState<number>(1);
   const [entriesPerPage] = useState<number>(20);
 
-  const fetchProcessedOrders = async () => {
+  // Add debounced fetch to prevent excessive API calls
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  const [isFetching, setIsFetching] = useState<boolean>(false);
+
+  const fetchProcessedOrders = async (force: boolean = false) => {
+    const now = Date.now();
+    
+    // Debounce: don't fetch if we just fetched within the last 15 seconds unless forced
+    if (!force && now - lastFetchTime < 15000 && !isFetching) {
+      return;
+    }
+
+    if (isFetching) {
+      return;
+    }
+
     try {
+      setIsFetching(true);
       setLoading(true);
       const processedOrders = await getProcessedOrdersWithAdminInfo();
       setOrders(processedOrders);
       refreshOrderCount();
+      setLastFetchTime(now);
     } catch (error) {
-      // // Console statement removed for security
+      // Console statement removed for security
     } finally {
       setLoading(false);
+      setIsFetching(false);
     }
   };
 
-  // Set up polling for real-time updates
+  // Optimized polling for real-time updates
   useEffect(() => {
-    // // Console log removed for security
-    
-    // Fetch orders immediately
-    fetchProcessedOrders();
+    // Fetch orders immediately (forced)
+    fetchProcessedOrders(true);
     
     // Set up event listener for order updates
     const handleOrderUpdate = () => {
-      // // Console log removed for security
-      fetchProcessedOrders();
+      fetchProcessedOrders(true); // Force refresh on events
     };
     
     // Set up a more specific event listener for processed orders
     const handleOrderProcessed = () => {
-      // // Console log removed for security
-      fetchProcessedOrders();
-      // Force a count update notification
+      fetchProcessedOrders(true); // Force refresh
       notifyCountUpdated();
     };
     
@@ -62,15 +75,12 @@ export default function ProcessedOrdersApp() {
     window.addEventListener(ORDER_UPDATED_EVENT, handleOrderUpdate);
     window.addEventListener(ORDER_PROCESSED_EVENT, handleOrderProcessed);
     
-    // Set up polling interval with longer interval (5 minutes)
-    // This significantly reduces bandwidth usage and function invocations
+    // Optimized polling - processed orders change less frequently
     const intervalId = setInterval(() => {
-      // Only poll if window is visible to further reduce API calls
       if (document.visibilityState === 'visible') {
-        // // Console log removed for security
-        fetchProcessedOrders();
+        fetchProcessedOrders(); // Uses debouncing internally
       }
-    }, 300000); // 5 minutes
+    }, 120000); // 2 minutes for processed orders (they change less frequently)
     
     // Clean up
     return () => {

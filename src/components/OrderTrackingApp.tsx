@@ -70,30 +70,49 @@ export default function OrderTrackingApp() {
     }
   }, []);
   
-  // Function to fetch order entries with or without filters
-  const fetchOrderEntries = async (filters?: { phoneNumber?: string, startDate?: string, endDate?: string, status?: string, processedBy?: string }) => {
+  // Add caching and debouncing for order tracking
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  const [isFetching, setIsFetching] = useState<boolean>(false);
+  const [lastFilters, setLastFilters] = useState<string>('');
+
+  // Function to fetch order entries with caching and debouncing
+  const fetchOrderEntries = async (filters?: { phoneNumber?: string, startDate?: string, endDate?: string, status?: string, processedBy?: string }, force: boolean = false) => {
+    const now = Date.now();
+    const filtersKey = JSON.stringify(filters || {});
+    
+    // Debounce: don't fetch if we just fetched the same data within the last 30 seconds unless forced
+    if (!force && now - lastFetchTime < 30000 && filtersKey === lastFilters && !isFetching) {
+      return;
+    }
+
+    if (isFetching) {
+      return;
+    }
+
+    setIsFetching(true);
     setIsLoading(true);
     setError(null);
+    
     try {
       let response;
       
       if (filters) {
         // Use the filter API endpoint with POST
-        // Console log removed for security
         response = await fetch("/api/orders/track/filter", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Cache-Control": "no-cache",
           },
           body: JSON.stringify(filters),
         });
       } else {
-        // Use the basic endpoint with GET
-        // Console log removed for security
+        // Use the basic endpoint with GET with cache headers
         response = await fetch("/api/orders/track", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
+            "Cache-Control": "no-cache",
           },
         });
       }
@@ -105,53 +124,69 @@ export default function OrderTrackingApp() {
       }
 
       const data = await response.json();
-      // Received entries from API - logging removed for security
       setOrderEntries(data.orderEntries || []);
+      setLastFetchTime(now);
+      setLastFilters(filtersKey);
     } catch (err) {
       // Console statement removed for security
       setError(`Failed to load order entries: ${(err as Error).message}`);
     } finally {
       setIsLoading(false);
       setIsFiltering(false);
+      setIsFetching(false);
     }
   };
 
-  // Handle applying filters
-  const handleApplyFilters = () => {
-    setIsFiltering(true);
-    
-    // Create filter object
-    const filters: { phoneNumber?: string; startDate?: string; endDate?: string; status?: string; processedBy?: string } = {};
-    
-    if (searchTerm) {
-      filters.phoneNumber = searchTerm;
+  // Debounced search functionality
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  // Debounced apply filters to reduce API calls
+  const handleApplyFilters = (immediate: boolean = false) => {
+    // Clear existing timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
     }
-    
-    if (startDate) {
-      filters.startDate = startDate;
-      // Console log removed for security
-    }
-    
-    if (endDate) {
-      filters.endDate = endDate;
-      // Console log removed for security
-    }
-    
-    if (statusFilter && statusFilter !== "all") {
-      filters.status = statusFilter;
-    }
-    
-    if (processedByFilter && processedByFilter !== "all") {
-      filters.processedBy = processedByFilter;
-    }
-    
-    // Check if we have any filters
-    if (Object.keys(filters).length > 0) {
-      // Console log removed for security
-      fetchOrderEntries(filters);
+
+    const applyFiltersNow = () => {
+      setIsFiltering(true);
+      
+      // Create filter object
+      const filters: { phoneNumber?: string; startDate?: string; endDate?: string; status?: string; processedBy?: string } = {};
+      
+      if (searchTerm) {
+        filters.phoneNumber = searchTerm;
+      }
+      
+      if (startDate) {
+        filters.startDate = startDate;
+      }
+      
+      if (endDate) {
+        filters.endDate = endDate;
+      }
+      
+      if (statusFilter && statusFilter !== "all") {
+        filters.status = statusFilter;
+      }
+      
+      if (processedByFilter && processedByFilter !== "all") {
+        filters.processedBy = processedByFilter;
+      }
+      
+      // Check if we have any filters
+      if (Object.keys(filters).length > 0) {
+        fetchOrderEntries(filters, true); // Force refresh when applying filters
+      } else {
+        fetchOrderEntries(undefined, true); // Force refresh when clearing filters
+      }
+    };
+
+    if (immediate) {
+      applyFiltersNow();
     } else {
-      // Console log removed for security
-      fetchOrderEntries();
+      // Debounce search by 1 second
+      const timeout = setTimeout(applyFiltersNow, 1000);
+      setSearchTimeout(timeout);
     }
   };
   
@@ -315,7 +350,10 @@ export default function OrderTrackingApp() {
               placeholder="Search phone number..."
               className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-gray-900 bg-white placeholder:text-gray-700"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                handleApplyFilters(); // This will be debounced automatically
+              }}
             />
           </div>
           
@@ -413,7 +451,7 @@ export default function OrderTrackingApp() {
                 Clear Filters
               </button>
               <button
-                onClick={handleApplyFilters}
+                onClick={() => handleApplyFilters(true)}
                 disabled={isFiltering}
                 className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >

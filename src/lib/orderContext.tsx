@@ -50,21 +50,40 @@ export const OrderProvider = ({ children }: OrderProviderProps) => {
   const [refreshAttempts, setRefreshAttempts] = useState<number>(0);
   const { data: session } = useSession();
 
-  // Keep track of the last time we refreshed to avoid too many refreshes
+  // Enhanced throttling and caching
   const lastRefreshRef = React.useRef<number>(0);
+  const refreshTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const isFetchingRef = React.useRef<boolean>(false);
   
-  // Function to refresh all order counts - using useCallback to maintain stable reference
-  const refreshOrderCount = useCallback(async () => {
-    // Throttle refreshes to prevent flooding
+  // Function to refresh all order counts with better throttling and debouncing
+  const refreshOrderCount = useCallback(async (force: boolean = false) => {
     const now = getCurrentTimestampSync();
-    const minRefreshInterval = 500; // 500ms minimum between refreshes
+    const minRefreshInterval = force ? 100 : 2000; // 2 seconds minimum between refreshes unless forced
     
-    if (now - lastRefreshRef.current < minRefreshInterval) {
-      // Console log removed for security
+    // Prevent multiple simultaneous fetches
+    if (isFetchingRef.current && !force) {
+      return;
+    }
+    
+    // Debounce non-forced refreshes
+    if (!force) {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+      
+      refreshTimeoutRef.current = setTimeout(() => {
+        refreshOrderCount(true);
+      }, 1000);
+      return;
+    }
+    
+    // Throttle even forced refreshes
+    if (now - lastRefreshRef.current < minRefreshInterval && !force) {
       return;
     }
     
     lastRefreshRef.current = now;
+    isFetchingRef.current = true;
     
     try {
       setIsLoading(true);
@@ -109,6 +128,7 @@ export const OrderProvider = ({ children }: OrderProviderProps) => {
       }
     } finally {
       setIsLoading(false);
+      isFetchingRef.current = false;
     }
   }, [session, orderCount, processedOrderCount, sentOrderCount, refreshAttempts]);
 
@@ -116,8 +136,8 @@ export const OrderProvider = ({ children }: OrderProviderProps) => {
   useEffect(() => {
     // Console log removed for security
     
-    // Get initial count
-    refreshOrderCount();
+    // Get initial count (forced)
+    refreshOrderCount(true);
 
     // Create event handlers for each event type
     const handleOrderUpdate = (event: Event) => {

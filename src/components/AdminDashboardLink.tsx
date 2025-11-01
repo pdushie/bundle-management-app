@@ -55,9 +55,9 @@ export default function AdminDashboardLink() {
   const [isVisible, setIsVisible] = useState(false);
   const [isWindowFocused, setIsWindowFocused] = useState<boolean>(true);
   
-  // Use SSE for realtime updates instead of polling
+  // Use SSE for realtime updates instead of polling - don't wait for permissions to load
   const { unreadChatCount, chatConnectionStatus } = useRealtimeUpdates({
-    enabled: !permissionsLoading && hasPermission('admin.chat')
+    enabled: true // Always enabled, will handle permissions internally
   });
   
 
@@ -110,6 +110,7 @@ export default function AdminDashboardLink() {
       <div className="relative">
         <Link 
           href="/admin"
+          prefetch={true}
           className={`flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105 ${
             hasPermission('admin.chat') && unreadChatCount > 0 ? 'ring-2 ring-red-400 ring-opacity-75 animate-pulse' : ''
           }`}

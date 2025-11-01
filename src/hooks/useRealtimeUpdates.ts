@@ -99,7 +99,7 @@ export function useRealtimeUpdates(options: UseRealtimeUpdatesOptions = {}) {
         timestamp: new Date().toISOString()
       });
     },
-    fallbackInterval: process.env.NODE_ENV === 'production' ? 5000 : 60000, // 5s in production, 60s in dev
+    fallbackInterval: process.env.NODE_ENV === 'production' || typeof window !== 'undefined' && window.location.hostname.includes('vercel') ? 3000 : 30000, // 3s in production, 30s in dev
     fallbackCallback: isAdminMode ? () => fetchUnreadChatCountRef.current() : undefined
   }), []); // Empty dependency array - options should never change
 
@@ -145,7 +145,7 @@ export function useRealtimeUpdates(options: UseRealtimeUpdatesOptions = {}) {
         timestamp: new Date().toISOString()
       });
     },
-    fallbackInterval: process.env.NODE_ENV === 'production' ? 30000 : 120000, // 30s in production, 2min in dev
+    fallbackInterval: process.env.NODE_ENV === 'production' || typeof window !== 'undefined' && window.location.hostname.includes('vercel') ? 15000 : 60000, // 15s in production, 60s in dev
     fallbackCallback: () => fetchAnnouncementsRef.current()
   }), []); // Empty dependency array - options should never change
 

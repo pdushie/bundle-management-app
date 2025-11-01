@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Users, Check, X, Clock, MessageCircle, Shield, Calendar, ArrowLeft, Database, User, LogOut, DollarSign, Settings, Receipt } from "lucide-react";
@@ -46,13 +46,13 @@ function usePermissions() {
     fetchPermissions();
   }, [(session?.user as any)?.id]);
 
-  const hasPermission = (permission: string) => {
+  const hasPermission = useCallback((permission: string) => {
     return permissions.includes(permission);
-  };
+  }, [permissions]);
 
-  const hasAnyPermission = (permissionList: string[]) => {
+  const hasAnyPermission = useCallback((permissionList: string[]) => {
     return permissionList.some(permission => permissions.includes(permission));
-  };
+  }, [permissions]);
 
   return { permissions, loading, hasPermission, hasAnyPermission };
 }
@@ -62,7 +62,6 @@ import MinimumEntriesAdmin from "@/components/admin/MinimumEntriesAdmin";
 import AdminOrdersDashboard from "@/components/AdminOrdersDashboard";
 import UserAssignmentManagement from "@/components/UserAssignmentManagement";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { useRouter as useNextRouter } from 'next/navigation';
 
 interface PendingUser {
   id: string;
@@ -80,36 +79,13 @@ interface UserStats {
 }
 
 function AdminDashboardContent() {
+  // ===== HOOKS SECTION - ALL HOOKS MUST BE CALLED IN THE SAME ORDER EVERY TIME =====
   const { data: session, status } = useSession() as any;
   const router = useRouter();
   const { permissions, loading: permissionsLoading, hasPermission, hasAnyPermission } = usePermissions();
   
-  // Helper function to check if user is admin
-  const isAdminRole = (role: string | undefined) => {
-    return role === 'super_admin' || role === 'superadmin' || role === 'admin' || role === 'standard_admin';
-  };
-  
-  // Set default tab based on user role and permissions
-  const getDefaultTab = () => {
-    if (session?.user?.role === 'super_admin' || session?.user?.role === 'superadmin') {
-      return 'pending';
-    }
-    // For users with user management permissions, default to pending tab
-    if (hasAnyPermission(['users:create', 'users:update']) || isAdminRole(session?.user?.role)) {
-      return 'pending';
-    }
-    // Otherwise default to users tab if they have user permissions
-    if (hasAnyPermission(['users:view'])) {
-      return 'users';
-    }
-    // Otherwise default to pricing if they have pricing permissions
-    if (hasAnyPermission(['pricing:view', 'pricing:create', 'pricing:update', 'pricing:delete'])) {
-      return 'pricing';
-    }
-    // Fallback to users
-    return 'users';
-  };
-  
+  // State hooks - always called in the same order
+  const [isClient, setIsClient] = useState(false);
   const [activeTab, setActiveTab] = useState<'pending' | 'users' | 'pricing' | 'minimum-entries' | 'assignments' | 'orders' | 'accounting'>('users');
   const [userHasSelectedTab, setUserHasSelectedTab] = useState(false);
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
@@ -124,117 +100,111 @@ function AdminDashboardContent() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
 
-  // Function to go back to the main application
-  const goBackToApplication = () => {
-    router.push('/');
-  };
+  // Memoized functions - always called in the same order
+  const isAdminRole = useCallback((role: string | undefined) => {
+    return role === 'super_admin' || role === 'superadmin' || role === 'admin' || role === 'standard_admin';
+  }, []);
 
-  // Handle sign out
-  const handleSignOut = () => {
-    signOut({ callbackUrl: "/auth/signin" });
-  };
+  const fetchPendingUsers = useCallback(async () => {
+    try {
+      const response = await fetch('/api/admin/pending-users');
+      if (response.ok) {
+        const text = await response.text();
+        try {
+          const data = JSON.parse(text);
+          setPendingUsers(data.users);
+        } catch (jsonError) {
+          console.error('JSON parsing error for pending users:', jsonError);
+          console.error('Response text:', text);
+        }
+      } else {
+        console.error('Failed to fetch pending users:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('Network error fetching pending users:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const fetchUserStats = useCallback(async () => {
+    try {
+      const response = await fetch('/api/admin/stats');
+      if (response.ok) {
+        const text = await response.text();
+        try {
+          const data = JSON.parse(text);
+          setUserStats({
+            totalUsers: data.totalUsers,
+            approvedCount: data.approvedCount,
+            rejectedCount: data.rejectedCount,
+            adminCount: data.adminCount
+          });
+        } catch (jsonError) {
+          console.error('JSON parsing error for user stats:', jsonError);
+          console.error('Response text:', text);
+        }
+      } else {
+        console.error('Failed to fetch user stats:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('Network error fetching user stats:', error);
+    }
+  }, []);
+
+  // Effect hooks - always called in the same order
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
-    // Console log removed for security
-    
-    // Redirect unauthenticated users
     if (status === "unauthenticated") {
-      // Console log removed for security
       router.push("/");
       return;
     }
-    
-    // For non-admin users, check if they have permissions to access admin dashboard
-    if (session && !isAdminRole(session.user?.role) && !permissionsLoading) {
-      const hasAdminPermissions = hasAnyPermission([
-        'users:view', 'users:create', 'users:update', 'users:delete',
-        'pricing:view', 'pricing:create', 'pricing:update', 'pricing:delete'
-      ]);
-      
-      const hasAnnouncementsPermission = hasAnyPermission(['admin.announcements']);
-      const hasChatPermission = hasAnyPermission(['admin.chat']);
-      
-      // Console log removed for security
-      
-      // If they have announcements permission but not general admin permissions, redirect to announcements
-      if (!hasAdminPermissions && hasAnnouncementsPermission) {
-        // Console log removed for security
-        router.push('/admin/announcements');
-        return;
-      }
-      
-      // If they have chat permission but not general admin permissions, redirect to chat
-      if (!hasAdminPermissions && hasChatPermission) {
-        // Console log removed for security
-        router.push('/admin/chat');
-        return;
-      }
-      
-      // If they don't have any admin permissions, redirect to home
-      if (!hasAdminPermissions && !hasAnnouncementsPermission && !hasChatPermission) {
-        // Console log removed for security
-        router.push("/");
-        return;
-      }
-    }
-    
-    // Regular users get redirected to home
-    if (session && !isAdminRole(session.user?.role)) {
-      // Console log removed for security
-      router.push("/");
-      return;
-    }
-  }, [status, session, router, permissionsLoading, hasAnyPermission, permissions]);
+  }, [status, router]);
 
   useEffect(() => {
-    if (isAdminRole(session?.user?.role) || hasAnyPermission(['users:create', 'users:update'])) {
+    if (session?.user && isAdminRole(session?.user?.role)) {
+      fetchPendingUsers();
+      fetchUserStats();
+    } else if (!permissionsLoading && hasAnyPermission(['users:create', 'users:update'])) {
       fetchPendingUsers();
       fetchUserStats();
     }
-  }, [session, hasAnyPermission]);
-  
-  // Update default tab when permissions are loaded (only if user hasn't manually selected a tab)
+  }, [session, hasAnyPermission, permissionsLoading, fetchPendingUsers, fetchUserStats, isAdminRole]);
+
   useEffect(() => {
     if (!permissionsLoading && session && !userHasSelectedTab) {
-      const defaultTab = getDefaultTab();
-      // Console log removed for security
-      // Only set the default tab if user hasn't manually selected one
+      let defaultTab = 'users';
+      
+      if (session?.user?.role === 'super_admin' || session?.user?.role === 'superadmin') {
+        defaultTab = 'pending';
+      } else if (hasAnyPermission(['users:create', 'users:update']) || isAdminRole(session?.user?.role)) {
+        defaultTab = 'pending';
+      } else if (hasAnyPermission(['users:view'])) {
+        defaultTab = 'users';
+      } else if (hasAnyPermission(['pricing:view', 'pricing:create', 'pricing:update', 'pricing:delete'])) {
+        defaultTab = 'pricing';
+      }
+      
       if (defaultTab !== activeTab) {
         setActiveTab(defaultTab as 'pending' | 'users' | 'pricing' | 'minimum-entries' | 'orders' | 'accounting');
       }
     }
-  }, [permissionsLoading, session, hasAnyPermission, userHasSelectedTab]);
+  }, [permissionsLoading, session, hasAnyPermission, userHasSelectedTab, activeTab, isAdminRole]);
 
-  const fetchPendingUsers = async () => {
-    try {
-      const response = await fetch('/api/admin/pending-users');
-      if (response.ok) {
-        const data = await response.json();
-        setPendingUsers(data.users);
-      }
-    } catch (error) {
-      // Console statement removed for security
-    } finally {
-      setIsLoading(false);
-    }
+  // ===== END OF HOOKS SECTION =====
+
+  // Regular functions and variables - these don't affect hook count
+  const goBackToApplication = () => {
+    router.push('/');
   };
 
-  const fetchUserStats = async () => {
-    try {
-      const response = await fetch('/api/admin/stats');
-      if (response.ok) {
-        const data = await response.json();
-        setUserStats({
-          totalUsers: data.totalUsers,
-          approvedCount: data.approvedCount,
-          rejectedCount: data.rejectedCount,
-          adminCount: data.adminCount
-        });
-      }
-    } catch (error) {
-      // Console statement removed for security
-    }
+  const handleSignOut = () => {
+    signOut({ callbackUrl: "/auth/signin" });
   };
+
 
   const handleApprove = async (userId: string) => {
     setActionLoading(userId);
@@ -287,31 +257,65 @@ function AdminDashboardContent() {
       'pricing:view', 'pricing:create', 'pricing:update', 'pricing:delete'
     ]));
 
-  // Show loading state without early return to avoid hook order issues
-  if (status === "loading" || permissionsLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-700">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  // Show loading state while waiting for session (only use client-side detection in production)
+  const isProduction = process.env.NODE_ENV === 'production';
+  const shouldWaitForClient = isProduction && !isClient;
   
-  // Show access denied without early return to avoid hook order issues  
-  if (!session || !hasAdminAccess) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-700">Checking permissions...</p>
+  // Determine what to render based on state - using conditional rendering instead of early returns
+  const renderContent = () => {
+    // Only block for session loading, not permissions loading to improve performance
+    if (shouldWaitForClient || status === "loading") {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-700">Loading...</p>
+          </div>
         </div>
-      </div>
-    );
-  }
+      );
+    }
+    
+    // Show access denied only if we're sure the user doesn't have access (not while loading)
+    if (!session) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-700">Loading session...</p>
+          </div>
+        </div>
+      );
+    }
 
-  return (
+    // If permissions are still loading, show the page with basic access
+    if (permissionsLoading) {
+      // Allow admin roles to see the page immediately while permissions load
+      if (!isAdminRole(session?.user?.role)) {
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-700">Checking permissions...</p>
+            </div>
+          </div>
+        );
+      }
+    }
+
+    // Final access check only after permissions are loaded
+    if (!permissionsLoading && !hasAdminAccess) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-700">Access denied</p>
+          </div>
+        </div>
+      );
+    }
+
+    // Main dashboard content
+    return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Header with Back Button and User Menu */}
       <div className="bg-white shadow-sm border-b border-gray-200">
@@ -722,26 +726,15 @@ function AdminDashboardContent() {
         </div>
       )}
     </div>
-  );
+    );
+  };
+
+  // Always return the result of renderContent to maintain consistent hook calls
+  return renderContent();
 }
 
 export default function AdminDashboard() {
-  const { data: session, status } = useSession() as any;
-  const { loading: permissionsLoading } = usePermissions();
-
-  // Show loading state - this component always calls the same hooks
-  if (status === "loading" || permissionsLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-700">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // If we get here, we can render the main content
+  // Remove duplicate hook calls - let AdminDashboardContent handle all the logic
   return <AdminDashboardContent />;
 }
 

@@ -35,13 +35,29 @@ export function useSSE(url: string, options: UseSSEOptions = {}) {
       return;
     }
 
+    // For production environments (especially Vercel), skip SSE and use polling immediately
+    const isProduction = process.env.NODE_ENV === 'production' || (typeof window !== 'undefined' && window.location.hostname.includes('vercel'));
+    
+    if (isProduction && options.fallbackInterval && options.fallbackCallback) {
+      console.log(`Production environment detected for ${url} - using polling instead of SSE`);
+      setConnectionStatus('error'); // Mark as error to indicate SSE isn't working
+      fallbackIntervalRef.current = setInterval(
+        options.fallbackCallback,
+        options.fallbackInterval
+      );
+      return;
+    }
+
     // Create new EventSource with credentials to ensure cookies are sent
     const eventSource = new EventSource(url, {
       withCredentials: true
     });
     eventSourceRef.current = eventSource;
 
-    // Set up connection timeout
+    // Set up connection timeout - shorter for production where SSE likely won't work
+    const isProductionEnv = process.env.NODE_ENV === 'production' || (typeof window !== 'undefined' && window.location.hostname.includes('vercel'));
+    const timeoutDuration = isProductionEnv ? 3000 : 10000; // 3s in production, 10s in dev
+    
     const connectionTimeout = setTimeout(() => {
       if (eventSource.readyState === EventSource.CONNECTING) {
         console.warn(`SSE connection timeout for ${url} - closing and falling back`);
@@ -57,7 +73,7 @@ export function useSSE(url: string, options: UseSSEOptions = {}) {
           );
         }
       }
-    }, 10000); // 10 second timeout
+    }, timeoutDuration);
 
     eventSource.onopen = () => {
       console.log(`SSE connection opened: ${url}`);
