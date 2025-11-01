@@ -1,17 +1,16 @@
 {
-  "name": "Data Processing Suite",
-  "short_name": "Data Suite",
-  "description": "Data validation and categorization tool",
+  "name": "Bundle Management App",
+  "short_name": "BundleApp",
+  "description": "A comprehensive bundle management application",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#3b82f6",
+  "theme_color": "#000000",
   "icons": [
     {
       "src": "/favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
+      "sizes": "48x48",
       "type": "image/x-icon"
     }
-  ],
-  "orientation": "portrait-primary"
+  ]
 }
