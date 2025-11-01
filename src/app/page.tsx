@@ -18,6 +18,7 @@ import BillingApp from "@/components/BillingApp";
 import AccountingApp from "@/components/AccountingApp";
 import PackagesApp from "@/components/PackagesApp";
 import NotReceivedReportsApp from "@/components/NotReceivedReportsApp";
+import AdminDashboardLink from "@/components/AdminDashboardLink";
 import { OrderProvider, useOrderCount } from "@/lib/orderContext";
 import { ORDER_UPDATED_EVENT } from "@/lib/orderNotifications";
 import { requestNotificationPermission, hasNotificationPermission, sendThrottledNotification, playNotificationSound } from '@/lib/notifications';
@@ -3152,6 +3153,9 @@ function AppContent() {
 
 
       </div>
+      
+      {/* Admin Dashboard Link - Floating Action Button */}
+      <AdminDashboardLink />
     </div>
   );
 }

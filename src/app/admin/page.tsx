@@ -1,61 +1,9 @@
 ﻿"use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Users, Check, X, Clock, MessageCircle, Shield, Calendar, ArrowLeft, Database, User, LogOut, DollarSign, Settings, Receipt } from "lucide-react";
-
-// Hook to check RBAC permissions
-function usePermissions() {
-  const [permissions, setPermissions] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { data: session } = useSession();
-
-  useEffect(() => {
-    const fetchPermissions = async () => {
-      const userId = (session?.user as any)?.id;
-      // Console log removed for security
-      if (!userId) {
-        // Console log removed for security
-        setLoading(false);
-        return;
-      }
-
-      try {
-        // AdminDashboard: Making request to permissions API - logging removed for security
-        const response = await fetch(`/api/admin/rbac/users/${userId}/permissions`);
-        // AdminDashboard: Permission API response status - logging removed for security
-        if (response.ok) {
-          const data = await response.json();
-          // AdminDashboard: Permission API response data - logging removed for security
-          if (data.success) {
-            const permissionNames = data.permissions.map((p: any) => p.name);
-            // Console log removed for security
-            setPermissions(permissionNames);
-          }
-        } else {
-          // AdminDashboard: Permission API request failed - logging removed for security
-        }
-      } catch (error) {
-        // Console statement removed for security
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPermissions();
-  }, [(session?.user as any)?.id]);
-
-  const hasPermission = useCallback((permission: string) => {
-    return permissions.includes(permission);
-  }, [permissions]);
-
-  const hasAnyPermission = useCallback((permissionList: string[]) => {
-    return permissionList.some(permission => permissions.includes(permission));
-  }, [permissions]);
-
-  return { permissions, loading, hasPermission, hasAnyPermission };
-}
 import UserManagement from "@/components/UserManagement";
 import PricingProfiles from "@/components/PricingProfiles";
 import MinimumEntriesAdmin from "@/components/admin/MinimumEntriesAdmin";
@@ -78,16 +26,13 @@ interface UserStats {
   adminCount: number;
 }
 
-function AdminDashboardContent() {
-  // ===== HOOKS SECTION - ALL HOOKS MUST BE CALLED IN THE SAME ORDER EVERY TIME =====
+export default function AdminDashboard() {
+  // All hooks called unconditionally at the top
   const { data: session, status } = useSession() as any;
   const router = useRouter();
-  const { permissions, loading: permissionsLoading, hasPermission, hasAnyPermission } = usePermissions();
   
-  // State hooks - always called in the same order
-  const [isClient, setIsClient] = useState(false);
+  // Simplified state management
   const [activeTab, setActiveTab] = useState<'pending' | 'users' | 'pricing' | 'minimum-entries' | 'assignments' | 'orders' | 'accounting'>('users');
-  const [userHasSelectedTab, setUserHasSelectedTab] = useState(false);
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [userStats, setUserStats] = useState<UserStats>({
     totalUsers: 0,
@@ -99,104 +44,65 @@ function AdminDashboardContent() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Memoized functions - always called in the same order
-  const isAdminRole = useCallback((role: string | undefined) => {
+  // Simple admin role check
+  const isAdminRole = (role: string | undefined) => {
     return role === 'super_admin' || role === 'superadmin' || role === 'admin' || role === 'standard_admin';
-  }, []);
+  };
 
-  const fetchPendingUsers = useCallback(async () => {
-    try {
-      const response = await fetch('/api/admin/pending-users');
-      if (response.ok) {
-        const text = await response.text();
-        try {
-          const data = JSON.parse(text);
-          setPendingUsers(data.users);
-        } catch (jsonError) {
-          console.error('JSON parsing error for pending users:', jsonError);
-          console.error('Response text:', text);
-        }
-      } else {
-        console.error('Failed to fetch pending users:', response.status, response.statusText);
-      }
-    } catch (error) {
-      console.error('Network error fetching pending users:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const fetchUserStats = useCallback(async () => {
-    try {
-      const response = await fetch('/api/admin/stats');
-      if (response.ok) {
-        const text = await response.text();
-        try {
-          const data = JSON.parse(text);
-          setUserStats({
-            totalUsers: data.totalUsers,
-            approvedCount: data.approvedCount,
-            rejectedCount: data.rejectedCount,
-            adminCount: data.adminCount
-          });
-        } catch (jsonError) {
-          console.error('JSON parsing error for user stats:', jsonError);
-          console.error('Response text:', text);
-        }
-      } else {
-        console.error('Failed to fetch user stats:', response.status, response.statusText);
-      }
-    } catch (error) {
-      console.error('Network error fetching user stats:', error);
-    }
-  }, []);
-
-  // Effect hooks - always called in the same order
+  // Load admin data
   useEffect(() => {
-    setIsClient(true);
-  }, []);
+    const loadAdminData = async () => {
+      if (!session?.user || !isAdminRole(session?.user?.role)) return;
+      
+      try {
+        // Load pending users
+        const usersResponse = await fetch('/api/admin/pending-users');
+        if (usersResponse.ok) {
+          const usersText = await usersResponse.text();
+          try {
+            const usersData = JSON.parse(usersText);
+            setPendingUsers(usersData.users || []);
+          } catch (e) {
+            console.error('Failed to parse users data');
+          }
+        }
 
+        // Load stats
+        const statsResponse = await fetch('/api/admin/stats');
+        if (statsResponse.ok) {
+          const statsText = await statsResponse.text();
+          try {
+            const statsData = JSON.parse(statsText);
+            setUserStats(statsData);
+          } catch (e) {
+            console.error('Failed to parse stats data');
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load admin data:', error);
+      } finally {
+        setIsLoading(false);
+        setIsInitialized(true);
+      }
+    };
+
+    if (session?.user) {
+      loadAdminData();
+    } else if (status !== "loading") {
+      setIsInitialized(true);
+    }
+  }, [session, status]);
+
+  // Redirect unauthenticated users
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/");
-      return;
     }
   }, [status, router]);
 
-  useEffect(() => {
-    if (session?.user && isAdminRole(session?.user?.role)) {
-      fetchPendingUsers();
-      fetchUserStats();
-    } else if (!permissionsLoading && hasAnyPermission(['users:create', 'users:update'])) {
-      fetchPendingUsers();
-      fetchUserStats();
-    }
-  }, [session, hasAnyPermission, permissionsLoading, fetchPendingUsers, fetchUserStats, isAdminRole]);
-
-  useEffect(() => {
-    if (!permissionsLoading && session && !userHasSelectedTab) {
-      let defaultTab = 'users';
-      
-      if (session?.user?.role === 'super_admin' || session?.user?.role === 'superadmin') {
-        defaultTab = 'pending';
-      } else if (hasAnyPermission(['users:create', 'users:update']) || isAdminRole(session?.user?.role)) {
-        defaultTab = 'pending';
-      } else if (hasAnyPermission(['users:view'])) {
-        defaultTab = 'users';
-      } else if (hasAnyPermission(['pricing:view', 'pricing:create', 'pricing:update', 'pricing:delete'])) {
-        defaultTab = 'pricing';
-      }
-      
-      if (defaultTab !== activeTab) {
-        setActiveTab(defaultTab as 'pending' | 'users' | 'pricing' | 'minimum-entries' | 'orders' | 'accounting');
-      }
-    }
-  }, [permissionsLoading, session, hasAnyPermission, userHasSelectedTab, activeTab, isAdminRole]);
-
-  // ===== END OF HOOKS SECTION =====
-
-  // Regular functions and variables - these don't affect hook count
+  // Event handlers
   const goBackToApplication = () => {
     router.push('/');
   };
@@ -204,7 +110,6 @@ function AdminDashboardContent() {
   const handleSignOut = () => {
     signOut({ callbackUrl: "/auth/signin" });
   };
-
 
   const handleApprove = async (userId: string) => {
     setActionLoading(userId);
@@ -217,11 +122,15 @@ function AdminDashboardContent() {
 
       if (response.ok) {
         setPendingUsers(prev => prev.filter(user => user.id !== userId));
-        // Refresh stats after approval
-        fetchUserStats();
+        // Reload stats
+        const statsResponse = await fetch('/api/admin/stats');
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
+          setUserStats(statsData);
+        }
       }
     } catch (error) {
-      // Console statement removed for security
+      console.error('Failed to approve user:', error);
     } finally {
       setActionLoading(null);
     }
@@ -240,81 +149,46 @@ function AdminDashboardContent() {
         setPendingUsers(prev => prev.filter(user => user.id !== userId));
         setShowRejectModal(null);
         setRejectionReason("");
-        // Refresh stats after rejection
-        fetchUserStats();
+        // Reload stats
+        const statsResponse = await fetch('/api/admin/stats');
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
+          setUserStats(statsData);
+        }
       }
     } catch (error) {
-      // Console statement removed for security
+      console.error('Failed to reject user:', error);
     } finally {
       setActionLoading(null);
     }
   };
 
-  // Check if user has permission to access admin dashboard
-  const hasAdminAccess = session && (isAdminRole(session?.user?.role) ||
-    hasAnyPermission([
-      'users:view', 'users:create', 'users:update', 'users:delete',
-      'pricing:view', 'pricing:create', 'pricing:update', 'pricing:delete'
-    ]));
-
-  // Show loading state while waiting for session (removed production-only client detection to fix hooks issue)
-  const shouldWaitForClient = false; // Simplified to avoid conditional hooks
-  
-  // Determine what to render based on state - using conditional rendering instead of early returns
-  const renderContent = () => {
-    // Only block for session loading, not permissions loading to improve performance
-    if (shouldWaitForClient || status === "loading") {
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-700">Loading...</p>
-          </div>
-        </div>
-      );
-    }
-    
-    // Show access denied only if we're sure the user doesn't have access (not while loading)
-    if (!session) {
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-700">Loading session...</p>
-          </div>
-        </div>
-      );
-    }
-
-    // If permissions are still loading, show the page with basic access
-    if (permissionsLoading) {
-      // Allow admin roles to see the page immediately while permissions load
-      if (!isAdminRole(session?.user?.role)) {
-        return (
-          <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-700">Checking permissions...</p>
-            </div>
-          </div>
-        );
-      }
-    }
-
-    // Final access check only after permissions are loaded
-    if (!permissionsLoading && !hasAdminAccess) {
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-700">Access denied</p>
-          </div>
-        </div>
-      );
-    }
-
-    // Main dashboard content
+  // Show loading while session or initialization is loading
+  if (status === "loading" || !isInitialized) {
     return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-700">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show access denied for non-admin users
+  if (!session?.user || !isAdminRole(session?.user?.role)) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-700">Access denied - Admin access required</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Main dashboard content
+  return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Header with Back Button and User Menu */}
       <div className="bg-white shadow-sm border-b border-gray-200">
@@ -371,171 +245,148 @@ function AdminDashboardContent() {
           </button>
         </div>
         
-        {/* Enhanced Stats - Show for users with user management permissions */}
-        {(session?.user?.role === 'super_admin' || session?.user?.role === 'admin' || session?.user?.role === 'standard_admin' || hasAnyPermission(['users:create', 'users:update'])) && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-yellow-100 rounded-lg">
-                  <Clock className="w-5 h-5 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-700 font-medium">Pending Requests</p>
-                  <p className="text-2xl font-bold text-gray-900">{pendingUsers.length}</p>
-                </div>
+        {/* Enhanced Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <Clock className="w-5 h-5 text-yellow-600" />
               </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <Users className="w-5 h-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-700 font-medium">Total Users</p>
-                  <p className="text-2xl font-bold text-gray-900">{userStats.totalUsers}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Check className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-700 font-medium">Approved Users</p>
-                  <p className="text-2xl font-bold text-gray-900">{userStats.approvedCount}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Shield className="w-5 h-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-700 font-medium">Admins</p>
-                  <p className="text-2xl font-bold text-gray-900">{userStats.adminCount}</p>
-                </div>
+              <div>
+                <p className="text-sm text-gray-700 font-medium">Pending Requests</p>
+                <p className="text-2xl font-bold text-gray-900">{pendingUsers.length}</p>
               </div>
             </div>
           </div>
-        )}
+
+          <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Users className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-700 font-medium">Total Users</p>
+                <p className="text-2xl font-bold text-gray-900">{userStats.totalUsers}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Check className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-700 font-medium">Approved Users</p>
+                <p className="text-2xl font-bold text-gray-900">{userStats.approvedCount}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Shield className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-700 font-medium">Admins</p>
+                <p className="text-2xl font-bold text-gray-900">{userStats.adminCount}</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Admin Dashboard Tabs */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-6">
           <div className="flex border-b border-gray-200">
-        {/* Show Pending Requests tab to users with user management permissions */}
-        {(isAdminRole(session?.user?.role) || hasAnyPermission(['users:create', 'users:update'])) && (
-              <button 
-                onClick={() => { setActiveTab('pending'); setUserHasSelectedTab(true); }} 
-                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
-                  activeTab === 'pending' 
-                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
-                    : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
-                }`}
-              >
-                <Clock className="w-4 h-4" />
-                Pending Requests
-                {pendingUsers.length > 0 && (
-                  <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">
-                    {pendingUsers.length}
-                  </span>
-                )}
-              </button>
-            )}
+            <button 
+              onClick={() => setActiveTab('pending')} 
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'pending' 
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+              }`}
+            >
+              <Clock className="w-4 h-4" />
+              Pending Requests
+              {pendingUsers.length > 0 && (
+                <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">
+                  {pendingUsers.length}
+                </span>
+              )}
+            </button>
             
-        {/* Show User Management tab to users with user permissions or admin roles */}
-        {(hasAnyPermission(['users:view', 'users:create', 'users:update', 'users:delete']) || isAdminRole(session?.user?.role)) && (
-              <button 
-                onClick={() => { setActiveTab('users'); setUserHasSelectedTab(true); }} 
-                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
-                  activeTab === 'users' 
-                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
-                    : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
-                }`}
-              >
-                <Users className="w-4 h-4" />
-                User Management
-              </button>
-            )}
+            <button 
+              onClick={() => setActiveTab('users')} 
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'users' 
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              User Management
+            </button>
             
-        {/* Show Pricing Profiles tab to users with pricing permissions or admin roles */}
-        {(hasAnyPermission(['pricing:view', 'pricing:create', 'pricing:update', 'pricing:delete']) || isAdminRole(session?.user?.role)) && (
-              <button 
-                onClick={() => { setActiveTab('pricing'); setUserHasSelectedTab(true); }} 
-                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
-                  activeTab === 'pricing' 
-                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
-                    : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
-                }`}
-              >
-                <DollarSign className="w-4 h-4" />
-                Pricing Profiles
-              </button>
-            )}
+            <button 
+              onClick={() => setActiveTab('pricing')} 
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'pricing' 
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+              }`}
+            >
+              <DollarSign className="w-4 h-4" />
+              Pricing Profiles
+            </button>
             
-        {/* Show Minimum Entries tab to users with minimum entries permissions or admin roles */}
-        {(hasAnyPermission(['admin:minimum_entries']) || isAdminRole(session?.user?.role)) && (
-              <button 
-                onClick={() => { setActiveTab('minimum-entries'); setUserHasSelectedTab(true); }} 
-                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
-                  activeTab === 'minimum-entries' 
-                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
-                    : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
-                }`}
-              >
-                <Settings className="w-4 h-4" />
-                Minimum Entries
-              </button>
-            )}
+            <button 
+              onClick={() => setActiveTab('minimum-entries')} 
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'minimum-entries' 
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+              }`}
+            >
+              <Settings className="w-4 h-4" />
+              Minimum Entries
+            </button>
             
-        {/* Show User Assignments tab to users with user permissions or admin roles */}
-        {(hasAnyPermission(['users:view', 'users:update']) || isAdminRole(session?.user?.role)) && (
-              <button 
-                onClick={() => { setActiveTab('assignments'); setUserHasSelectedTab(true); }} 
-                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
-                  activeTab === 'assignments' 
-                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
-                    : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
-                }`}
-              >
-                <Users className="w-4 h-4" />
-                User Assignments
-              </button>
-            )}
+            <button 
+              onClick={() => setActiveTab('assignments')} 
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'assignments' 
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              User Assignments
+            </button>
             
-        {/* Show Order Reports tab to users with order permissions or admin roles */}
-        {(hasAnyPermission(['admin:orders']) || isAdminRole(session?.user?.role)) && (
-              <button 
-                onClick={() => { setActiveTab('orders'); setUserHasSelectedTab(true); }} 
-                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
-                  activeTab === 'orders' 
-                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
-                    : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
-                }`}
-              >
-                <Database className="w-4 h-4" />
-                Order Reports
-              </button>
-            )}
+            <button 
+              onClick={() => setActiveTab('orders')} 
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'orders' 
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+              }`}
+            >
+              <Database className="w-4 h-4" />
+              Order Reports
+            </button>
             
-        {/* Show Accounting tab to admin roles */}
-        {isAdminRole(session?.user?.role) && (
-              <button 
-                onClick={() => { setActiveTab('accounting'); setUserHasSelectedTab(true); }} 
-                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
-                  activeTab === 'accounting' 
-                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
-                    : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
-                }`}
-              >
-                <Receipt className="w-4 h-4" />
-                Accounting
-              </button>
-            )}
+            <button 
+              onClick={() => setActiveTab('accounting')} 
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'accounting' 
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+              }`}
+            >
+              <Receipt className="w-4 h-4" />
+              Accounting
+            </button>
           </div>
         </div>
 
@@ -726,15 +577,6 @@ function AdminDashboardContent() {
       )}
     </div>
     );
-  };
-
-  // Always return the result of renderContent to maintain consistent hook calls
-  return renderContent();
-}
-
-export default function AdminDashboard() {
-  // Remove duplicate hook calls - let AdminDashboardContent handle all the logic
-  return <AdminDashboardContent />;
 }
 
 

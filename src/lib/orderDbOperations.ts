@@ -106,11 +106,13 @@ export const saveOrder = async (order: Order): Promise<void> => {
 
 export const loadOrders = async (): Promise<Order[]> => {
   try {
-    let dbOrders;
+    let dbOrdersWithEntries;
     if (db) {
-      dbOrders = await db
+      // Use LEFT JOIN to get orders with their entries in a single query
+      dbOrdersWithEntries = await db
         .select({
-          id: orders.id,
+          // Order fields
+          orderId: orders.id,
           timestamp: orders.timestamp,
           date: orders.date,
           time: orders.time,
@@ -126,33 +128,80 @@ export const loadOrders = async (): Promise<Order[]> => {
           pricingProfileName: orders.pricingProfileName,
           processedBy: orders.processedBy,
           processedAt: orders.processedAt,
-          createdAt: orders.createdAt
+          createdAt: orders.createdAt,
+          // Entry fields
+          entryId: orderEntries.id,
+          entryNumber: orderEntries.number,
+          entryAllocationGB: orderEntries.allocationGB,
+          entryStatus: orderEntries.status,
+          entryCost: orderEntries.cost
         })
         .from(orders)
-        .orderBy(desc(orders.timestamp));
+        .leftJoin(orderEntries, eq(orders.id, orderEntries.orderId))
+        .orderBy(desc(orders.timestamp), asc(orderEntries.id));
     } else {
-      dbOrders = await neonClient`SELECT * FROM orders ORDER BY timestamp DESC`;
+      // Fallback to raw query for neonClient
+      dbOrdersWithEntries = await neonClient`
+        SELECT 
+          o.*, 
+          e.id as entry_id,
+          e.number as entry_number,
+          e.allocation_gb as entry_allocation_gb,
+          e.status as entry_status,
+          e.cost as entry_cost
+        FROM orders o
+        LEFT JOIN order_entries e ON o.id = e.order_id
+        ORDER BY o.timestamp DESC, e.id ASC
+      `;
     }
-    const allOrders: Order[] = [];
-    for (const dbOrder of dbOrders) {
-      // Fetch the entries for this order
-      let entries;
-      if (db) {
-        entries = await db
-          .select()
-          .from(orderEntries)
-          .where(eq(orderEntries.orderId, dbOrder.id));
-      } else {
-        entries = await neonClient`SELECT * FROM order_entries WHERE order_id = ${dbOrder.id}`;
+
+    // Group entries by order ID
+    const orderMap = new Map<string, any>();
+    
+    for (const row of dbOrdersWithEntries) {
+      const orderId = db ? row.orderId : (row as any).id;
+      
+      if (!orderMap.has(orderId)) {
+        orderMap.set(orderId, {
+          id: db ? row.orderId : (row as any).id,
+          timestamp: row.timestamp,
+          date: row.date,
+          time: row.time,
+          userName: db ? row.userName : (row as any).user_name,
+          userEmail: db ? row.userEmail : (row as any).user_email,
+          totalData: db ? row.totalData : (row as any).total_data,
+          totalCount: db ? row.totalCount : (row as any).total_count,
+          status: row.status,
+          userId: db ? row.userId : (row as any).user_id,
+          cost: row.cost,
+          estimatedCost: db ? row.estimatedCost : (row as any).estimated_cost,
+          pricingProfileId: db ? row.pricingProfileId : (row as any).pricing_profile_id,
+          pricingProfileName: db ? row.pricingProfileName : (row as any).pricing_profile_name,
+          processedBy: db ? row.processedBy : (row as any).processed_by,
+          processedAt: db ? row.processedAt : (row as any).processed_at,
+          createdAt: db ? row.createdAt : (row as any).created_at,
+          entries: []
+        });
       }
       
-      // Attach entries to the order object
-      const orderWithEntries = {
-        ...dbOrder,
-        entries: entries
-      };
-      
-      const order = await mapDbOrderToOrder(orderWithEntries);
+      // Add entry if it exists (LEFT JOIN might return null entries)
+      const entryId = db ? row.entryId : (row as any).entry_id;
+      if (entryId) {
+        orderMap.get(orderId).entries.push({
+          id: entryId,
+          number: db ? row.entryNumber : (row as any).entry_number,
+          allocationGB: db ? row.entryAllocationGB : (row as any).entry_allocation_gb,
+          status: db ? row.entryStatus : (row as any).entry_status,
+          cost: db ? row.entryCost : (row as any).entry_cost
+        });
+      }
+    }
+    
+    // Convert map to array and map to application order format
+    const allOrders: Order[] = [];
+    const dbOrdersArray = Array.from(orderMap.values());
+    for (const dbOrder of dbOrdersArray) {
+      const order = await mapDbOrderToOrder(dbOrder);
       allOrders.push(order);
     }
     return allOrders;
@@ -218,11 +267,13 @@ export const saveOrderWithCost = async (order: Order): Promise<void> => {
 // Get all orders sorted by timestamp ascending (oldest first)
 export const getOrdersOldestFirst = async (): Promise<Order[]> => {
   try {
-    let dbOrders;
+    let dbOrdersWithEntries;
     if (db) {
-      dbOrders = await db
+      // Use LEFT JOIN to get orders with their entries in a single query
+      dbOrdersWithEntries = await db
         .select({
-          id: orders.id,
+          // Order fields
+          orderId: orders.id,
           timestamp: orders.timestamp,
           date: orders.date,
           time: orders.time,
@@ -238,33 +289,80 @@ export const getOrdersOldestFirst = async (): Promise<Order[]> => {
           pricingProfileName: orders.pricingProfileName,
           processedBy: orders.processedBy,
           processedAt: orders.processedAt,
-          createdAt: orders.createdAt
+          createdAt: orders.createdAt,
+          // Entry fields
+          entryId: orderEntries.id,
+          entryNumber: orderEntries.number,
+          entryAllocationGB: orderEntries.allocationGB,
+          entryStatus: orderEntries.status,
+          entryCost: orderEntries.cost
         })
         .from(orders)
-        .orderBy(asc(orders.timestamp));
+        .leftJoin(orderEntries, eq(orders.id, orderEntries.orderId))
+        .orderBy(asc(orders.timestamp), asc(orderEntries.id));
     } else {
-      dbOrders = await neonClient`SELECT * FROM orders ORDER BY timestamp ASC`;
+      // Fallback to raw query for neonClient
+      dbOrdersWithEntries = await neonClient`
+        SELECT 
+          o.*, 
+          e.id as entry_id,
+          e.number as entry_number,
+          e.allocation_gb as entry_allocation_gb,
+          e.status as entry_status,
+          e.cost as entry_cost
+        FROM orders o
+        LEFT JOIN order_entries e ON o.id = e.order_id
+        ORDER BY o.timestamp ASC, e.id ASC
+      `;
     }
-    const allOrders: Order[] = [];
-    for (const dbOrder of dbOrders) {
-      // Fetch the entries for this order
-      let entries;
-      if (db) {
-        entries = await db
-          .select()
-          .from(orderEntries)
-          .where(eq(orderEntries.orderId, dbOrder.id));
-      } else {
-        entries = await neonClient`SELECT * FROM order_entries WHERE order_id = ${dbOrder.id}`;
+
+    // Group entries by order ID
+    const orderMap = new Map<string, any>();
+    
+    for (const row of dbOrdersWithEntries) {
+      const orderId = db ? row.orderId : (row as any).id;
+      
+      if (!orderMap.has(orderId)) {
+        orderMap.set(orderId, {
+          id: db ? row.orderId : (row as any).id,
+          timestamp: row.timestamp,
+          date: row.date,
+          time: row.time,
+          userName: db ? row.userName : (row as any).user_name,
+          userEmail: db ? row.userEmail : (row as any).user_email,
+          totalData: db ? row.totalData : (row as any).total_data,
+          totalCount: db ? row.totalCount : (row as any).total_count,
+          status: row.status,
+          userId: db ? row.userId : (row as any).user_id,
+          cost: row.cost,
+          estimatedCost: db ? row.estimatedCost : (row as any).estimated_cost,
+          pricingProfileId: db ? row.pricingProfileId : (row as any).pricing_profile_id,
+          pricingProfileName: db ? row.pricingProfileName : (row as any).pricing_profile_name,
+          processedBy: db ? row.processedBy : (row as any).processed_by,
+          processedAt: db ? row.processedAt : (row as any).processed_at,
+          createdAt: db ? row.createdAt : (row as any).created_at,
+          entries: []
+        });
       }
       
-      // Attach entries to the order object
-      const orderWithEntries = {
-        ...dbOrder,
-        entries: entries
-      };
-      
-      const order = await mapDbOrderToOrder(orderWithEntries);
+      // Add entry if it exists (LEFT JOIN might return null entries)
+      const entryId = db ? row.entryId : (row as any).entry_id;
+      if (entryId) {
+        orderMap.get(orderId).entries.push({
+          id: entryId,
+          number: db ? row.entryNumber : (row as any).entry_number,
+          allocationGB: db ? row.entryAllocationGB : (row as any).entry_allocation_gb,
+          status: db ? row.entryStatus : (row as any).entry_status,
+          cost: db ? row.entryCost : (row as any).entry_cost
+        });
+      }
+    }
+    
+    // Convert map to array and map to application order format
+    const allOrders: Order[] = [];
+    const dbOrdersArray = Array.from(orderMap.values());
+    for (const dbOrder of dbOrdersArray) {
+      const order = await mapDbOrderToOrder(dbOrder);
       allOrders.push(order);
     }
     return allOrders;
@@ -342,11 +440,13 @@ export const updateOrder = async (orderId: string, updates: Partial<Order>): Pro
 // Get pending orders (not yet processed) sorted by timestamp with oldest first
 export const getPendingOrdersOldestFirst = async (): Promise<Order[]> => {
   try {
-    // Get pending orders sorted by timestamp ascending (oldest first)
+    // Get pending orders with their entries in a single query using LEFT JOIN
     if (!db) throw new Error('Database not initialized');
-    const dbOrders = await db
+    
+    const dbOrdersWithEntries = await db
       .select({
-        id: orders.id,
+        // Order fields
+        orderId: orders.id,
         timestamp: orders.timestamp,
         date: orders.date,
         time: orders.time,
@@ -362,28 +462,65 @@ export const getPendingOrdersOldestFirst = async (): Promise<Order[]> => {
         pricingProfileName: orders.pricingProfileName,
         processedBy: orders.processedBy,
         processedAt: orders.processedAt,
-        createdAt: orders.createdAt
+        createdAt: orders.createdAt,
+        // Entry fields
+        entryId: orderEntries.id,
+        entryNumber: orderEntries.number,
+        entryAllocationGB: orderEntries.allocationGB,
+        entryStatus: orderEntries.status,
+        entryCost: orderEntries.cost
       })
       .from(orders)
+      .leftJoin(orderEntries, eq(orders.id, orderEntries.orderId))
       .where(eq(orders.status, 'pending'))
-      .orderBy(asc(orders.timestamp));
+      .orderBy(asc(orders.timestamp), asc(orderEntries.id));
+
+    // Group entries by order ID
+    const orderMap = new Map<string, any>();
     
-    // Map to application orders with entries
+    for (const row of dbOrdersWithEntries) {
+      const orderId = row.orderId;
+      
+      if (!orderMap.has(orderId)) {
+        orderMap.set(orderId, {
+          id: row.orderId,
+          timestamp: row.timestamp,
+          date: row.date,
+          time: row.time,
+          userName: row.userName,
+          userEmail: row.userEmail,
+          totalData: row.totalData,
+          totalCount: row.totalCount,
+          status: row.status,
+          userId: row.userId,
+          cost: row.cost,
+          estimatedCost: row.estimatedCost,
+          pricingProfileId: row.pricingProfileId,
+          pricingProfileName: row.pricingProfileName,
+          processedBy: row.processedBy,
+          processedAt: row.processedAt,
+          createdAt: row.createdAt,
+          entries: []
+        });
+      }
+      
+      // Add entry if it exists (LEFT JOIN might return null entries)
+      if (row.entryId) {
+        orderMap.get(orderId).entries.push({
+          id: row.entryId,
+          number: row.entryNumber,
+          allocationGB: row.entryAllocationGB,
+          status: row.entryStatus,
+          cost: row.entryCost
+        });
+      }
+    }
+    
+    // Convert map to array and map to application order format
     const allOrders: Order[] = [];
-    for (const dbOrder of dbOrders) {
-      // Fetch the entries for this order
-      const entries = await db
-        .select()
-        .from(orderEntries)
-        .where(eq(orderEntries.orderId, dbOrder.id));
-      
-      // Attach entries to the order object
-      const orderWithEntries = {
-        ...dbOrder,
-        entries: entries
-      };
-      
-      const order = await mapDbOrderToOrder(orderWithEntries);
+    const dbOrdersArray = Array.from(orderMap.values());
+    for (const dbOrder of dbOrdersArray) {
+      const order = await mapDbOrderToOrder(dbOrder);
       allOrders.push(order);
     }
     
@@ -397,11 +534,13 @@ export const getPendingOrdersOldestFirst = async (): Promise<Order[]> => {
 // Get processed orders sorted by timestamp with oldest first
 export const getProcessedOrdersOldestFirst = async (): Promise<Order[]> => {
   try {
-    // Get processed orders sorted by timestamp ascending (oldest first)
+    // Get processed orders with their entries in a single query using LEFT JOIN
     if (!db) throw new Error('Database not initialized');
-    const dbOrders = await db
+    
+    const dbOrdersWithEntries = await db
       .select({
-        id: orders.id,
+        // Order fields
+        orderId: orders.id,
         timestamp: orders.timestamp,
         date: orders.date,
         time: orders.time,
@@ -417,28 +556,65 @@ export const getProcessedOrdersOldestFirst = async (): Promise<Order[]> => {
         pricingProfileName: orders.pricingProfileName,
         processedBy: orders.processedBy,
         processedAt: orders.processedAt,
-        createdAt: orders.createdAt
+        createdAt: orders.createdAt,
+        // Entry fields
+        entryId: orderEntries.id,
+        entryNumber: orderEntries.number,
+        entryAllocationGB: orderEntries.allocationGB,
+        entryStatus: orderEntries.status,
+        entryCost: orderEntries.cost
       })
       .from(orders)
+      .leftJoin(orderEntries, eq(orders.id, orderEntries.orderId))
       .where(eq(orders.status, 'processed'))
-      .orderBy(asc(orders.timestamp));
+      .orderBy(asc(orders.timestamp), asc(orderEntries.id));
+
+    // Group entries by order ID
+    const orderMap = new Map<string, any>();
     
-    // Map to application orders with entries
+    for (const row of dbOrdersWithEntries) {
+      const orderId = row.orderId;
+      
+      if (!orderMap.has(orderId)) {
+        orderMap.set(orderId, {
+          id: row.orderId,
+          timestamp: row.timestamp,
+          date: row.date,
+          time: row.time,
+          userName: row.userName,
+          userEmail: row.userEmail,
+          totalData: row.totalData,
+          totalCount: row.totalCount,
+          status: row.status,
+          userId: row.userId,
+          cost: row.cost,
+          estimatedCost: row.estimatedCost,
+          pricingProfileId: row.pricingProfileId,
+          pricingProfileName: row.pricingProfileName,
+          processedBy: row.processedBy,
+          processedAt: row.processedAt,
+          createdAt: row.createdAt,
+          entries: []
+        });
+      }
+      
+      // Add entry if it exists (LEFT JOIN might return null entries)
+      if (row.entryId) {
+        orderMap.get(orderId).entries.push({
+          id: row.entryId,
+          number: row.entryNumber,
+          allocationGB: row.entryAllocationGB,
+          status: row.entryStatus,
+          cost: row.entryCost
+        });
+      }
+    }
+    
+    // Convert map to array and map to application order format
     const allOrders: Order[] = [];
-    for (const dbOrder of dbOrders) {
-      // Fetch the entries for this order
-      const entries = await db
-        .select()
-        .from(orderEntries)
-        .where(eq(orderEntries.orderId, dbOrder.id));
-      
-      // Attach entries to the order object
-      const orderWithEntries = {
-        ...dbOrder,
-        entries: entries
-      };
-      
-      const order = await mapDbOrderToOrder(orderWithEntries);
+    const dbOrdersArray = Array.from(orderMap.values());
+    for (const dbOrder of dbOrdersArray) {
+      const order = await mapDbOrderToOrder(dbOrder);
       allOrders.push(order);
     }
     
